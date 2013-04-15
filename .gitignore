@@ -1,4 +1,7 @@
-[Ll]ibrary/
+[Ll]ibrary/cache
+[Ll]ibrary/metadata
+[Ll]ibrary/previews
+[Ll]ibrary/ScriptAssemblies
 [Tt]emp/
 [Oo]bj/
 
