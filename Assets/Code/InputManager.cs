@@ -6,8 +6,13 @@ public class InputManager : SingletonBehaviour<InputManager>
 	[SerializeField]
 	Camera gameCamera;
 	
+	
 	public HexCell ClosestHexCell { get; private set; }
 	public HexCell OverHexCell { get { return OverCell ? ClosestHexCell : null; } }
+	
+	public HexCell _debug_ClosestHexCell;
+	public HexCell _debug_OverHexCell;
+	public HexCellPlaceable _debug_OverHexCellMechanism;
 	
 	public bool OverCell { get; private set; }
 	
@@ -22,7 +27,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	public const float tapThreshold = 20f;
 	
 	
-	HexCell dragStartObject = null;
+	HexCellPlaceable draggingObject = null;
 	
 	// Update is called once per frame
 	void Update () 
@@ -57,35 +62,64 @@ public class InputManager : SingletonBehaviour<InputManager>
 				ClosestHexCell = distanceToOutsideCell < closestDistance ? outsideCell : ClosestHexCell;
 			}
 		}
+		_debug_ClosestHexCell = ClosestHexCell;
+		_debug_OverHexCell = OverHexCell;
+		_debug_OverHexCellMechanism = OverHexCell == null?null:OverHexCell.placedMechanism;
 		
-		
-		
-		if (OverCell)
+		if (Input.GetMouseButtonDown(0))
 		{
-			if (Input.GetMouseButtonDown(0))
-			{
-				dragStartObject = OverHexCell;
-			}
-			if (Input.GetMouseButton(0))
-			{
-				// UpdateDragging
-				if ( dragStartObject != OverCell)
-				{
-					dragStartObject.placedMechanism.Location = OverHexCell.location;
-				}
+			StartDragging();
+		}
+		
+		if (Input.GetMouseButton(0))
+		{
 				
-			}
-			if (Input.GetMouseButtonUp(0))
-			{
-				dragStartObject = null;
-			}
+		}
+		if (Input.GetMouseButtonUp(0))
+		{
+			StopDragging();
+		}
+		if (!Input.GetMouseButton(0))
+		{
+			StopDragging();
 		}
 		
 		Debug.DrawLine(inputRay.origin, ClosestHexCell.transform.position, debugDrawColor, 1f);
 //		Debug.Log(closestHexCell.location.x+":"+closestHexCell.location.y);
 		
 		
-		
-		
 	}
+	
+	
+	public void StartDraggingUnplaced(HexCellPlaceable hexCellPlacable)
+	{
+		draggingObject = hexCellPlacable;
+		if (draggingObject != null)
+		{
+			draggingObject.StartDrag();
+		}
+	}
+	
+	void StartDragging()
+	{
+		if (OverCell)
+		{
+			draggingObject = OverHexCell == null ? null : OverHexCell.placedMechanism;
+			if (draggingObject != null)
+			{
+				draggingObject.StartDrag();
+			}
+		}
+	}
+	
+	
+	void StopDragging()
+	{
+		if (draggingObject != null)
+		{
+			draggingObject.StopDrag();
+			draggingObject = null;
+		}
+	}
+	
 }

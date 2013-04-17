@@ -26,7 +26,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 		
 	public void StartDrag()
 	{
-		Debug.Log ("StartDrag()");
+		Debug.Log ("StartDrag()" + (_hexCell!= null?""+_hexCell.location.x +":"+_hexCell.location.y:""));
 		if (_hexCell != null)
 		{
 			_hexCell.placedMechanism = null;
@@ -35,10 +35,11 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	}
 	public void StopDrag()
 	{	
-		Debug.Log ("StopDrag()");
-		if (InputManager.instance.OverCell)
+		Debug.Log ("StopDrag()" + (_hexCell!= null?""+_hexCell.location.x +":"+_hexCell.location.y:""));
+		
+		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedMechanism == null)
 		{
-			PlaceAtLocation(InputManager.instance.ClosestHexCell.location);
+			PlaceAtLocation(InputManager.instance.OverHexCell.location);
 		}
 		else
 		{
@@ -55,7 +56,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 		if (location != null)
 		{
 			_hexCell = GridManager.instance.GetHexCell(location);
-			if (_hexCell)
+			if (_hexCell != null)
 			{
 				transform.position = _hexCell.transform.position;
 				_hexCell.placedMechanism = this;
@@ -63,8 +64,14 @@ public abstract class HexCellPlaceable : MonoBehaviour
 		}
 		else
 		{
-			_hexCell.placedMechanism = null;
-			_hexCell = null;
+			if (_hexCell != null)
+			{
+				if (_hexCell.placedMechanism == this)
+				{
+					_hexCell.placedMechanism = null;
+				}
+				_hexCell = null;
+			}
 		}
 	}
 	

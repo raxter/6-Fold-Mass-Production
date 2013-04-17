@@ -23,7 +23,7 @@ public class HUDFunctions : MonoBehaviour
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:
 			case POINTER_INFO.INPUT_EVENT.RELEASE_OFF:
-				GameManager.instance.UnSelecteMechanistIcon();
+//				GameManager.instance.UnSelecteMechanistIcon();
 				break;
 			
 		}

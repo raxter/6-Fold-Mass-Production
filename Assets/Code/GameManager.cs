@@ -32,18 +32,18 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		unplacedMechanism = (GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<HexCellPlaceable>();
 		
-		unplacedMechanism.StartDrag();
+		InputManager.instance.StartDraggingUnplaced(unplacedMechanism);
 		
 	}
 	
-	public void UnSelecteMechanistIcon ()
-	{
-		if (unplacedMechanism != null)
-		{
-			unplacedMechanism.StopDrag();
-			
-		}
-	}
+//	public void UnSelecteMechanistIcon ()
+//	{
+//		if (unplacedMechanism != null)
+//		{
+//			unplacedMechanism.StopDrag();
+//			
+//		}
+//	}
 	
 }
 
