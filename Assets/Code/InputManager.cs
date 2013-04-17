@@ -7,6 +7,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	Camera gameCamera;
 	
 	public HexCell ClosestHexCell { get; private set; }
+	public HexCell OverHexCell { get { return OverCell ? ClosestHexCell : null; } }
 	
 	public bool OverCell { get; private set; }
 	
@@ -17,6 +18,11 @@ public class InputManager : SingletonBehaviour<InputManager>
 		return ClosestHexCell;
 	}
 	
+	
+	public const float tapThreshold = 20f;
+	
+	
+	HexCell dragStartObject = null;
 	
 	// Update is called once per frame
 	void Update () 
@@ -52,6 +58,28 @@ public class InputManager : SingletonBehaviour<InputManager>
 			}
 		}
 		
+		
+		
+		if (OverCell)
+		{
+			if (Input.GetMouseButtonDown(0))
+			{
+				dragStartObject = OverHexCell;
+			}
+			if (Input.GetMouseButton(0))
+			{
+				// UpdateDragging
+				if ( dragStartObject != OverCell)
+				{
+					dragStartObject.placedMechanism.Location = OverHexCell.location;
+				}
+				
+			}
+			if (Input.GetMouseButtonUp(0))
+			{
+				dragStartObject = null;
+			}
+		}
 		
 		Debug.DrawLine(inputRay.origin, ClosestHexCell.transform.position, debugDrawColor, 1f);
 //		Debug.Log(closestHexCell.location.x+":"+closestHexCell.location.y);
