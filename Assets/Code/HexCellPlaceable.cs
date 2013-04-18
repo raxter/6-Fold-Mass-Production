@@ -15,6 +15,20 @@ public abstract class HexCellPlaceable : MonoBehaviour
 		get;
 	}
 	
+	[SerializeField]
+	GameObject _selectionItem;
+	
+	public bool selected
+	{
+		get
+		{
+			return _selectionItem.active;
+		}
+		set
+		{
+			_selectionItem.SetActiveRecursively(value);
+		}
+	}
 	
 	[SerializeField]
 	bool _placeAtStart = false;
@@ -91,6 +105,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	
 	void Start()
 	{
+		selected = false;
 		if (_placeAtStart)
 		{
 			PlaceAtLocation(debugLocation);

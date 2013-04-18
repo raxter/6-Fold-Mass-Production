@@ -68,6 +68,11 @@ public class InputManager : SingletonBehaviour<InputManager>
 		
 		if (Input.GetMouseButtonDown(0))
 		{
+			if (OverHexCell != null && OverHexCell.placedMechanism != null)
+			{
+				OverHexCell.placedMechanism.selected = true;
+				
+			}
 			StartDragging();
 		}
 		

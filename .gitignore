@@ -9,3 +9,9 @@
 *.csproj
 *.unityproj
 *.sln
+
+*.pidb
+
+*.pidb
+
+Assets/Art/Sprite Atlases/.DS_Store
