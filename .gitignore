@@ -15,3 +15,7 @@
 *.pidb
 
 Assets/Art/Sprite Atlases/.DS_Store
+
+*.pidb
+
+Assembly-CSharp-firstpass.pidb
