@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class InputManager : SingletonBehaviour<InputManager>
 {
@@ -15,6 +16,44 @@ public class InputManager : SingletonBehaviour<InputManager>
 	public HexCellPlaceable _debug_OverHexCellMechanism;
 	
 	public bool OverCell { get; private set; }
+	
+	HashSet<HexCellPlaceable> selectedMechanisms = new HashSet<HexCellPlaceable>();
+	
+	void SelectUniqueMechanism(HexCellPlaceable mechanism)
+	{
+		foreach (HexCellPlaceable selectedMechanism in selectedMechanisms)
+		{
+			selectedMechanism.selected = false;
+		}
+		selectedMechanisms.Clear();
+		
+		
+		SelectMechanism(mechanism);
+	}
+	
+	void SelectMechanism(HexCellPlaceable mechanism)
+	{
+		selectedMechanisms.Add(mechanism);
+		mechanism.selected = true;
+	}
+	
+	void DeselectMechanism(HexCellPlaceable mechanism)
+	{
+		selectedMechanisms.Remove(mechanism);
+		mechanism.selected = false;
+	}
+	
+	void ToggleSelectMechanism(HexCellPlaceable mechanism)
+	{
+		if (selectedMechanisms.Contains(mechanism))
+		{
+			DeselectMechanism(mechanism);
+		}
+		else
+		{
+			SelectMechanism(mechanism);
+		}
+	}
 	
 	Color debugDrawColor = Color.white;
 	
@@ -32,6 +71,19 @@ public class InputManager : SingletonBehaviour<InputManager>
 	// Update is called once per frame
 	void Update () 
 	{
+	}
+	
+	public enum PressState {Down, Up, Pressed, Released};
+	
+	public void HandleScreenPoint(Vector3 screenPos, PressState pressState)
+	{
+		Ray	inputRay = gameCamera.ScreenPointToRay(screenPos);
+		
+		HandleRay(inputRay, pressState);
+	}
+	
+	public void HandleRay(Ray inputRay, PressState pressState)
+	{
 		debugDrawColor = Input.GetMouseButton(0) ? Color.green : Color.red;
 		
 //		if (Input.GetMouseButtonDown(0))
@@ -39,7 +91,6 @@ public class InputManager : SingletonBehaviour<InputManager>
 //			Debug.Log("Input.GetMouseButtonDown(0)");
 //		}
 		
-		Ray	inputRay = gameCamera.ScreenPointToRay(Input.mousePosition);
 		
 //		Debug.DrawRay(inputRay.origin, inputRay.direction*1000f, debugDrawColor, 1f);
 		
@@ -66,11 +117,12 @@ public class InputManager : SingletonBehaviour<InputManager>
 		_debug_OverHexCell = OverHexCell;
 		_debug_OverHexCellMechanism = OverHexCell == null?null:OverHexCell.placedMechanism;
 		
+		
 		if (Input.GetMouseButtonDown(0))
 		{
 			if (OverHexCell != null && OverHexCell.placedMechanism != null)
 			{
-				OverHexCell.placedMechanism.selected = true;
+				SelectUniqueMechanism(OverHexCell.placedMechanism);
 				
 			}
 			StartDragging();

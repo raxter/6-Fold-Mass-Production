@@ -13,6 +13,13 @@ public class HUDFunctions : MonoBehaviour
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
 	}
 	
+//	void CreateGrabber()
+//	{
+//		GameManager.instance.SetSelectedMechanistIcon(HexCellPlaceableType.Grabber);
+//
+//	}
+	
+	
 	public void GrabberInputDelegate(ref POINTER_INFO ptr)
 	{
 		switch (ptr.evt)
@@ -27,6 +34,8 @@ public class HUDFunctions : MonoBehaviour
 				break;
 			
 		}
+		
+		InputCatcher.instance.InputDelegate(ref ptr);
 	}
 	
 }

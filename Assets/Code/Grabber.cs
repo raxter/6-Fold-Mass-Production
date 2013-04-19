@@ -7,7 +7,7 @@ public class Grabber : HexCellPlaceable
 	
 	public override HexCellPlaceableType MechanismType { get { return HexCellPlaceableType.Grabber; } }
 	
-	public enum Instruction {None, RotateLeft, RotateRight, Extend, Retract, Grab, Drop, GrabDrop, Mark, GoToMark};
+	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, Mark, GoToMark};
 	
 	public Instruction [] instructions = new Instruction [16];
 	
