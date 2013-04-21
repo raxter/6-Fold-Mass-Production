@@ -11,6 +11,8 @@ public class Grabber : HexCellPlaceable
 	
 	public Instruction [] instructions = new Instruction [16];
 	
+	public int instructionCounter = -1;
+	
 	int instructionPointer = 0;
 	
 	[System.Serializable]

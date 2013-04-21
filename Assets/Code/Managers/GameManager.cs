@@ -23,8 +23,14 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	public bool guiEnabled { get; private set; }
 	
+	public enum State {Construction, Simulation, PausedSimulation};
+	
+	public State gameState;
+	
 	void Start()
 	{
+		
+		gameState = State.Construction;
 		cellMechanisms = new Dictionary<HexCellPlaceableType, HexCellPlaceable>();
 		
 		cellMechanisms.Add(HexCellPlaceableType.None, null);
@@ -47,8 +53,40 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 	}
 	
+	IEnumerator SimulationCoroutine()
+	{
+		int programCounter = -1;
+		List<HexCellPlaceable> mechanisms = new List<HexCellPlaceable>();
+		List<Grabber> grabbers = new List<Grabber>();
+		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
+		{
+			if (hexCell.placedMechanism != null)
+			{
+				mechanisms.Add(hexCell.placedMechanism);
+				if (hexCell.placedMechanism is Grabber)
+				{
+					grabbers.Add(hexCell.placedMechanism as Grabber);
+				}
+			}
+		}
+		foreach (Grabber grabber in grabbers)
+		{
+			grabber.instructionCounter = 0;
+		}
+		
+		// perform instruction
+		
+		// wait for sucess or failure
+		
+		// repeat
+		
+		yield break;
+	}
+	
 	public void PlaySimulation()
 	{
+		gameState = State.Simulation;
+		
 		Debug.Log ("PlaySimulation");
 		// Disable Input
 		foreach (GUIEnabler guiElement in _enableableGUIObjects)
@@ -62,18 +100,14 @@ public class GameManager : SingletonBehaviour<GameManager>
 		// change play to stop
 		// start simulation
 		
-		List<HexCellPlaceable> mechanisms = new List<HexCellPlaceable>();
-		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
-		{
-			if (hexCell.placedMechanism != null)
-			{
-				mechanisms.Add(hexCell.placedMechanism);
-			}
-		}
 		// MAKE THE THINGS DO THE THINGS!
+		
+		StartCoroutine(SimulationCoroutine());
 	}
 	public void StopSimulation()
 	{
+		gameState = State.Construction;
+		
 		Debug.Log ("StopSimulation");
 		// Reenable Input
 		
