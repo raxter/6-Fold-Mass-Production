@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
-public class HUDFunctions : MonoBehaviour 
+[RequireComponent(typeof(GUIEnabler))]
+public class HUDFunctions : MonoBehaviour
 {
+	bool _inputEnabled = true;
 	
 	[SerializeField]
 	UIButton grabberButton;
@@ -10,22 +12,21 @@ public class HUDFunctions : MonoBehaviour
 	
 	void Start()
 	{
+		GetComponent<GUIEnabler>().onEnableGUI = (enabled) => _inputEnabled = enabled;
+		
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
 	}
 	
-//	void CreateGrabber()
-//	{
-//		GameManager.instance.SetSelectedMechanistIcon(HexCellPlaceableType.Grabber);
-//
-//	}
 	
 	
 	public void GrabberInputDelegate(ref POINTER_INFO ptr)
 	{
+		if (!_inputEnabled) return;
+		
 		switch (ptr.evt)
 		{
 			case POINTER_INFO.INPUT_EVENT.PRESS:
-				GameManager.instance.SetSelectedMechanistIcon(HexCellPlaceableType.Grabber);
+				GameManager.instance.CreateMechanism(HexCellPlaceableType.Grabber);
 				break;
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:

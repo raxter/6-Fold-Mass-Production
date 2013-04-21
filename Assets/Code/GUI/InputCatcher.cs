@@ -30,10 +30,11 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 			pressState = InputManager.PressState.Up;
 		}
 		
-		if (pressState != InputManager.PressState.Up)
-		{
-			InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
-		}
+		InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
+//		if (pressState != InputManager.PressState.Released)
+//		{
+//			InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
+//		}
 			
 //#if UNITY_IPHONE || UNITY_ANDROID
 //#else

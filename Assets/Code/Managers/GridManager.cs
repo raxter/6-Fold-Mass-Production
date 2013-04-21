@@ -99,6 +99,20 @@ public class GridManager : SingletonBehaviour<GridManager>
 	    }	
 	};
 	
+	public IEnumerable<HexCell> GetAllCells()
+	{
+		if (_hexCellRows == null)
+			yield break;
+		
+		foreach (HexCellRow hexCellRow in _hexCellRows)
+		{
+			foreach(HexCell hexCell in hexCellRow.row)
+			{
+				yield return hexCell;
+			}
+		}
+	}
+	
 	public IEnumerable<HexCell> GetOutsideCells()
 	{
 		if (_hexCellRows == null)

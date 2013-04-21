@@ -17,7 +17,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	public bool OverCell { get; private set; }
 	
-	HashSet<HexCellPlaceable> selectedMechanisms = new HashSet<HexCellPlaceable>();
+	List<HexCellPlaceable> selectedMechanisms = new List<HexCellPlaceable>();
 	
 	void SelectUniqueMechanism(HexCellPlaceable mechanism)
 	{
@@ -35,6 +35,23 @@ public class InputManager : SingletonBehaviour<InputManager>
 	{
 		selectedMechanisms.Add(mechanism);
 		mechanism.selected = true;
+		
+		
+		if (selectedMechanisms.Count == 1)
+		{
+			if (selectedMechanisms[0] is Grabber)
+			{
+				GrabberProgramUI.instance.DisplayedGrabber = selectedMechanisms[0] as Grabber;
+			}
+			else
+			{
+				GrabberProgramUI.instance.DisplayedGrabber = null;
+			}
+		}
+		else
+		{
+			GrabberProgramUI.instance.DisplayedGrabber = null;
+		}
 	}
 	
 	void DeselectMechanism(HexCellPlaceable mechanism)
@@ -73,6 +90,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	{
 	}
 	
+	// Up and Down are for mouse released and pressed ( single frame), Released and Pressed are for constant states (multiple frames)
 	public enum PressState {Down, Up, Pressed, Released};
 	
 	public void HandleScreenPoint(Vector3 screenPos, PressState pressState)
@@ -84,6 +102,11 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	public void HandleRay(Ray inputRay, PressState pressState)
 	{
+		if (pressState != PressState.Released)
+		{
+			GrabberProgramUI.instance.CloseAllSlots();
+		}
+			
 		debugDrawColor = Input.GetMouseButton(0) ? Color.green : Color.red;
 		
 //		if (Input.GetMouseButtonDown(0))

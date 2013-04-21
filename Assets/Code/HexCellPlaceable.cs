@@ -40,6 +40,10 @@ public abstract class HexCellPlaceable : MonoBehaviour
 		
 	public void StartDrag()
 	{
+		if (!GameManager.instance.guiEnabled)
+		{
+			return;
+		}
 		Debug.Log ("StartDrag()" + (_hexCell!= null?""+_hexCell.location.x +":"+_hexCell.location.y:""));
 		if (_hexCell != null)
 		{
@@ -49,6 +53,10 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	}
 	public void StopDrag()
 	{	
+		if (!_dragging)
+		{
+			return;
+		}
 		Debug.Log ("StopDrag()" + (_hexCell!= null?""+_hexCell.location.x +":"+_hexCell.location.y:""));
 		
 		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedMechanism == null)

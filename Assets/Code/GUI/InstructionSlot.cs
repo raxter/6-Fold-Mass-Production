@@ -2,23 +2,31 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class InstructionSlot : MonoBehaviour 
+public class InstructionSlot : MonoBehaviour
 {
-	[SerializeField]
-	GrabberProgramUI _grabberProgramUI;
+	bool _inputEnabled = true;
+	public void EnableGUI (bool enabled)
+	{
+		_inputEnabled = enabled;
+	}
 	
 	[SerializeField]
-	UIButton _currentInstructionButton;
+	GrabberProgramUI _grabberProgramUI = null;
 	
 	[SerializeField]
-	UIPanel _otherInstructionsPanel;
+	UIButton _currentInstructionButton = null;
+	
+	[SerializeField]
+	UIPanel _otherInstructionsPanel = null;
 	
 	bool panelExpanded = false;
 	
 	Grabber.Instruction currentInstruction = Grabber.Instruction.None;
 	
 	[SerializeField]
-	InstructionOption [] instructionOptions;
+	InstructionOption [] instructionOptions = null;
+	
+	int _index = -1;
 	
 	Dictionary<Grabber.Instruction, SpriteBase> instructionIcons = new Dictionary<Grabber.Instruction, SpriteBase>();
 	
@@ -36,6 +44,12 @@ public class InstructionSlot : MonoBehaviour
 		RefreshInstuctionIcons();
 	}
 	
+	public void SetIndex(int i)
+	{
+		_index = i;
+		SetCurrentSelected ();
+	}
+	
 	public void CloseInstructionPanel()
 	{
 		UpdateInstructionsPanel(false);
@@ -49,6 +63,21 @@ public class InstructionSlot : MonoBehaviour
 	// Update is called once per frame
 	void UpdateInstructionsPanel (bool newExpanded) 
 	{
+		if (_inputEnabled == false)
+		{
+			if (!panelExpanded)
+			{
+				return;
+				// panel is closed, do nothing
+			}
+			else
+			{
+				// panel is open, make it closed
+				newExpanded = false;
+			}
+		}
+		
+		
 		if (newExpanded)
 		{
 			_grabberProgramUI.CloseAllSlots();
@@ -59,7 +88,6 @@ public class InstructionSlot : MonoBehaviour
 		}
 		else
 		{
-//			_otherInstructionsPanel.Dismiss();
 			if (newExpanded != panelExpanded)
 			{
 				_otherInstructionsPanel.Dismiss();
@@ -68,11 +96,24 @@ public class InstructionSlot : MonoBehaviour
 		panelExpanded = newExpanded;
 	}
 	
+	void SetCurrentSelected ()
+	{
+		if (_grabberProgramUI.DisplayedGrabber != null)
+		{
+			currentInstruction = _grabberProgramUI.DisplayedGrabber.instructions[_index];
+		}
+		
+		RefreshInstuctionIcons();
+	}
+	
 	public void SetSelected (Grabber.Instruction instruction)
 	{
 		currentInstruction = instruction;
 		
-		
+		if (_grabberProgramUI.DisplayedGrabber != null)
+		{
+			_grabberProgramUI.DisplayedGrabber.instructions[_index] = currentInstruction;
+		}
 		RefreshInstuctionIcons();
 	}
 	
