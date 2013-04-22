@@ -33,6 +33,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	void SelectMechanism(HexCellPlaceable mechanism)
 	{
+		Debug.Log ("Selecting "+mechanism);
 		selectedMechanisms.Add(mechanism);
 		mechanism.selected = true;
 		
@@ -84,6 +85,13 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	
 	HexCellPlaceable draggingObject = null;
+	
+	IEnumerator Start () 
+	{
+		yield return null;
+		GrabberProgramUI.instance.DisplayedGrabber = null;
+	}
+	
 	
 	// Update is called once per frame
 	void Update () 

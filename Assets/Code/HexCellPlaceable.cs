@@ -26,6 +26,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 		}
 		set
 		{
+			Debug.Log(gameObject+" selected = "+value);
 			_selectionItem.SetActiveRecursively(value);
 		}
 	}
@@ -113,12 +114,17 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	
 	void Start()
 	{
+		Debug.Log ("HexCellPlacable Start");
 		selected = false;
 		if (_placeAtStart)
 		{
 			PlaceAtLocation(debugLocation);
 		}
+		
+		PlaceableStart();
 	}
+	
+	protected abstract void PlaceableStart();
 	
 	void Update()
 	{

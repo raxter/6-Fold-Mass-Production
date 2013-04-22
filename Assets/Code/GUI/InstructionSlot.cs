@@ -42,6 +42,7 @@ public class InstructionSlot : MonoBehaviour
 			
 		}
 		RefreshInstuctionIcons();
+		
 	}
 	
 	public void SetIndex(int i)
@@ -100,7 +101,12 @@ public class InstructionSlot : MonoBehaviour
 	{
 		if (_grabberProgramUI.DisplayedGrabber != null)
 		{
+			gameObject.SetActiveRecursively(true);
 			currentInstruction = _grabberProgramUI.DisplayedGrabber.instructions[_index];
+		}
+		else
+		{
+			gameObject.SetActiveRecursively(false);
 		}
 		
 		RefreshInstuctionIcons();

@@ -23,7 +23,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	public bool guiEnabled { get; private set; }
 	
-	public enum State {Construction, Simulation, PausedSimulation};
+	public enum State {Construction, Simulation, SimulationFailed};
 	
 	public State gameState;
 	
@@ -71,12 +71,58 @@ public class GameManager : SingletonBehaviour<GameManager>
 		}
 		foreach (Grabber grabber in grabbers)
 		{
-			grabber.instructionCounter = 0;
+			grabber.StartSimulation(60);
 		}
 		
-		// perform instruction
+		while (true)
+		{
+			// perform instruction
+			foreach (Grabber grabber in grabbers)
+			{
+				grabber.PerformInstruction();
+				Debug.Log("PerformInstruction "+grabber._instructionCounter);
+			}
+			
+			// perform step
+			while (true)
+			{
+				foreach (Grabber grabber in grabbers)
+				{
+					grabber.PerformStep();
+//					Debug.Log("PerformStep "+grabber._stepCounter);
+				}
+				
+				bool allFinished = true;
+				
+				foreach (Grabber grabber in grabbers)
+				{
+					if (!grabber.StepFinished())
+					{
+						allFinished = false;
+					}
+				}
+				
+				
+				// check for collisions
+			
+				// if collision, pause and exit
+				
+				if (allFinished)
+				{
+					break;
+				}
+				
+				if (gameState == State.Construction)
+				{
+					yield break;
+				}
+				
+				yield return null;
+			}
+			
+		}
 		
-		// wait for sucess or failure
+		
 		
 		// repeat
 		

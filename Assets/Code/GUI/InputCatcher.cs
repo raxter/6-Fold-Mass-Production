@@ -10,9 +10,9 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 	
 	public void InputDelegate(ref POINTER_INFO ptr)
 	{
-		Debug.Log (ptr.devicePos);
+//		Debug.Log (ptr.devicePos);
 		
-		Debug.Log (ptr.evt);
+//		Debug.Log (ptr.evt);
 		
 		InputManager.PressState pressState = InputManager.PressState.Released;
 		
