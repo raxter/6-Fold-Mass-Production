@@ -17,6 +17,7 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 		InputManager.PressState pressState = InputManager.PressState.Released;
 		
 		
+		
 		if (ptr.evt == POINTER_INFO.INPUT_EVENT.PRESS)
 		{
 			pressState = InputManager.PressState.Down;

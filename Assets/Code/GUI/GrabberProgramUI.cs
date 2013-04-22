@@ -32,17 +32,37 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 		set
 		{
 			_displayedGrabber = value;
-			RefreshAllSlots();	
+			SetAllIndecies();	
 		}
 	}
 	
 	
-	void RefreshAllSlots()
+	void SetAllIndecies()
 	{
 		for (int i = 0 ; i < _instructionSlots.Length ; i++)
 		{
 			_instructionSlots[i].SetIndex(i);
 		}
+		RefreshDisplayedSlots();
+	}
+	
+	public void RefreshDisplayedSlots()
+	{
+		
+		// TODOOOOOO this should hide all instructions after a None operation (all slots other than last should not have the non operation as an option!)
+//		bool noneOpFound = false;
+//		for (int i = 0 ; i < _instructionSlots.Length ; i++)
+//		{
+//			if (noneOpFound)
+//			{
+//				_instructionSlots[i].EnableGUI(false);
+//			}
+//			
+//			if (_instructionSlots[i].currentInstruction == Grabber.Instruction.None)
+//			{
+//				noneOpFound = true;
+//			}
+//		}
 	}
 	
 	

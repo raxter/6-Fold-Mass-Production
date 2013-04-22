@@ -7,7 +7,7 @@ public class Grabber : HexCellPlaceable
 	
 	public override HexCellPlaceableType MechanismType { get { return HexCellPlaceableType.Grabber; } }
 	
-	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, Mark, GoToMark};
+	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, Mark, GoToMark, NoOp};
 	
 	public Instruction [] instructions = new Instruction [16];
 	
@@ -60,6 +60,7 @@ public class Grabber : HexCellPlaceable
 	
 	GrabberState _startStepState;
 	GrabberState _endStepState;
+	Instruction _currentInstruction = Instruction.None;
 	
 	protected override void PlaceableStart()
 	{
@@ -83,6 +84,9 @@ public class Grabber : HexCellPlaceable
 		
 //		Debug.Log ("instructionCounter "+_instructionCounter);
 //		Debug.Log ("instruction = "+instructions[_instructionCounter]);
+		
+		_currentInstruction = instructions[_instructionCounter];
+		
 		switch (instructions[_instructionCounter])
 		{
 			case Instruction.RotateClock:
@@ -155,7 +159,7 @@ public class Grabber : HexCellPlaceable
 		if (_stepCounter == _stepsPerInstruction/2)
 		{
 			Debug.Log(_stepCounter+" == "+_stepsPerInstruction/2+":"+instructions[_instructionCounter]);
-			switch (instructions[_instructionCounter])
+			switch (_currentInstruction)
 			{
 				case Instruction.Grab:
 				{

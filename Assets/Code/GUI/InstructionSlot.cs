@@ -21,7 +21,7 @@ public class InstructionSlot : MonoBehaviour
 	
 	bool panelExpanded = false;
 	
-	Grabber.Instruction currentInstruction = Grabber.Instruction.None;
+	public Grabber.Instruction currentInstruction = Grabber.Instruction.None;
 	
 	[SerializeField]
 	InstructionOption [] instructionOptions = null;
@@ -139,6 +139,8 @@ public class InstructionSlot : MonoBehaviour
 				instructionIcons[option.Instruction].transform.localScale = Vector3.zero;
 			}
 		}
+		
+		_grabberProgramUI.RefreshDisplayedSlots();
 	}
 }
 
