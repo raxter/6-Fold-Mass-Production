@@ -21,11 +21,16 @@ public class GameManager : SingletonBehaviour<GameManager>
 	[SerializeField]
 	UIButton _stopButton = null;
 	
+	
+	float _stepsPerSecond = 120f;
+	int _stepsPerInstruction = 60;
+	
 	public bool guiEnabled { get; private set; }
 	
 	public enum State {Construction, Simulation, SimulationFailed};
 	
 	public State gameState;
+	
 	
 	void Start()
 	{
@@ -69,9 +74,14 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 			}
 		}
+		
+		
+		int stepsToDoThisFrame = 0;
+		float spareTime = 0;
+		
 		foreach (Grabber grabber in grabbers)
 		{
-			grabber.StartSimulation(60);
+			grabber.StartSimulation(_stepsPerInstruction);
 		}
 		
 		while (true)
@@ -86,6 +96,20 @@ public class GameManager : SingletonBehaviour<GameManager>
 			// perform step
 			while (true)
 			{
+				
+				if (stepsToDoThisFrame == 0)
+				{
+					yield return null;
+					// in new frame!
+					float timeThisFrame = Time.deltaTime+spareTime;
+					float stepTime = 1f/_stepsPerSecond;
+					stepsToDoThisFrame = (int)(timeThisFrame/stepTime);
+					spareTime = timeThisFrame - stepsToDoThisFrame*stepTime;
+//					Debug.Log (timeThisFrame+"("+spareTime+")");
+				}
+				
+				stepsToDoThisFrame -= 1;
+					
 				foreach (Grabber grabber in grabbers)
 				{
 					grabber.PerformStep();
@@ -114,10 +138,21 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 				if (gameState == State.Construction)
 				{
+					foreach (Grabber grabber in grabbers)
+					{
+						grabber.EndSimulation();
+					}
 					yield break;
 				}
 				
-				yield return null;
+				
+				bool debugForceExit = false;
+				
+				if (debugForceExit) // make this true in debugger to get out of an infinite loop
+				{
+					yield break;
+				}
+				
 			}
 			
 		}
@@ -128,6 +163,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		yield break;
 	}
+	
+	
 	
 	public void PlaySimulation()
 	{
@@ -150,6 +187,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		StartCoroutine(SimulationCoroutine());
 	}
+	
+	
 	public void StopSimulation()
 	{
 		gameState = State.Construction;

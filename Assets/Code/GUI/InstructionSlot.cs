@@ -9,6 +9,21 @@ public class InstructionSlot : MonoBehaviour
 	{
 		_inputEnabled = enabled;
 	}
+
+	public void Display (bool show)
+	{
+		_currentInstructionButton.renderer.enabled = show;
+		_currentInstructionButton.enabled = show;
+		foreach (SpriteBase sprite in instructionIcons.Values)
+		{
+			sprite.renderer.enabled = show;
+		}
+	}
+
+	public void DisplayNoneOperation (bool show)
+	{
+		instructionOptions[instructionOptions.Length -1].Display(show);
+	}
 	
 	[SerializeField]
 	GrabberProgramUI _grabberProgramUI = null;

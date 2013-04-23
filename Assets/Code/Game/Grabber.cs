@@ -7,7 +7,7 @@ public class Grabber : HexCellPlaceable
 	
 	public override HexCellPlaceableType MechanismType { get { return HexCellPlaceableType.Grabber; } }
 	
-	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, Mark, GoToMark, NoOp};
+	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, RestartMark, NoOp};
 	
 	public Instruction [] instructions = new Instruction [16];
 	
@@ -17,13 +17,8 @@ public class Grabber : HexCellPlaceable
 	
 	public int _stepCounter = -1;
 	
-	int instructionPointer = 0;
-	
 	[SerializeField]
 	GameObject [] _arms;
-	
-	float targetRotation = 0;
-	float rotationTimeRemaining = 0;
 	
 	[SerializeField]
 	MeshRenderer _clampOpenRenderer;
@@ -67,6 +62,29 @@ public class Grabber : HexCellPlaceable
 		_startState = new GrabberState(HexMetrics.Direction.Up, 0, true);
 	}
 	
+	
+	public void ExtendStartState()
+	{
+		_startState.extention = Mathf.Clamp(_startState.extention + 1, 0, 2);
+		MoveToStartState();
+	}
+	public void RetractStartState()
+	{
+		_startState.extention = Mathf.Clamp(_startState.extention - 1, 0, 2);
+		MoveToStartState();
+	}
+	public void RotateClockStartState()
+	{
+		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 5) % 6);
+		MoveToStartState();
+	}
+	public void RotateAntiStartState()
+	{
+		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 1) % 6);
+		MoveToStartState();
+	}
+	
+	
 	public void StartSimulation(int stepsPerInstruction)
 	{
 		_stepsPerInstruction = stepsPerInstruction;
@@ -75,8 +93,45 @@ public class Grabber : HexCellPlaceable
 		ClampOpen = _startState.clampOpen;
 	}
 	
+	
+	public void EndSimulation()
+	{
+		MoveToStartState();
+	}
+	
+	void MoveToStartState()
+	{
+		MoveToState(_startState);
+	}
+	
+	void MoveToState(GrabberState grabberState)
+	{
+		MoveToState(grabberState.extention, ((int)grabberState.direction)*60f);
+	}
+	
+	void MoveToState(float extentionValue, float directionValue)
+	{
+		
+		transform.localRotation = Quaternion.Euler(0, 0, directionValue);
+		for (int i = 0 ; i < _arms.Length ; i++)
+		{
+			_arms[i].transform.localPosition = new Vector3(0, extentionValue*_hexCell.Height/(_arms.Length), 1);
+		}
+		
+	}
+	
 	public void PerformInstruction ()
 	{
+		if (instructions[_instructionCounter] == Instruction.None)
+		{
+			// goto mark if there is a mark
+			// TODO
+			// otherwise go to start
+			_instructionCounter = 0;
+		}
+		
+		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
+		
 		_startStepState = _endStepState;
 	
 //		Debug.Break ();
@@ -141,19 +196,14 @@ public class Grabber : HexCellPlaceable
 		if (endAngle - startAngle < -180)
 			endAngle += 360;
 		
-//		Debug.Log (startAngle+":"+endAngle);
-//		Debug.Log (percStep+" : "+((startAngle*(1f-percStep)) + (endAngle*percStep)));
-		transform.localRotation = Quaternion.Euler(0, 0, (startAngle*(1f-percStep)) + (endAngle*percStep));
+		float angleValue = (startAngle*(1f-percStep)) + (endAngle*percStep);
 		
 		float startExtention = _startStepState.extention;
 		float endExtention = _endStepState.extention;
 		
 		float extentionValue = (startExtention*(1f-percStep)) + (endExtention*percStep);
 		
-		for (int i = 0 ; i < _arms.Length ; i++)
-		{
-			_arms[i].transform.localPosition = new Vector3(0, extentionValue*_hexCell.Height/(_arms.Length), 1);
-		}
+		MoveToState(extentionValue, angleValue);
 		
 		
 		if (_stepCounter == _stepsPerInstruction/2)

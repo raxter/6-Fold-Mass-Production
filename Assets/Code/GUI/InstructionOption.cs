@@ -35,6 +35,14 @@ public class InstructionOption : MonoBehaviour
 	}
 	
 	#endregion EZGUI
+
+	public void Display (bool show)
+	{
+		_instructionIcon.renderer.enabled = show;
+		_instructionButton.renderer.enabled = show;
+		_instructionButton.controlIsEnabled = show;
+		_instructionButton.enabled = show;
+	}
 	
 	
 	#region selection stuff

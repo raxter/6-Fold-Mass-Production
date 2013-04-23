@@ -7,12 +7,16 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	[SerializeField]
 	InstructionSlot [] _instructionSlots = null;
 	
+	[SerializeField]
+	GameObject [] _grabberUIObjects = null;
+	
 	void EnableGUI (bool enabled)
 	{
 		foreach (InstructionSlot instructionSlot in _instructionSlots)
 		{
 			instructionSlot.EnableGUI(enabled);
 		}
+		
 	}
 	
 	Grabber _displayedGrabber = null;
@@ -32,10 +36,49 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 		set
 		{
 			_displayedGrabber = value;
+			
 			SetAllIndecies();	
+			
+			
+			foreach (GameObject uiObject in _grabberUIObjects)
+			{
+				uiObject.transform.localScale = Vector3.one * (value != null ? 1f : 0f);
+			}
 		}
 	}
 	
+	#region EZGUI
+	
+	void ExtendGrabber()
+	{
+		if (DisplayedGrabber != null)
+		{
+			DisplayedGrabber.ExtendStartState();
+		}
+	}
+	void RetractGrabber()
+	{
+		if (DisplayedGrabber != null)
+		{
+			DisplayedGrabber.RetractStartState();
+		}
+	}
+	void RotateAntiGrabber()
+	{
+		if (DisplayedGrabber != null)
+		{
+			DisplayedGrabber.RotateAntiStartState();
+		}
+	}
+	void RotateClockGrabber()
+	{
+		if (DisplayedGrabber != null)
+		{
+			DisplayedGrabber.RotateClockStartState();
+		}
+	}
+	
+	#endregion
 	
 	void SetAllIndecies()
 	{
@@ -48,21 +91,39 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	public void RefreshDisplayedSlots()
 	{
-		
-		// TODOOOOOO this should hide all instructions after a None operation (all slots other than last should not have the non operation as an option!)
-//		bool noneOpFound = false;
-//		for (int i = 0 ; i < _instructionSlots.Length ; i++)
-//		{
-//			if (noneOpFound)
-//			{
-//				_instructionSlots[i].EnableGUI(false);
-//			}
-//			
-//			if (_instructionSlots[i].currentInstruction == Grabber.Instruction.None)
-//			{
-//				noneOpFound = true;
-//			}
-//		}
+		bool noneOpFound = false;
+		for (int i = 0 ; i < _instructionSlots.Length ; i++)
+		{
+			
+			if (noneOpFound)
+			{
+				_instructionSlots[i].Display(false);
+				_instructionSlots[i].EnableGUI(false);
+			}
+			else
+			{
+				_instructionSlots[i].Display(true);
+				_instructionSlots[i].EnableGUI(true);
+				
+			}
+			
+			_instructionSlots[i].DisplayNoneOperation(false);
+			
+			
+			if (_instructionSlots[i].currentInstruction == Grabber.Instruction.None)
+			{
+				noneOpFound = true;
+				
+				if (i == 0)
+				{
+					_instructionSlots[i].DisplayNoneOperation(true);
+				}
+				else
+				{
+					_instructionSlots[i-1].DisplayNoneOperation(true);
+				}
+			}
+		}
 	}
 	
 	
