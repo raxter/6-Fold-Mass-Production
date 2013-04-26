@@ -1,18 +1,12 @@
 using UnityEngine;
 using System.Collections;
 
-public enum HexCellPlaceableType {None, Grabber};
 
 public abstract class HexCellPlaceable : MonoBehaviour
 {
 	public IntVector2 Location
 	{
 		get; set;
-	}
-	
-	public abstract HexCellPlaceableType MechanismType
-	{
-		get;
 	}
 	
 	[SerializeField]
@@ -32,91 +26,59 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	}
 	
 	[SerializeField]
-	bool _placeAtStart = false;
+	bool _debug_placeAtStart = false;
 	
 	[SerializeField]
 	IntVector2 debugLocation;
 	
-	bool _dragging = false;
-		
-	public void StartDrag()
-	{
-		if (!GameManager.instance.guiEnabled)
-		{
-			return;
-		}
-		Debug.Log ("StartDrag()" + (_hexCell!= null?""+_hexCell.location.x +":"+_hexCell.location.y:""));
-		if (_hexCell != null)
-		{
-			_hexCell.placedMechanism = null;
-		}
-		_dragging = true;
-	}
-	public void StopDrag()
-	{	
-		if (!_dragging)
-		{
-			return;
-		}
-		Debug.Log ("StopDrag()" + (_hexCell!= null?""+_hexCell.location.x +":"+_hexCell.location.y:""));
-		
-		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedMechanism == null)
-		{
-			PlaceAtLocation(InputManager.instance.OverHexCell.location);
-		}
-		else
-		{
-			PlaceAtLocation(null);
-			GameObject.Destroy(gameObject);
-		}
-		
-		_dragging = false;
-	}
 	
-	void PlaceAtLocation(IntVector2 location)
+	
+	protected HexCell hexCell;
+	
+	
+	
+	public virtual void PlaceAtLocation(IntVector2 location)
 	{
 		Location = location;
 		if (location != null)
 		{
-			_hexCell = GridManager.instance.GetHexCell(location);
-			if (_hexCell != null)
+			hexCell = GridManager.instance.GetHexCell(location);
+			if (hexCell != null)
 			{
-				transform.position = _hexCell.transform.position;
-				_hexCell.placedMechanism = this;
+				transform.position = hexCell.transform.position;
+				hexCell.placedPlaceable = this;
 			}
 		}
 		else
 		{
-			if (_hexCell != null)
+			if (hexCell != null)
 			{
-				if (_hexCell.placedMechanism == this)
+				if (hexCell.placedPlaceable == this)
 				{
-					_hexCell.placedMechanism = null;
+					hexCell.placedPlaceable = null;
 				}
-				_hexCell = null;
+				hexCell = null;
 			}
 		}
 	}
 	
-	void PlaceOverLocation(IntVector2 location)
+	protected void PlaceOverLocation(IntVector2 location)
 	{
 		if (location != null)
 		{
-			_hexCell = GridManager.instance.GetHexCell(location);
-			if (_hexCell)
+			hexCell = GridManager.instance.GetHexCell(location);
+			if (hexCell)
 			{
-				transform.position = _hexCell.transform.position;
+				transform.position = hexCell.transform.position;
 			}
 		}
 	}
-	
-	protected HexCell _hexCell;
 	
 	void Start()
 	{
 		Debug.Log ("HexCellPlacable Start");
 		selected = false;
-		if (_placeAtStart)
+		if (_debug_placeAtStart)
 		{
 			PlaceAtLocation(debugLocation);
 		}
@@ -128,11 +90,6 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	
 	void Update()
 	{
-		if (_dragging)
-		{
-			PlaceOverLocation(InputManager.instance.ClosestHexCell.location);
-		}
-		
 		PlaceableUpdate();
 	}
 	

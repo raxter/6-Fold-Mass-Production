@@ -26,7 +26,7 @@ public class HUDFunctions : MonoBehaviour
 		switch (ptr.evt)
 		{
 			case POINTER_INFO.INPUT_EVENT.PRESS:
-				GameManager.instance.CreateMechanism(HexCellPlaceableType.Grabber);
+				GameManager.instance.CreateMechanism(MechanismType.Grabber);
 				break;
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:

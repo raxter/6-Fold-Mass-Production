@@ -58,6 +58,21 @@ public class GridManager : SingletonBehaviour<GridManager>
 		return null;
 	}
 	
+	
+	public static IntVector2 GetRelativeLocation (HexMetrics.Direction direction)
+	{
+		return new Dictionary<HexMetrics.Direction, System.Func<IntVector2>>()
+		{
+			{HexMetrics.Direction.Up, 		() => new IntVector2( 0, 1)},
+			{HexMetrics.Direction.RightUp, 	() => new IntVector2( 1, 0)},
+			{HexMetrics.Direction.RightDown,() => new IntVector2( 1,-1)},
+			{HexMetrics.Direction.Down, 	() => new IntVector2( 0,-1)},
+			{HexMetrics.Direction.LeftDown,	() => new IntVector2(-1, 0)},
+			{HexMetrics.Direction.LeftUp,	() => new IntVector2(-1, 1)}
+			
+		}[direction]();
+	}
+	
 	public void DestroyHexCellMap()
 	{
 		if (_hexCellRows == null)

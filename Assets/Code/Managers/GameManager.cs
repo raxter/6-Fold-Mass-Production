@@ -7,11 +7,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 {
 	
 	[SerializeField]
-	List<HexCellPlaceable> placeablePrefabs = null;
+	List<Mechanism> mechanismPrefabs = null;
 	
-	Dictionary<HexCellPlaceableType, HexCellPlaceable> cellMechanisms;
 	
-	HexCellPlaceable unplacedMechanism = null;
+	[SerializeField]
+	PartGenerator generatorPrefab = null;
+	
+	Dictionary<MechanismType, Mechanism> cellMechanisms;
+	
+	Mechanism unplacedMechanism = null;
 	
 	[SerializeField]
 	GUIEnabler [] _enableableGUIObjects = null;
@@ -31,28 +35,45 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	public State gameState;
 	
+	public string loadLevelOnStart = "";
 	
 	void Start()
 	{
+		LoadLevel(loadLevelOnStart);
 		
 		gameState = State.Construction;
-		cellMechanisms = new Dictionary<HexCellPlaceableType, HexCellPlaceable>();
+		cellMechanisms = new Dictionary<MechanismType, Mechanism>();
 		
-		cellMechanisms.Add(HexCellPlaceableType.None, null);
+		cellMechanisms.Add(MechanismType.None, null);
 		
-		foreach (HexCellPlaceable placeable in placeablePrefabs)
+		foreach (Mechanism mechanism in mechanismPrefabs)
 		{
-			cellMechanisms.Add(placeable.MechanismType, placeable);
+			cellMechanisms.Add(mechanism.MechanismType, mechanism);
 		}
 		StopSimulation();
 	}
-	
-	public void CreateMechanism(HexCellPlaceableType cellMechanismType)
+
+	void LoadLevel (string leveName)
 	{
-		if (cellMechanismType == HexCellPlaceableType.None)
+		// clear all parts first when reloading! TODO
+		
+		LevelSettings.Level lvl = LevelSettings.instance.GetLevel(leveName);
+		
+		foreach (LevelSettings.GeneratorDetails generatorDetails in lvl.generators)
+		{
+			PartGenerator generator = (GameObject.Instantiate(generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
+			generator.toGeneratePrefab = generatorDetails.toGeneratePrefab;
+			generator.PlaceAtLocation(generatorDetails.location);
+		}
+		
+	}
+	
+	public void CreateMechanism(MechanismType cellMechanismType)
+	{
+		if (cellMechanismType == MechanismType.None)
 			return;
 		
-		unplacedMechanism = (GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<HexCellPlaceable>();
+		unplacedMechanism = (GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<Mechanism>();
 		
 		InputManager.instance.StartDraggingUnplaced(unplacedMechanism);
 		
@@ -61,16 +82,21 @@ public class GameManager : SingletonBehaviour<GameManager>
 	IEnumerator SimulationCoroutine()
 	{
 		int programCounter = -1;
-		List<HexCellPlaceable> mechanisms = new List<HexCellPlaceable>();
+		List<HexCellPlaceable> placeables = new List<HexCellPlaceable>();
 		List<Grabber> grabbers = new List<Grabber>();
+		List<PartGenerator> generators = new List<PartGenerator>();
 		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
 		{
-			if (hexCell.placedMechanism != null)
+			if (hexCell.placedPlaceable != null)
 			{
-				mechanisms.Add(hexCell.placedMechanism);
-				if (hexCell.placedMechanism is Grabber)
+				placeables.Add(hexCell.placedPlaceable);
+				if (hexCell.placedPlaceable is Grabber)
 				{
-					grabbers.Add(hexCell.placedMechanism as Grabber);
+					grabbers.Add(hexCell.placedPlaceable as Grabber);
+				}
+				if (hexCell.placedPlaceable is PartGenerator)
+				{
+					generators.Add(hexCell.placedPlaceable as PartGenerator);
 				}
 			}
 		}
@@ -86,6 +112,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		while (true)
 		{
+			
+			foreach (PartGenerator generator in generators)
+			{
+				generator.StepPreStart();
+			}
 			// perform instruction
 			foreach (Grabber grabber in grabbers)
 			{
@@ -96,6 +127,16 @@ public class GameManager : SingletonBehaviour<GameManager>
 			// perform step
 			while (true)
 			{
+				if (gameState == State.Construction)
+				{
+					Debug.Log ("Simulation ending");
+					foreach (Grabber grabber in grabbers)
+					{
+						grabber.EndSimulation();
+					}
+					yield break;
+				}
+				
 				
 				if (stepsToDoThisFrame == 0)
 				{
@@ -125,25 +166,17 @@ public class GameManager : SingletonBehaviour<GameManager>
 						allFinished = false;
 					}
 				}
-				
-				
 				// check for collisions
 			
 				// if collision, pause and exit
 				
 				if (allFinished)
 				{
+				
 					break;
 				}
 				
-				if (gameState == State.Construction)
-				{
-					foreach (Grabber grabber in grabbers)
-					{
-						grabber.EndSimulation();
-					}
-					yield break;
-				}
+				
 				
 				
 				bool debugForceExit = false;
@@ -188,6 +221,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 		StartCoroutine(SimulationCoroutine());
 	}
 	
+//	IEnumerator SimulationStopCoroutine()
+//	{
+//		yield return null;
+//	}
 	
 	public void StopSimulation()
 	{
@@ -195,6 +232,24 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		Debug.Log ("StopSimulation");
 		// Reenable Input
+		
+//		StartCoroutine(SimulationStopCoroutine());
+		
+		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
+		{
+			GrabbablePart part = hexCell.part;
+			if (part != null)
+			{
+				part.PlaceAtLocation(null);
+				GameObject.Destroy(part.gameObject);
+			}
+			
+			Grabber grabber = hexCell.placedMechanism as Grabber;
+			if (grabber != null)
+			{
+				grabber.ClearClamp();
+			}
+		}
 		
 		foreach (GUIEnabler guiElement in _enableableGUIObjects)
 		{

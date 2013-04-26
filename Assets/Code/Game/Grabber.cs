@@ -2,10 +2,10 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Grabber : HexCellPlaceable
+public class Grabber : Mechanism
 {
 	
-	public override HexCellPlaceableType MechanismType { get { return HexCellPlaceableType.Grabber; } }
+	public override MechanismType MechanismType { get { return MechanismType.Grabber; } }
 	
 	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, RestartMark, NoOp};
 	
@@ -19,6 +19,9 @@ public class Grabber : HexCellPlaceable
 	
 	[SerializeField]
 	GameObject [] _arms;
+	
+	[SerializeField]
+	GameObject clamp;
 	
 	[SerializeField]
 	MeshRenderer _clampOpenRenderer;
@@ -51,11 +54,22 @@ public class Grabber : HexCellPlaceable
 		public bool clampOpen;
 	}
 	
+	GrabbablePart heldPart;
+	
 	GrabberState _startState;
 	
 	GrabberState _startStepState;
 	GrabberState _endStepState;
 	Instruction _currentInstruction = Instruction.None;
+
+	public void ClearClamp ()
+	{
+		if (heldPart != null)
+		{
+			GameObject.Destroy(heldPart.gameObject);
+			heldPart = null;
+		}
+	}
 	
 	protected override void PlaceableStart()
 	{
@@ -75,12 +89,12 @@ public class Grabber : HexCellPlaceable
 	}
 	public void RotateClockStartState()
 	{
-		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 5) % 6);
+		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 1) % 6);
 		MoveToStartState();
 	}
 	public void RotateAntiStartState()
 	{
-		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 1) % 6);
+		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 5) % 6);
 		MoveToStartState();
 	}
 	
@@ -106,7 +120,7 @@ public class Grabber : HexCellPlaceable
 	
 	void MoveToState(GrabberState grabberState)
 	{
-		MoveToState(grabberState.extention, ((int)grabberState.direction)*60f);
+		MoveToState(grabberState.extention, ((int)grabberState.direction)*-60f);
 	}
 	
 	void MoveToState(float extentionValue, float directionValue)
@@ -115,7 +129,7 @@ public class Grabber : HexCellPlaceable
 		transform.localRotation = Quaternion.Euler(0, 0, directionValue);
 		for (int i = 0 ; i < _arms.Length ; i++)
 		{
-			_arms[i].transform.localPosition = new Vector3(0, extentionValue*_hexCell.Height/(_arms.Length), 1);
+			_arms[i].transform.localPosition = new Vector3(0, extentionValue*hexCell.Height/(_arms.Length), 1);
 		}
 		
 	}
@@ -146,12 +160,12 @@ public class Grabber : HexCellPlaceable
 		{
 			case Instruction.RotateClock:
 			{
-				_endStepState.direction += 1;
+				_endStepState.direction += 5;
 			}
 			break;
 			case Instruction.RotateAnti:
 			{
-				_endStepState.direction += 5;
+				_endStepState.direction += 1;
 			}
 			break;
 			case Instruction.Extend:
@@ -162,6 +176,32 @@ public class Grabber : HexCellPlaceable
 			case Instruction.Retract:
 			{
 				_endStepState.extention -= 1;
+			}
+			break;
+			case Instruction.Grab:
+			{
+				if (heldPart == null)
+				{
+					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
+					GrabbablePart part = underClamp.part;
+					if (part != null)
+					{
+						part.PlaceAtLocation(null);
+						part.gameObject.transform.parent = clamp.transform;
+						heldPart = part;
+					}
+				}
+			}
+			break;
+			case Instruction.Drop:
+			{
+				if (heldPart != null)
+				{
+//					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
+					heldPart.gameObject.transform.parent = null;
+					heldPart.PlaceAtLocation(LocationAtClamp());
+					heldPart = null;
+				}
 			}
 			break;
 		}
@@ -179,6 +219,11 @@ public class Grabber : HexCellPlaceable
 		}
 	}
 	
+	IntVector2 LocationAtClamp()
+	{
+		return Location+GridManager.GetRelativeLocation(_startStepState.direction)*(_startStepState.extention+1);
+	}
+	
 	public void PerformStep ()
 	{
 		if (StepFinished())
@@ -188,8 +233,8 @@ public class Grabber : HexCellPlaceable
 		
 		float percStep = (float)_stepCounter/(float)_stepsPerInstruction;
 		
-		float startAngle = (int)_startStepState.direction*60f;
-		float endAngle = (int)_endStepState.direction*60f;
+		float startAngle = (int)_startStepState.direction*-60f;
+		float endAngle = (int)_endStepState.direction*-60f;
 		
 		if (endAngle - startAngle > 180)
 			endAngle -= 360;
@@ -240,7 +285,7 @@ public class Grabber : HexCellPlaceable
 		return _stepCounter >= _stepsPerInstruction;
 	}
 	
-	protected override void PlaceableUpdate()
+	protected override void MechanismUpdate()
 	{
 //		if (Input.GetKeyDown(KeyCode.Alpha1))
 //		{

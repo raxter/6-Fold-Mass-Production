@@ -8,7 +8,10 @@ public class HexCell : MonoBehaviour
 	public UIButton button;
 	
 //	[System.NonSerialized]
-	public HexCellPlaceable placedMechanism = null;
+	public HexCellPlaceable placedPlaceable = null;
+	public GrabbablePart part = null;
+	
+	public Mechanism placedMechanism { get { return placedPlaceable as Mechanism; } }
 	
 	public IntVector2 location;
 	
@@ -48,7 +51,7 @@ public class HexCell : MonoBehaviour
 		{
 			case POINTER_INFO.INPUT_EVENT.PRESS:
 			{
-				if (placedMechanism != null)
+				if (placedPlaceable is Mechanism)
 				{
 //					Debug.Log("StartDrag()");
 					placedMechanism.StartDrag();
@@ -58,7 +61,7 @@ public class HexCell : MonoBehaviour
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:
 			case POINTER_INFO.INPUT_EVENT.RELEASE_OFF:
-				if (placedMechanism != null)
+				if (placedPlaceable is Mechanism)
 				{
 //					Debug.Log("StopDrag()");
 					placedMechanism.StopDrag();
@@ -67,7 +70,7 @@ public class HexCell : MonoBehaviour
 			
 		}
 	}
-			
+	
 	public Vector2 GetDirection (HexMetrics.Direction direction)
 	{
 		return new Dictionary<HexMetrics.Direction, System.Func<Vector2>>()

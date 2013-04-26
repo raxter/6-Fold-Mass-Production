@@ -48,6 +48,7 @@ public class InstructionSlot : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
+		
 		foreach (InstructionOption option in instructionOptions)
 		{
 			GameObject iconGameObjectClone = GameObject.Instantiate(option.InstructionIcon.gameObject) as GameObject;

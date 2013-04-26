@@ -17,32 +17,32 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	public bool OverCell { get; private set; }
 	
-	List<HexCellPlaceable> selectedMechanisms = new List<HexCellPlaceable>();
+	List<HexCellPlaceable> selectedPlacables = new List<HexCellPlaceable>();
 	
 	void SelectUniqueMechanism(HexCellPlaceable mechanism)
 	{
-		foreach (HexCellPlaceable selectedMechanism in selectedMechanisms)
+		foreach (HexCellPlaceable selectedMechanism in selectedPlacables)
 		{
 			selectedMechanism.selected = false;
 		}
-		selectedMechanisms.Clear();
+		selectedPlacables.Clear();
 		
 		
-		SelectMechanism(mechanism);
+		SelectPlacable(mechanism);
 	}
 	
-	void SelectMechanism(HexCellPlaceable mechanism)
+	void SelectPlacable(HexCellPlaceable mechanism)
 	{
 		Debug.Log ("Selecting "+mechanism);
-		selectedMechanisms.Add(mechanism);
+		selectedPlacables.Add(mechanism);
 		mechanism.selected = true;
 		
 		
-		if (selectedMechanisms.Count == 1)
+		if (selectedPlacables.Count == 1)
 		{
-			if (selectedMechanisms[0] is Grabber)
+			if (selectedPlacables[0] is Grabber)
 			{
-				GrabberProgramUI.instance.DisplayedGrabber = selectedMechanisms[0] as Grabber;
+				GrabberProgramUI.instance.DisplayedGrabber = selectedPlacables[0] as Grabber;
 			}
 			else
 			{
@@ -57,19 +57,19 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	void DeselectMechanism(HexCellPlaceable mechanism)
 	{
-		selectedMechanisms.Remove(mechanism);
+		selectedPlacables.Remove(mechanism);
 		mechanism.selected = false;
 	}
 	
 	void ToggleSelectMechanism(HexCellPlaceable mechanism)
 	{
-		if (selectedMechanisms.Contains(mechanism))
+		if (selectedPlacables.Contains(mechanism))
 		{
 			DeselectMechanism(mechanism);
 		}
 		else
 		{
-			SelectMechanism(mechanism);
+			SelectPlacable(mechanism);
 		}
 	}
 	
@@ -84,7 +84,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	public const float tapThreshold = 20f;
 	
 	
-	HexCellPlaceable draggingObject = null;
+	Mechanism draggingMechanism = null;
 	
 	IEnumerator Start () 
 	{
@@ -146,14 +146,14 @@ public class InputManager : SingletonBehaviour<InputManager>
 		}
 		_debug_ClosestHexCell = ClosestHexCell;
 		_debug_OverHexCell = OverHexCell;
-		_debug_OverHexCellMechanism = OverHexCell == null?null:OverHexCell.placedMechanism;
+		_debug_OverHexCellMechanism = OverHexCell == null?null:OverHexCell.placedPlaceable;
 		
 		
 		if (Input.GetMouseButtonDown(0))
 		{
-			if (OverHexCell != null && OverHexCell.placedMechanism != null)
+			if (OverHexCell != null && OverHexCell.placedPlaceable != null)
 			{
-				SelectUniqueMechanism(OverHexCell.placedMechanism);
+				SelectUniqueMechanism(OverHexCell.placedPlaceable);
 				
 			}
 			StartDragging();
@@ -179,12 +179,12 @@ public class InputManager : SingletonBehaviour<InputManager>
 	}
 	
 	
-	public void StartDraggingUnplaced(HexCellPlaceable hexCellPlacable)
+	public void StartDraggingUnplaced(Mechanism mechanism)
 	{
-		draggingObject = hexCellPlacable;
-		if (draggingObject != null)
+		draggingMechanism = mechanism;
+		if (draggingMechanism != null)
 		{
-			draggingObject.StartDrag();
+			draggingMechanism.StartDrag();
 		}
 	}
 	
@@ -192,10 +192,10 @@ public class InputManager : SingletonBehaviour<InputManager>
 	{
 		if (OverCell)
 		{
-			draggingObject = OverHexCell == null ? null : OverHexCell.placedMechanism;
-			if (draggingObject != null)
+			draggingMechanism = OverHexCell == null ? null : OverHexCell.placedMechanism;
+			if (draggingMechanism != null)
 			{
-				draggingObject.StartDrag();
+				draggingMechanism.StartDrag();
 			}
 		}
 	}
@@ -203,10 +203,10 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	void StopDragging()
 	{
-		if (draggingObject != null)
+		if (draggingMechanism != null)
 		{
-			draggingObject.StopDrag();
-			draggingObject = null;
+			draggingMechanism.StopDrag();
+			draggingMechanism = null;
 		}
 	}
 	
