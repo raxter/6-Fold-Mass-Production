@@ -6,6 +6,8 @@ public class PartGenerator : HexCellPlaceable
 	
 	public GrabbablePart toGeneratePrefab;
 	
+	bool placeOnNextTurn = false;
+	
 	#region implemented abstract members of HexCellPlaceable
 	protected override void PlaceableStart ()
 	{
@@ -15,19 +17,31 @@ public class PartGenerator : HexCellPlaceable
 	{
 	}
 	#endregion
-
-	public void StepPreStart ()
+	
+	public void StartSimulation()
 	{
-		Debug.Log ("StepFinished");
+		placeOnNextTurn = true;
+	}
+
+	public GrabbablePart StepPreStart ()
+	{
+//		Debug.Log ("StepPreStart");
 		if (hexCell != null)
 		{
 			GrabbablePart part = hexCell.part;
 			
-			if (part == null)
+			if (placeOnNextTurn)
 			{
 				part = (GameObject.Instantiate(toGeneratePrefab.gameObject) as GameObject).GetComponent<GrabbablePart>();
 				part.PlaceAtLocation(Location);
+				placeOnNextTurn = false;
+				return part;
+			}
+			else if (hexCell.part == null)
+			{ 
+				placeOnNextTurn = true;
 			}
 		}
+		return null;
 	}
 }

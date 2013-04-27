@@ -26,7 +26,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 	UIButton _stopButton = null;
 	
 	
-	float _stepsPerSecond = 120f;
+	float _stepsPerSecond = 80f;
 	int _stepsPerInstruction = 60;
 	
 	public bool guiEnabled { get; private set; }
@@ -85,6 +85,9 @@ public class GameManager : SingletonBehaviour<GameManager>
 		List<HexCellPlaceable> placeables = new List<HexCellPlaceable>();
 		List<Grabber> grabbers = new List<Grabber>();
 		List<PartGenerator> generators = new List<PartGenerator>();
+		
+		HashSet<GrabbablePart> parts = new HashSet<GrabbablePart>();
+		
 		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
 		{
 			if (hexCell.placedPlaceable != null)
@@ -96,7 +99,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 				if (hexCell.placedPlaceable is PartGenerator)
 				{
-					generators.Add(hexCell.placedPlaceable as PartGenerator);
+				generators.Add(hexCell.placedPlaceable as PartGenerator);
 				}
 			}
 		}
@@ -105,6 +108,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 		int stepsToDoThisFrame = 0;
 		float spareTime = 0;
 		
+		foreach (PartGenerator generator in generators)
+		{
+			generator.StartSimulation();
+		}
 		foreach (Grabber grabber in grabbers)
 		{
 			grabber.StartSimulation(_stepsPerInstruction);
@@ -115,21 +122,45 @@ public class GameManager : SingletonBehaviour<GameManager>
 			
 			foreach (PartGenerator generator in generators)
 			{
-				generator.StepPreStart();
+				GrabbablePart newPart = generator.StepPreStart();
+				if (newPart)
+				{
+					parts.Add(newPart);
+				}
 			}
 			// perform instruction
 			foreach (Grabber grabber in grabbers)
 			{
 				grabber.PerformInstruction();
-				Debug.Log("PerformInstruction "+grabber._instructionCounter);
+//				Debug.Log("PerformInstruction "+grabber._instructionCounter);
+			}
+			foreach (Grabber grabber in grabbers)
+			{
+				grabber.PerformPostInstruction();
+//				Debug.Log("PerformPostInstruction "+grabber._instructionCounter);
 			}
 			
 			// perform step
 			while (true)
 			{
+				
+				bool debugForceExit = false;
+				
+				if (debugForceExit) // make this true in debugger to get out of an infinite loop
+				{
+					yield break;
+				}
+				
+				if (gameState == State.SimulationFailed)
+				{
+					yield return null;
+					continue;
+				}
+				
 				if (gameState == State.Construction)
 				{
 					Debug.Log ("Simulation ending");
+					
 					foreach (Grabber grabber in grabbers)
 					{
 						grabber.EndSimulation();
@@ -169,6 +200,17 @@ public class GameManager : SingletonBehaviour<GameManager>
 				// check for collisions
 			
 				// if collision, pause and exit
+				foreach (GrabbablePart part in parts)
+				{
+					GrabbablePart other = part.CheckForCollisions();
+					if (other != null)
+					{
+						part.selected = true;
+						other.selected = true;
+						gameState = State.SimulationFailed;
+						continue;
+					}
+				}
 				
 				if (allFinished)
 				{
@@ -179,12 +221,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 				
 				
-				bool debugForceExit = false;
-				
-				if (debugForceExit) // make this true in debugger to get out of an infinite loop
-				{
-					yield break;
-				}
 				
 			}
 			
@@ -219,6 +255,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		// MAKE THE THINGS DO THE THINGS!
 		
 		StartCoroutine(SimulationCoroutine());
+		
+		
 	}
 	
 //	IEnumerator SimulationStopCoroutine()
@@ -273,6 +311,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 //		}
 //	}
 	
+	public void PartCollisionOccured (GrabbablePart part, GrabbablePart otherPart)
+	{
+		Debug.Log ("SimulationFailed");
+//		gameState = State.SimulationFailed;
+	}
 }
 
 

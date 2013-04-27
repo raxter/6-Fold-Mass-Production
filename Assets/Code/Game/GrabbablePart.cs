@@ -1,11 +1,15 @@
 using UnityEngine;
 using System.Collections;
 
-public class GrabbablePart : HexCellPlaceable 
+
+public class GrabbablePart : HexCellPlaceable
 {
+	SphereCollider _sphereCollider;
+	
 	#region implemented abstract members of HexCellPlaceable
 	protected override void PlaceableStart ()
 	{
+		_sphereCollider = gameObject.GetComponentsInChildren<Collider>()[0] as SphereCollider;
 	}
 
 	protected override void PlaceableUpdate ()
@@ -37,4 +41,49 @@ public class GrabbablePart : HexCellPlaceable
 			}
 		}
 	}
+	
+	public GrabbablePart CheckForCollisions()
+	{
+		if (_sphereCollider == null)
+		{
+			return null;
+		}
+		Collider [] colliders = Physics.OverlapSphere(_sphereCollider.transform.position + _sphereCollider.center, _sphereCollider.radius, 1<<gameObject.layer);
+		
+		foreach(Collider c in colliders)
+		{
+			if (c.attachedRigidbody == _sphereCollider.attachedRigidbody)
+			{
+				continue;
+			}
+			
+			GrabbablePart collidedPart = c.attachedRigidbody.gameObject.GetComponent<GrabbablePart>();
+			if (collidedPart != null)
+			{
+				return collidedPart;
+			}
+		}
+		
+		return null;
+	}
+
+	#region ITriggerDelegateReceiver implementation
+	public void OnTriggerEnter (Collider other)
+	{
+//		Debug.Log("OnTriggerEnter (Collider "+other+")");
+		
+		if (other.attachedRigidbody == null)
+			return;
+		
+		GrabbablePart otherPart = other.attachedRigidbody.gameObject.GetComponent<GrabbablePart>();
+//		foreach(Component c in other.gameObject.GetComponents<MonoBehaviour>())
+//		{
+//			Debug.Log (c);
+//		}
+		if (otherPart != null)
+		{
+			GameManager.instance.PartCollisionOccured(this, otherPart);
+		}
+	}
+	#endregion
 }

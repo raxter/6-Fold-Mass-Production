@@ -76,7 +76,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	
 	void Start()
 	{
-		Debug.Log ("HexCellPlacable Start");
+//		Debug.Log ("HexCellPlacable Start");
 		selected = false;
 		if (_debug_placeAtStart)
 		{
@@ -94,6 +94,6 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	}
 	
 	protected abstract void PlaceableUpdate();
-	
+
 
 }

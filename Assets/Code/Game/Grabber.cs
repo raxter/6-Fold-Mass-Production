@@ -144,7 +144,7 @@ public class Grabber : Mechanism
 			_instructionCounter = 0;
 		}
 		
-		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
+//		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
 		
 		_startStepState = _endStepState;
 	
@@ -156,7 +156,7 @@ public class Grabber : Mechanism
 		
 		_currentInstruction = instructions[_instructionCounter];
 		
-		switch (instructions[_instructionCounter])
+		switch (_currentInstruction)
 		{
 			case Instruction.RotateClock:
 			{
@@ -180,17 +180,18 @@ public class Grabber : Mechanism
 			break;
 			case Instruction.Grab:
 			{
-				if (heldPart == null)
-				{
-					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
-					GrabbablePart part = underClamp.part;
-					if (part != null)
-					{
-						part.PlaceAtLocation(null);
-						part.gameObject.transform.parent = clamp.transform;
-						heldPart = part;
-					}
-				}
+			// performed in post
+//				if (heldPart == null)
+//				{
+//					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
+//					GrabbablePart part = underClamp.part;
+//					if (part != null)
+//					{
+//						part.PlaceAtLocation(null);
+//						part.gameObject.transform.parent = clamp.transform;
+//						heldPart = part;
+//					}
+//				}
 			}
 			break;
 			case Instruction.Drop:
@@ -218,6 +219,26 @@ public class Grabber : Mechanism
 			_instructionCounter = 0;
 		}
 	}
+	
+	
+	public void PerformPostInstruction ()
+	{
+		if (_currentInstruction == Instruction.Grab)
+		{
+			if (heldPart == null)
+			{
+				HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
+				GrabbablePart part = underClamp.part;
+				if (part != null)
+				{
+					part.PlaceAtLocation(null);
+					part.gameObject.transform.parent = clamp.transform;
+					heldPart = part;
+				}
+			}
+		}
+	}
+	
 	
 	IntVector2 LocationAtClamp()
 	{
@@ -253,7 +274,7 @@ public class Grabber : Mechanism
 		
 		if (_stepCounter == _stepsPerInstruction/2)
 		{
-			Debug.Log(_stepCounter+" == "+_stepsPerInstruction/2+":"+instructions[_instructionCounter]);
+//			Debug.Log(_stepCounter+" == "+_stepsPerInstruction/2+":"+instructions[_instructionCounter]);
 			switch (_currentInstruction)
 			{
 				case Instruction.Grab:
