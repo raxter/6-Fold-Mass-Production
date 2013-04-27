@@ -17,6 +17,10 @@ public class LevelSettings : ScriptableObjectSingleton<LevelSettings>
 	{
 		public string name;
 		public List<GeneratorDetails> generators;
+		
+		public int targetConstructions;
+		
+		public ConstructionDefinition targetConstruction;
 	}
 	
 	

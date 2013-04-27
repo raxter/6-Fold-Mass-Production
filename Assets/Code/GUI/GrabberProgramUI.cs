@@ -10,14 +10,21 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	[SerializeField]
 	GameObject [] _grabberUIObjects = null;
 	
+	bool guiEnabled = false;
+	
 	void EnableGUI (bool enabled)
 	{
+		guiEnabled = enabled;
 		foreach (InstructionSlot instructionSlot in _instructionSlots)
 		{
 			instructionSlot.EnableGUI(enabled);
 		}
-		
+		if (!enabled)
+		{
+			CloseAllSlots();
+		}
 	}
+	
 	
 	Grabber _displayedGrabber = null;
 	
@@ -48,6 +55,14 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	}
 	
 	#region EZGUI
+
+	public void InstructionSetAt (int _index)
+	{
+		if (_index + 1 < _instructionSlots.Length && DisplayedGrabber.instructions[_index+1] == Grabber.Instruction.None)
+		{
+			_instructionSlots[_index+1].ToggleInstructionPanel();
+		}
+	}
 	
 	void ExtendGrabber()
 	{
@@ -104,7 +119,6 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 			{
 				_instructionSlots[i].Display(true);
 				_instructionSlots[i].EnableGUI(true);
-				
 			}
 			
 			_instructionSlots[i].DisplayNoneOperation(false);

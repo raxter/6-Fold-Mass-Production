@@ -16,6 +16,10 @@ public class GridManagerInspector : Editor
 		if (GUILayout.Button("Create HexCell Grid"))
 		{
 			gridManager.CreateHexCellMap();
+			foreach (HexCell hexCell in gridManager.GetAllCells())
+			{
+				EditorUtility.SetDirty(hexCell);
+			}
 		}
 		
 		if (GUILayout.Button("Destroy HexCell Grid"))

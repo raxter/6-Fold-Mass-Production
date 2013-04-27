@@ -55,6 +55,7 @@ public class Grabber : Mechanism
 	}
 	
 	GrabbablePart heldPart;
+	System.Action _doAtEndOfInstruction;
 	
 	GrabberState _startState;
 	
@@ -156,6 +157,8 @@ public class Grabber : Mechanism
 		
 		_currentInstruction = instructions[_instructionCounter];
 		
+		_doAtEndOfInstruction = null;
+		
 		switch (_currentInstruction)
 		{
 			case Instruction.RotateClock:
@@ -198,6 +201,11 @@ public class Grabber : Mechanism
 			{
 				if (heldPart != null)
 				{
+					GrabbablePart partToCheck = heldPart;
+					_doAtEndOfInstruction = () => 
+					{
+						partToCheck.CheckForFinish();
+					};
 //					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
 					heldPart.gameObject.transform.parent = null;
 					heldPart.PlaceAtLocation(LocationAtClamp());
@@ -245,11 +253,17 @@ public class Grabber : Mechanism
 		return Location+GridManager.GetRelativeLocation(_startStepState.direction)*(_startStepState.extention+1);
 	}
 	
-	public void PerformStep ()
+	// returns true if finished
+	public bool PerformStep ()
 	{
 		if (StepFinished())
 		{
-			return;
+			if (_doAtEndOfInstruction != null)
+			{
+				_doAtEndOfInstruction();
+				_doAtEndOfInstruction = null;
+			}
+			return true;
 		}
 		
 		float percStep = (float)_stepCounter/(float)_stepsPerInstruction;
@@ -297,11 +311,13 @@ public class Grabber : Mechanism
 		
 		
 		_stepCounter += 1 ;
+		
+		return false;
 	}
 	
 	
 	
-	public bool StepFinished()
+	bool StepFinished()
 	{
 		return _stepCounter >= _stepsPerInstruction;
 	}

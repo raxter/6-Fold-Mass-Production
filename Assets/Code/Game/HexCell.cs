@@ -7,13 +7,46 @@ public class HexCell : MonoBehaviour
 {
 	public UIButton button;
 	
+	[SerializeField]
+	Color finishCellColor;
+	
 //	[System.NonSerialized]
 	public HexCellPlaceable placedPlaceable = null;
-	public GrabbablePart part = null;
+	
+	GrabbablePart _part;
+	public GrabbablePart part
+	{
+		get {return _part;}
+		set 
+		{
+			_part = value;
+			if (_part != null)
+			{
+				button.SetColor(Color.red);
+			}
+			else
+			{
+				finishCell = _finishCell;
+			}
+		}
+	}
 	
 	public Mechanism placedMechanism { get { return placedPlaceable as Mechanism; } }
 	
 	public IntVector2 location;
+	
+	[HideInInspector]
+	[SerializeField]
+	bool _finishCell;
+	public bool finishCell
+	{
+		get { return _finishCell; }
+		set 
+		{
+			_finishCell = value;
+			button.SetColor(_finishCell ? finishCellColor : Color.white);
+		}
+	}
 	
 	public float SideLength
 	{

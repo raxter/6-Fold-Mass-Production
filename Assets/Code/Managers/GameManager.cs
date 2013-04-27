@@ -20,11 +20,35 @@ public class GameManager : SingletonBehaviour<GameManager>
 	[SerializeField]
 	GUIEnabler [] _enableableGUIObjects = null;
 	
-	[SerializeField]
-	UIButton _playButton = null;
+//	[SerializeField]
+//	UIButton _playButton = null;
 	[SerializeField]
 	UIButton _stopButton = null;
 	
+	[SerializeField]
+	SpriteText _targetText = null;
+	
+	LevelSettings.Level _currentLevel = null;
+	
+	int _completedConstructions = -1;
+	int completedConstructions
+	{
+		get { return _completedConstructions; }
+		set 
+		{ 
+			_completedConstructions = value; 
+			_targetText.Text = "Target\n"+_completedConstructions+"/"+_currentLevel.targetConstructions;
+		}
+	}
+	
+	[SerializeField]
+	float instructionsPerSecondNormal = 1;
+	[SerializeField]
+	float instructionsPerSecondFast = 2;
+	[SerializeField]
+	float instructionsPerSecondFaster = 4;
+	[SerializeField]
+	float instructionsPerSecondFastest = 16;
 	
 	float _stepsPerSecond = 80f;
 	int _stepsPerInstruction = 60;
@@ -57,16 +81,31 @@ public class GameManager : SingletonBehaviour<GameManager>
 	{
 		// clear all parts first when reloading! TODO
 		
-		LevelSettings.Level lvl = LevelSettings.instance.GetLevel(leveName);
+		_currentLevel = LevelSettings.instance.GetLevel(leveName);
 		
-		foreach (LevelSettings.GeneratorDetails generatorDetails in lvl.generators)
+		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
 		{
 			PartGenerator generator = (GameObject.Instantiate(generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
 			generator.toGeneratePrefab = generatorDetails.toGeneratePrefab;
 			generator.PlaceAtLocation(generatorDetails.location);
 		}
-		
+		completedConstructions = 0;
 	}
+
+	public void AddCompletedConstruction ()
+	{
+		completedConstructions += 1;
+		
+		if (_completedConstructions >= _currentLevel.targetConstructions)
+		{
+		}
+	}
+
+	public void IncompleteConstruction ()
+	{
+		throw new System.NotImplementedException ();
+	}
+	
 	
 	public void CreateMechanism(MechanismType cellMechanismType)
 	{
@@ -181,22 +220,27 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 				
 				stepsToDoThisFrame -= 1;
-					
-				foreach (Grabber grabber in grabbers)
-				{
-					grabber.PerformStep();
-//					Debug.Log("PerformStep "+grabber._stepCounter);
-				}
+				
 				
 				bool allFinished = true;
 				
 				foreach (Grabber grabber in grabbers)
 				{
-					if (!grabber.StepFinished())
+					if (!grabber.PerformStep())
 					{
 						allFinished = false;
 					}
+//					Debug.Log("PerformStep "+grabber._stepCounter);
 				}
+				
+				
+//				foreach (Grabber grabber in grabbers)
+//				{
+//					if (!grabber.StepFinished())
+//					{
+//						allFinished = false;
+//					}
+//				}
 				// check for collisions
 			
 				// if collision, pause and exit
@@ -219,9 +263,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 				
 				
-				
-				
-				
 			}
 			
 		}
@@ -234,10 +275,37 @@ public class GameManager : SingletonBehaviour<GameManager>
 	}
 	
 	
+	public void PlaySimulationNormal()
+	{
+		_stepsPerSecond =_stepsPerInstruction * instructionsPerSecondNormal;
+		PlaySimulation();
+	}
+	
+	public void PlaySimulationFast()
+	{
+		_stepsPerSecond =_stepsPerInstruction * instructionsPerSecondFast;
+		PlaySimulation();
+	}
+	
+	public void PlaySimulationFaster()
+	{
+		_stepsPerSecond =_stepsPerInstruction * instructionsPerSecondFaster;
+		PlaySimulation();
+	}
+	
+	public void PlaySimulationFastest()
+	{
+		_stepsPerSecond =_stepsPerInstruction * instructionsPerSecondFastest;
+		PlaySimulation();
+	}
+	
 	
 	public void PlaySimulation()
 	{
-		gameState = State.Simulation;
+		if (gameState != State.Construction)
+		{
+			return;
+		}
 		
 		Debug.Log ("PlaySimulation");
 		// Disable Input
@@ -247,12 +315,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 			guiEnabled = false;
 		}
 		
-		_playButton.transform.localScale = Vector3.zero;
+//		_playButton.transform.localScale = Vector3.zero;
 		_stopButton.transform.localScale = Vector3.one;
-		// change play to stop
-		// start simulation
 		
-		// MAKE THE THINGS DO THE THINGS!
+		
+		gameState = State.Simulation;
 		
 		StartCoroutine(SimulationCoroutine());
 		
@@ -296,10 +363,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 		}
 		
 		// change stop to play
-		_playButton.transform.localScale = Vector3.one;
+//		_playButton.transform.localScale = Vector3.one;
 		_stopButton.transform.localScale = Vector3.zero;
 		
-		// start simulation
+		
+		completedConstructions = 0;
 	}
 	
 //	public void UnSelecteMechanistIcon ()

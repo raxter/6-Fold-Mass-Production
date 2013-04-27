@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public enum MechanismType {None, Grabber};
+public enum MechanismType {None, Grabber, WeldingRig};
 
 public abstract class Mechanism : HexCellPlaceable 
 {

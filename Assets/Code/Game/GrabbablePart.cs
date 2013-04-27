@@ -41,6 +41,27 @@ public class GrabbablePart : HexCellPlaceable
 			}
 		}
 	}
+
+	public void CheckForFinish ()
+	{
+		hexCell = GridManager.instance.GetHexCell(Location);
+		
+		if (hexCell != null && hexCell.finishCell)
+		{
+			// check if it is the right thing
+			bool isCorrectConstruction = true;
+			if (isCorrectConstruction)
+			{
+				PlaceAtLocation(null);
+				Destroy(this.gameObject);
+				GameManager.instance.AddCompletedConstruction();
+				return;
+			}
+			GameManager.instance.IncompleteConstruction();
+		}
+	}
+	
+	
 	
 	public GrabbablePart CheckForCollisions()
 	{

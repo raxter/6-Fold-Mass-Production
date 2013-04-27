@@ -6,28 +6,10 @@
 *.csproj
 *.unityproj
 *.sln
-
 *.pidb
-
-*.pidb
-
-Assets/Art/Sprite Atlases/.DS_Store
-
-*.pidb
-
-Assembly-CSharp-firstpass.pidb
-
-*.pidb
+*.DS_Store
 
 6-Fold-Mass-Production.userprefs
 
-*.pidb
-
-*.pidb
-
 /Assembly-CSharp-Editor.pidb
 /Assembly-CSharp.pidb
-/Library/InspectorExpandedItems.asset
-/Library/guidmapper
-/Library/expandedItems
-/Library/assetDatabase3

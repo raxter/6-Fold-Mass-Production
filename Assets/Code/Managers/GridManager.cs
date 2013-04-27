@@ -34,6 +34,11 @@ public class GridManager : SingletonBehaviour<GridManager>
 	HexCell _hexCellPrefab;
 	
 	[SerializeField]
+	int _finalCellsFromWidth;
+	[SerializeField]
+	int _finalCellsFromHeight;
+	
+	[SerializeField]
 	int _width;
 	
 	[SerializeField]
@@ -186,6 +191,11 @@ public class GridManager : SingletonBehaviour<GridManager>
 				
 				go.layer = _hexCellHolder.layer;
 				_hexCellRows[w][h] = hexCell;
+				
+				if (w >= _finalCellsFromWidth && h >= _finalCellsFromHeight)
+				{
+					_hexCellRows[w][h].finishCell = true;
+				}
 			}
 		}
 		

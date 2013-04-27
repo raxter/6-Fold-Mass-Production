@@ -1,6 +1,16 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\GameManager.cs">
+    <Files>
+      <File FileName="Assets\Code\Managers\GameManager.cs" Line="370" Column="30" />
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="60" Column="1" />
+      <File FileName="Assets\Code\Game\HexCell.cs" Line="46" Column="1" />
+      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="55" Column="27" />
+      <File FileName="Assets\Code\Data\LevelSettings.cs" Line="23" Column="40" />
+      <File FileName="Assets\Code\Game\ConstructionDefinition.cs" Line="6" Column="68" />
+      <File FileName="Assets\Code\GUI\GrabberProgramUI.cs" Line="111" Column="4" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="/Users/richard/Projects/Personal Development/6-Fold-Mass-Production/Assets/Code/HexCellPlaceable.cs" line="90" />

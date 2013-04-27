@@ -80,6 +80,10 @@ public class InstructionSlot : MonoBehaviour
 	// Update is called once per frame
 	void UpdateInstructionsPanel (bool newExpanded) 
 	{
+		if (GameManager.instance.gameState != GameManager.State.Construction)
+		{
+			return;
+		}
 		if (_inputEnabled == false)
 		{
 			if (!panelExpanded)
@@ -98,14 +102,14 @@ public class InstructionSlot : MonoBehaviour
 		if (newExpanded)
 		{
 			_grabberProgramUI.CloseAllSlots();
-			if (newExpanded != panelExpanded)
+			if (!panelExpanded) // only bring in if in construction state
 			{
 				_otherInstructionsPanel.BringIn();
 			}
 		}
 		else
 		{
-			if (newExpanded != panelExpanded)
+			if (panelExpanded)
 			{
 				_otherInstructionsPanel.Dismiss();
 			}
@@ -137,6 +141,11 @@ public class InstructionSlot : MonoBehaviour
 			_grabberProgramUI.DisplayedGrabber.instructions[_index] = currentInstruction;
 		}
 		RefreshInstuctionIcons();
+		
+		if (_grabberProgramUI.DisplayedGrabber != null)
+		{
+			_grabberProgramUI.InstructionSetAt(_index);
+		}
 	}
 	
 	public void RefreshInstuctionIcons ()
