@@ -1,15 +1,17 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Game\WeldingRig.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Game\GrabbablePart.cs">
     <Files>
       <File FileName="Assets\Code\Managers\GameManager.cs" Line="266" Column="24" />
-      <File FileName="Assets\Code\Game\Grabber.cs" Line="292" Column="1" />
-      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="37" Column="3" />
+      <File FileName="Assets\Code\Game\Grabber.cs" Line="231" Column="26" />
       <File FileName="Assets\Code\Data\LevelSettings.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\HexCell.cs" Line="21" Column="23" />
-      <File FileName="Assets\Code\Game\WeldingRig.cs" Line="71" Column="1" />
-      <File FileName="Assets\Code\Game\Mechanism.cs" Line="41" Column="54" />
-      <File FileName="Assets\Code\Managers\InputManager.cs" Line="22" Column="9" />
+      <File FileName="Assets\Code\Game\HexCell.cs" Line="33" Column="19" />
+      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="111" Column="68" />
+      <File FileName="Assets\Code\Game\WeldingRig.cs" Line="88" Column="1" />
+      <File FileName="Assets\Code\Game\HexMetrics.cs" Line="16" Column="1" />
+      <File FileName="Assets\Plugins\RaxterFramework\IntVector2.cs" Line="36" Column="1" />
+      <File FileName="Assets\Code\Game\HexCellPlaceable.cs" Line="43" Column="24" />
+      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="25" Column="26" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
