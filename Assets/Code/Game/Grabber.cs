@@ -126,12 +126,16 @@ public class Grabber : Mechanism
 	
 	void MoveToState(float extentionValue, float directionValue)
 	{
+		if (heldPart != null) heldPart.RootPart.gameObject.transform.parent = clamp.transform;
+		
 		
 		transform.localRotation = Quaternion.Euler(0, 0, directionValue);
 		for (int i = 0 ; i < _arms.Length ; i++)
 		{
 			_arms[i].transform.localPosition = new Vector3(0, extentionValue*hexCell.Height/(_arms.Length), 1);
 		}
+		
+		if (heldPart != null) heldPart.RootPart.gameObject.transform.parent = null;
 		
 	}
 	
@@ -146,7 +150,7 @@ public class Grabber : Mechanism
 			_instructionCounter = 0;
 		}
 		
-		Debug.Log("Deregistering "+heldPart+" at "+LocationAtClampEnd().x+":"+LocationAtClampEnd().y);
+//		Debug.Log("Deregistering "+heldPart+" at "+LocationAtClampEnd().x+":"+LocationAtClampEnd().y);
 		GridManager.instance.GetHexCell(LocationAtClampEnd()).partHeldOverCell = null;
 		
 //		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
@@ -215,15 +219,15 @@ public class Grabber : Mechanism
 						heldPart.selected = true;
 						break;
 					}
-				
+					
 					GrabbablePart partToCheck = heldPart;
 					_doAtEndOfInstruction = () => 
 					{
 						partToCheck.CheckForFinish();
 					};
 //					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
-					heldPart.gameObject.transform.parent = null;
-					
+//					heldPart.gameObject.transform.parent = null;
+					// TOD drop and lower for all connected cells
 					heldPart.PlaceAtLocation(locationAtClamp);
 					heldPart = null;
 				}
@@ -252,13 +256,17 @@ public class Grabber : Mechanism
 		{
 			if (heldPart == null)
 			{
+				// TODO grab and lift for all connected cells
 				HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
 				GrabbablePart part = underClamp.partOnCell;
 				if (part != null)
 				{
-					part.PlaceAtLocation(null);
-					part.gameObject.transform.parent = clamp.transform;
 					heldPart = part;
+//					part.gameObject.transform.parent = clamp.transform;
+//					foreach (part.GetAllConnectedParts())
+//					{
+						part.PlaceAtLocation(null);
+//					}
 				}
 			}
 		}
@@ -285,7 +293,7 @@ public class Grabber : Mechanism
 		if (StepFinished())
 		{
 			IntVector2 locationAtClampEnd = LocationAtClampEnd();
-			Debug.Log("Registering "+heldPart+" at "+locationAtClampEnd.x+":"+locationAtClampEnd.y);
+//			Debug.Log("Registering "+heldPart+" at "+locationAtClampEnd.x+":"+locationAtClampEnd.y);
 			HexCell overClampCell = GridManager.instance.GetHexCell(locationAtClampEnd);
 			overClampCell.partHeldOverCell = heldPart;
 			

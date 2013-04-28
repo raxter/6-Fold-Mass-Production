@@ -21,6 +21,11 @@ public class IntVector2
 		}
 	}
 	
+	public bool IsEqualTo(IntVector2 b)
+	{
+		return x == b.x && y == b.y;
+	}
+	
 	public static implicit operator Vector2 (IntVector2 v)
 	{
 		return new Vector2(v.x, v.y);
@@ -50,5 +55,6 @@ public class IntVector2
 	{
 		return new IntVector2(a.x%b, a.y%b);
 	}
+	
 	
 }

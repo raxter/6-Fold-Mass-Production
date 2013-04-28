@@ -10,15 +10,54 @@ public class HexCell : MonoBehaviour
 	[SerializeField]
 	Color finishCellColor;
 	
+	public SpriteText debugText;
+	
+	void SetDebugText()
+	{
+		debugText.Text = ""+(_partOnCell == null ? "_" : ""+_partOnCell.idNumber) +">"+(_partHeldOverCell == null ? "_" : ""+_partHeldOverCell.idNumber)
+			+ "\n" + (placedMechanism == null? " ":""+(int)placedMechanism.MechanismType);
+	}
+	
 //	[System.NonSerialized]
-	public HexCellPlaceable placedPlaceable = null;
+	HexCellPlaceable _placedPlaceable = null;
+	public HexCellPlaceable placedPlaceable 
+	{
+		get 
+		{ 
+			return _placedPlaceable; 
+		}
+		set
+		{
+			Debug.Log ("Placing "+value+" at "+location.x+":"+location.y);
+			_placedPlaceable = value;
+			SetDebugText();
+		}
+	}
 	
 	public GrabbablePart partOverCell
 	{
 		get { return _partOnCell ?? partHeldOverCell; }
 	}
 	
-	public GrabbablePart partHeldOverCell;
+	public GrabbablePart _partHeldOverCell;
+	public GrabbablePart partHeldOverCell
+	{
+		get { return _partHeldOverCell; }
+		set 
+		{
+			// Must deregister overLocation with Part
+			if (_partHeldOverCell != null)
+			{
+				partOverCell.heldOverLocation = null;
+			}
+			_partHeldOverCell = value;
+			if (_partHeldOverCell != null)
+			{
+				partOverCell.heldOverLocation = location;
+			}
+			SetDebugText();
+		}
+	}
 	
 //	GrabbablePart _part;
 	GrabbablePart _partOnCell;
@@ -36,6 +75,7 @@ public class HexCell : MonoBehaviour
 			{
 				finishCell = _finishCell;
 			}
+			SetDebugText();
 		}
 	}
 	
@@ -83,6 +123,7 @@ public class HexCell : MonoBehaviour
 	
 	void Start()
 	{
+		SetDebugText();
 		button.AddInputDelegate(GrabberInputDelegate);
 	}
 	

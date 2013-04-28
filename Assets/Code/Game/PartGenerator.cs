@@ -8,7 +8,7 @@ public class PartGenerator : HexCellPlaceable
 	
 	bool placeOnNextTurn = false;
 	
-	int generatorCount = 0;
+	static int generatorCount = 0;
 	
 	#region implemented abstract members of HexCellPlaceable
 	protected override void PlaceableStart ()
@@ -36,6 +36,7 @@ public class PartGenerator : HexCellPlaceable
 			if (placeOnNextTurn)
 			{
 				part = (GameObject.Instantiate(toGeneratePrefab.gameObject) as GameObject).GetComponent<GrabbablePart>();
+				part.idNumber = generatorCount;
 				part.gameObject.name = toGeneratePrefab.gameObject.name+" "+generatorCount;
 				part.PlaceAtLocation(Location);
 				placeOnNextTurn = false;

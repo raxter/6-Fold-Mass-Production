@@ -8,6 +8,12 @@ public class GrabbablePart : HexCellPlaceable
 	
 	bool finished = false;
 	
+	public IntVector2 heldOverLocation;
+	
+	public IntVector2 OverLocation { get { return Location ?? heldOverLocation; } }
+	
+	public int idNumber = -1;
+	
 	public bool IsFinished { get { return finished; } }
 	
 	public enum PhysicalConnectionType {None = 0, Weld = 1, Magentic = 2};
@@ -20,12 +26,76 @@ public class GrabbablePart : HexCellPlaceable
 	[System.Serializable]
 	public class ConnectionDescription
 	{
-		GrabbablePart connectedPart;
+		public GrabbablePart connectedPart;
 		
-		int connectionTypes = 0;
+		
+		public PhysicalConnectionType connectionType = GrabbablePart.PhysicalConnectionType.None;
 	}
 	
-	GrabbablePart [] connectedParts;
+	ConnectionDescription [] connectedParts = new ConnectionDescription [6];
+	
+	
+	public GrabbablePart RootPart
+	{
+		get 
+		{
+			Transform parentTransform = gameObject.transform.parent;
+			GameObject parentGO = ( parentTransform == null ? null : parentTransform.gameObject );
+			if (parentGO != null)
+			{
+				GrabbablePart parentPart = parentGO.GetComponent<GrabbablePart>();
+				if (parentPart != null)
+				{
+					return parentPart.RootPart;
+				}
+			}
+			return this;
+		}
+	}
+	
+	public bool ConnectPart(GrabbablePart otherPart)
+	{
+		Debug.Log("Connecting: "+this+" : "+otherPart);
+		ConnectionDescription connectionDesc = null;
+		bool foundDirection = false;
+//		HexMetrics.Direction directionToOther;
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction dir = (HexMetrics.Direction)i;
+			IntVector2 relativeLocation = HexMetrics.GetRelativeLocation(dir);
+			
+			if (OverLocation == null || relativeLocation == null)
+			{
+				Debug.LogError ("Arg!");
+			}
+			IntVector2 offsetLocation = OverLocation + relativeLocation;
+			if (offsetLocation.IsEqualTo(otherPart.OverLocation)) // part might not be dropped, must use an over location
+			{
+				foundDirection = true;
+//				directionToOther = (HexMetrics.Direction)i;
+				if (connectedParts[i] == null)
+				{
+					connectedParts[i] = new ConnectionDescription();
+				}
+				else
+				{
+					Debug.Log("Connecting part "+otherPart+" to a direction that is already connected");
+					return false;
+				}
+				connectionDesc = connectedParts[i];
+				break;
+			}
+		}
+		if (!foundDirection) return false;
+		
+		otherPart.gameObject.transform.parent = gameObject.transform;
+//		connectionDesc.joint = gameObject.AddComponent<FixedJoint>();
+//		connectionDesc.joint.connectedBody = otherPart.gameObject.rigidbody;
+		connectionDesc.connectionType = PhysicalConnectionType.Weld;
+		
+		return true;
+	}
+	
 	
 	#region implemented abstract members of HexCellPlaceable
 	protected override void PlaceableStart ()
@@ -38,6 +108,7 @@ public class GrabbablePart : HexCellPlaceable
 	}
 	#endregion
 	
+	// TODO place children of root's object rather than just this one!
 	public override void PlaceAtLocation(IntVector2 location)
 	{
 		Location = location;

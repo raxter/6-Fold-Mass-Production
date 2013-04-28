@@ -68,10 +68,33 @@ public class WeldingRig : Mechanism
 	
 	public void PerformPreStart()
 	{
-		foreach (HexCell hc in new HexCell [4] {hexCell, leftBelow, centerBelow, rightBelow})
+//		foreach (HexCell hc in new HexCell [4] {hexCell, leftBelow, centerBelow, rightBelow})
+//		{
+//			Debug.Log ("("+hc.location.x+":"+hc.location.y+")"+hc.partOnCell+" -> "+hc.partHeldOverCell +" | "+hc.partOverCell);
+//			
+//			// there are 5 welding combos (t = top, b = botton, l = left, r = right):
+//			// tl, tr, bl, br, tb
+//			
+//		}
+		
+		GrabbablePart topPart = hexCell.partOverCell;
+		GrabbablePart bottomPart = centerBelow.partOverCell;
+		GrabbablePart leftPart = leftBelow.partOverCell;
+		GrabbablePart rightPart = rightBelow.partOverCell;
+		
+		if (topPart != null)
 		{
-			Debug.Log ("("+hc.location.x+":"+hc.location.y+")"+hc.partOnCell+" -> "+hc.partHeldOverCell +" | "+hc.partOverCell);
+			if (leftPart   != null) topPart.ConnectPart(leftPart);
+			if (bottomPart != null) topPart.ConnectPart(bottomPart);
+			if (rightPart  != null) topPart.ConnectPart(rightPart);
 		}
+		if (bottomPart != null)
+		{
+			if (leftPart  != null) bottomPart.ConnectPart(leftPart);
+			if (rightPart != null) bottomPart.ConnectPart(rightPart);
+		}
+		
+//		if (hexCell.partOverCell)
 	}
 	
 	
