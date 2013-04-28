@@ -8,6 +8,32 @@ public static class HexMetrics {
 	public static readonly Direction UpDirection = Direction.Up;
 	public static readonly Direction RightDirection = Direction.RightUp;
 	
+
+	public static IntVector2 GetRelativeLocation (HexMetrics.Direction direction)
+	{
+		switch (direction)
+		{
+			case HexMetrics.Direction.Up: 		 return new IntVector2( 0, 1);
+			case HexMetrics.Direction.RightUp: 	 return new IntVector2( 1, 0);
+			case HexMetrics.Direction.RightDown: return new IntVector2( 1,-1);
+			case HexMetrics.Direction.Down: 	 return new IntVector2( 0,-1);
+			case HexMetrics.Direction.LeftDown:	 return new IntVector2(-1, 0);
+			case HexMetrics.Direction.LeftUp:	 return new IntVector2(-1, 1);
+		}
+		
+		return null;
+//		return new Dictionary<HexMetrics.Direction, System.Func<IntVector2>>()
+//		{
+//			{HexMetrics.Direction.Up, 		() => new IntVector2( 0, 1)},
+//			{HexMetrics.Direction.RightUp, 	() => new IntVector2( 1, 0)},
+//			{HexMetrics.Direction.RightDown,() => new IntVector2( 1,-1)},
+//			{HexMetrics.Direction.Down, 	() => new IntVector2( 0,-1)},
+//			{HexMetrics.Direction.LeftDown,	() => new IntVector2(-1, 0)},
+//			{HexMetrics.Direction.LeftUp,	() => new IntVector2(-1, 1)}
+//			
+//		}
+	}
+	
 	public static float Side
 	{
 		get 

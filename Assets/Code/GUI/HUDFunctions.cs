@@ -7,7 +7,9 @@ public class HUDFunctions : MonoBehaviour
 	bool _inputEnabled = true;
 	
 	[SerializeField]
-	UIButton grabberButton;
+	UIButton grabberButton = null;
+	[SerializeField]
+	UIButton welderButton = null;
 	
 	
 	void Start()
@@ -15,18 +17,28 @@ public class HUDFunctions : MonoBehaviour
 		GetComponent<GUIEnabler>().onEnableGUI = (enabled) => _inputEnabled = enabled;
 		
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
+		welderButton.AddInputDelegate(WelderInputDelegate);
+	}
+	
+	void GrabberInputDelegate(ref POINTER_INFO ptr)
+	{
+		InputDelegate(ref ptr, MechanismType.Grabber);
+	}
+	
+	void WelderInputDelegate(ref POINTER_INFO ptr)
+	{
+		InputDelegate(ref ptr, MechanismType.WeldingRig);
 	}
 	
 	
-	
-	public void GrabberInputDelegate(ref POINTER_INFO ptr)
+	public void InputDelegate(ref POINTER_INFO ptr, MechanismType mechanismType)
 	{
 		if (!_inputEnabled) return;
 		
 		switch (ptr.evt)
 		{
 			case POINTER_INFO.INPUT_EVENT.PRESS:
-				GameManager.instance.CreateMechanism(MechanismType.Grabber);
+				GameManager.instance.CreateMechanism(mechanismType);
 				break;
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:

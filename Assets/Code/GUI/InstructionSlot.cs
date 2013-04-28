@@ -24,6 +24,11 @@ public class InstructionSlot : MonoBehaviour
 	{
 		instructionOptions[instructionOptions.Length -1].Display(show);
 	}
+
+	public void DisplayNoneOperationAfterTransision (bool show)
+	{
+		_otherInstructionsPanel.OnTransitionFinished(() => DisplayNoneOperation (show));
+	}
 	
 	[SerializeField]
 	GrabberProgramUI _grabberProgramUI = null;
@@ -121,12 +126,12 @@ public class InstructionSlot : MonoBehaviour
 	{
 		if (_grabberProgramUI.DisplayedGrabber != null)
 		{
-			gameObject.SetActiveRecursively(true);
+			gameObject.SetActive(true);
 			currentInstruction = _grabberProgramUI.DisplayedGrabber.instructions[_index];
 		}
 		else
 		{
-			gameObject.SetActiveRecursively(false);
+			gameObject.SetActive(false);
 		}
 		
 		RefreshInstuctionIcons();

@@ -135,6 +135,7 @@ public class Grabber : Mechanism
 		
 	}
 	
+	// returns true for succesful
 	public void PerformInstruction ()
 	{
 		if (instructions[_instructionCounter] == Instruction.None)
@@ -201,6 +202,17 @@ public class Grabber : Mechanism
 			{
 				if (heldPart != null)
 				{
+				
+					IntVector2 locationAtClamp = LocationAtClamp();
+					if (GridManager.instance.GetHexCell(locationAtClamp) == null)
+					{
+						// trying to drop into non grid location
+						
+						GameManager.instance.gameState = GameManager.State.SimulationFailed;
+						heldPart.selected = true;
+						break;
+					}
+				
 					GrabbablePart partToCheck = heldPart;
 					_doAtEndOfInstruction = () => 
 					{
@@ -208,7 +220,8 @@ public class Grabber : Mechanism
 					};
 //					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
 					heldPart.gameObject.transform.parent = null;
-					heldPart.PlaceAtLocation(LocationAtClamp());
+					
+					heldPart.PlaceAtLocation(locationAtClamp);
 					heldPart = null;
 				}
 			}
@@ -226,6 +239,7 @@ public class Grabber : Mechanism
 		{
 			_instructionCounter = 0;
 		}
+		
 	}
 	
 	
@@ -250,7 +264,7 @@ public class Grabber : Mechanism
 	
 	IntVector2 LocationAtClamp()
 	{
-		return Location+GridManager.GetRelativeLocation(_startStepState.direction)*(_startStepState.extention+1);
+		return Location+HexMetrics.GetRelativeLocation(_startStepState.direction)*(_startStepState.extention+1);
 	}
 	
 	// returns true if finished

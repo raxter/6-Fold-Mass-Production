@@ -23,6 +23,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 		{
 			CloseAllSlots();
 		}
+		RefreshGrabberUIObjects();
 	}
 	
 	
@@ -44,17 +45,23 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 		{
 			_displayedGrabber = value;
 			
-			SetAllIndecies();	
 			
+			SetAllIndecies();
 			
-			foreach (GameObject uiObject in _grabberUIObjects)
-			{
-				uiObject.transform.localScale = Vector3.one * (value != null ? 1f : 0f);
-			}
+			EnableGUI (value != null);
+//			RefreshGrabberUIObjects();
 		}
 	}
 	
 	#region EZGUI
+	
+	public void RefreshGrabberUIObjects()
+	{
+		foreach (GameObject uiObject in _grabberUIObjects)
+		{
+			uiObject.transform.localScale = Vector3.one * (_displayedGrabber != null && guiEnabled && GameManager.instance.gameState == GameManager.State.Construction ? 1f : 0f);
+		}
+	}
 
 	public void InstructionSetAt (int _index)
 	{
@@ -124,17 +131,17 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 			_instructionSlots[i].DisplayNoneOperation(false);
 			
 			
-			if (_instructionSlots[i].currentInstruction == Grabber.Instruction.None)
+			if (!noneOpFound && _instructionSlots[i].currentInstruction == Grabber.Instruction.None)
 			{
 				noneOpFound = true;
 				
 				if (i == 0)
 				{
-					_instructionSlots[i].DisplayNoneOperation(true);
+					_instructionSlots[i].DisplayNoneOperation(false);
 				}
 				else
 				{
-					_instructionSlots[i-1].DisplayNoneOperation(true);
+					_instructionSlots[i-1].DisplayNoneOperationAfterTransision(true);
 				}
 			}
 		}

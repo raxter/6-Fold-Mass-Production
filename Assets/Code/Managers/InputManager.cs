@@ -23,7 +23,10 @@ public class InputManager : SingletonBehaviour<InputManager>
 	{
 		foreach (HexCellPlaceable selectedMechanism in selectedPlacables)
 		{
-			selectedMechanism.selected = false;
+			if (selectedMechanism != null)
+			{
+				selectedMechanism.selected = false;
+			}
 		}
 		selectedPlacables.Clear();
 		
@@ -43,6 +46,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 			if (selectedPlacables[0] is Grabber)
 			{
 				GrabberProgramUI.instance.DisplayedGrabber = selectedPlacables[0] as Grabber;
+				
 			}
 			else
 			{

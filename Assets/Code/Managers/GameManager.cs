@@ -271,7 +271,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		// repeat
 		
-		yield break;
+		yield break; 
 	}
 	
 	

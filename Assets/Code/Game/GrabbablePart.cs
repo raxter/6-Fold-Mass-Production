@@ -44,7 +44,7 @@ public class GrabbablePart : HexCellPlaceable
 
 	public void CheckForFinish ()
 	{
-		hexCell = GridManager.instance.GetHexCell(Location);
+		hexCell = Location == null ? null : GridManager.instance.GetHexCell(Location);
 		
 		if (hexCell != null && hexCell.finishCell)
 		{
