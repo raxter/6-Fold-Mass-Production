@@ -62,4 +62,37 @@ public class WeldingRig : Mechanism
 			}
 		}
 	}
+	
+	
+	
+	
+	public void PerformPreStart()
+	{
+		foreach (HexCell hc in new HexCell [4] {hexCell, leftBelow, centerBelow, rightBelow})
+		{
+			Debug.Log ("("+hc.location.x+":"+hc.location.y+")"+hc.partOnCell+" -> "+hc.partHeldOverCell +" | "+hc.partOverCell);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

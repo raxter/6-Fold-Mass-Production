@@ -6,6 +6,27 @@ public class GrabbablePart : HexCellPlaceable
 {
 	SphereCollider _sphereCollider;
 	
+	bool finished = false;
+	
+	public bool IsFinished { get { return finished; } }
+	
+	public enum PhysicalConnectionType {None = 0, Weld = 1, Magentic = 2};
+	public enum AuxilaryConnectionType {None = 0, Electric = 1, Belt = 2};
+	// weld is a normal connection, will physically keep the parts together
+	// magnet is a connection with string magnets, will physically keep the parts together
+	// wired means it is electrically connected (though not physically, just wired connections alone won't keep them together)
+	// belt means that a rotary part is connected (engine, wheel, gun, anything operated by an engine)
+	
+	[System.Serializable]
+	public class ConnectionDescription
+	{
+		GrabbablePart connectedPart;
+		
+		int connectionTypes = 0;
+	}
+	
+	GrabbablePart [] connectedParts;
+	
 	#region implemented abstract members of HexCellPlaceable
 	protected override void PlaceableStart ()
 	{
@@ -26,16 +47,16 @@ public class GrabbablePart : HexCellPlaceable
 			if (hexCell != null)
 			{
 				transform.position = hexCell.transform.position;
-				hexCell.part = this;
+				hexCell.partOnCell = this;
 			}
 		}
 		else
 		{
 			if (hexCell != null)
 			{
-				if (hexCell.part == this)
+				if (hexCell.partOnCell == this)
 				{
-					hexCell.part = null;
+					hexCell.partOnCell = null;
 				}
 				hexCell = null;
 			}
@@ -53,6 +74,8 @@ public class GrabbablePart : HexCellPlaceable
 			if (isCorrectConstruction)
 			{
 				PlaceAtLocation(null);
+				
+				finished = true;
 				Destroy(this.gameObject);
 				GameManager.instance.AddCompletedConstruction();
 				return;
@@ -73,6 +96,10 @@ public class GrabbablePart : HexCellPlaceable
 		
 		foreach(Collider c in colliders)
 		{
+			if (c.attachedRigidbody.GetComponent<GrabbablePart>().IsFinished)
+			{
+				continue;
+			}
 			if (c.attachedRigidbody == _sphereCollider.attachedRigidbody)
 			{
 				continue;

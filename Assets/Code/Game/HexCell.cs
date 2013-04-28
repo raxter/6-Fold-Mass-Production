@@ -13,14 +13,22 @@ public class HexCell : MonoBehaviour
 //	[System.NonSerialized]
 	public HexCellPlaceable placedPlaceable = null;
 	
-	GrabbablePart _part;
-	public GrabbablePart part
+	public GrabbablePart partOverCell
 	{
-		get {return _part;}
+		get { return _partOnCell ?? partHeldOverCell; }
+	}
+	
+	public GrabbablePart partHeldOverCell;
+	
+//	GrabbablePart _part;
+	GrabbablePart _partOnCell;
+	public GrabbablePart partOnCell
+	{
+		get {return _partOnCell;}
 		set 
 		{
-			_part = value;
-			if (_part != null)
+			_partOnCell = value;
+			if (_partOnCell != null)
 			{
 				button.SetColor(Color.red);
 			}

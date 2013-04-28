@@ -146,6 +146,9 @@ public class Grabber : Mechanism
 			_instructionCounter = 0;
 		}
 		
+		Debug.Log("Deregistering "+heldPart+" at "+LocationAtClampEnd().x+":"+LocationAtClampEnd().y);
+		GridManager.instance.GetHexCell(LocationAtClampEnd()).partHeldOverCell = null;
+		
 //		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
 		
 		_startStepState = _endStepState;
@@ -250,7 +253,7 @@ public class Grabber : Mechanism
 			if (heldPart == null)
 			{
 				HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
-				GrabbablePart part = underClamp.part;
+				GrabbablePart part = underClamp.partOnCell;
 				if (part != null)
 				{
 					part.PlaceAtLocation(null);
@@ -262,9 +265,18 @@ public class Grabber : Mechanism
 	}
 	
 	
+	IntVector2 LocationAtClampEnd()
+	{
+		return Location+HexMetrics.GetRelativeLocation(_endStepState.direction)*(_endStepState.extention+1);
+	}
 	IntVector2 LocationAtClamp()
 	{
 		return Location+HexMetrics.GetRelativeLocation(_startStepState.direction)*(_startStepState.extention+1);
+	}
+	
+	void EndOfInstruction()
+	{
+		
 	}
 	
 	// returns true if finished
@@ -272,6 +284,11 @@ public class Grabber : Mechanism
 	{
 		if (StepFinished())
 		{
+			IntVector2 locationAtClampEnd = LocationAtClampEnd();
+			Debug.Log("Registering "+heldPart+" at "+locationAtClampEnd.x+":"+locationAtClampEnd.y);
+			HexCell overClampCell = GridManager.instance.GetHexCell(locationAtClampEnd);
+			overClampCell.partHeldOverCell = heldPart;
+			
 			if (_doAtEndOfInstruction != null)
 			{
 				_doAtEndOfInstruction();
@@ -300,7 +317,7 @@ public class Grabber : Mechanism
 		MoveToState(extentionValue, angleValue);
 		
 		
-		if (_stepCounter == _stepsPerInstruction/2)
+		if (_stepCounter == 0)//_stepsPerInstruction/2)
 		{
 //			Debug.Log(_stepCounter+" == "+_stepsPerInstruction/2+":"+instructions[_instructionCounter]);
 			switch (_currentInstruction)
@@ -333,7 +350,7 @@ public class Grabber : Mechanism
 	
 	bool StepFinished()
 	{
-		return _stepCounter >= _stepsPerInstruction;
+		return _stepCounter > _stepsPerInstruction;
 	}
 	
 	protected override void MechanismUpdate()

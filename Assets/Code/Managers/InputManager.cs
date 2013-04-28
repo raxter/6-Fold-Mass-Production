@@ -19,7 +19,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	List<HexCellPlaceable> selectedPlacables = new List<HexCellPlaceable>();
 	
-	void SelectUniqueMechanism(HexCellPlaceable mechanism)
+	public void SelectUniqueMechanism(HexCellPlaceable mechanism)
 	{
 		foreach (HexCellPlaceable selectedMechanism in selectedPlacables)
 		{

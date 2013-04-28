@@ -38,6 +38,7 @@ public abstract class Mechanism : HexCellPlaceable
 		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedPlaceable == null)
 		{
 			PlaceAtLocation(InputManager.instance.OverHexCell.location);
+			InputManager.instance.SelectUniqueMechanism(this);
 		}
 		else
 		{
