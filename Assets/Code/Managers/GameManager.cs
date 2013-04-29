@@ -24,6 +24,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 //	UIButton _playButton = null;
 	[SerializeField]
 	UIButton _stopButton = null;
+	[SerializeField]
+	UIButton _playNormalButton = null;
+	[SerializeField]
+	UIButton _pauseButton = null;
 	
 	[SerializeField]
 	SpriteText _targetText = null;
@@ -157,6 +161,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		HashSet<GrabbablePart> parts = new HashSet<GrabbablePart>();
 		
+		List<HexCell> finishCells = new List<HexCell>();
+		
 		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
 		{
 			if (hexCell.placedPlaceable != null)
@@ -174,6 +180,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 				{
 					welders.Add(hexCell.placedPlaceable as WeldingRig);
 				}
+				
+			}
+			if (hexCell.finishCell)
+			{
+				finishCells.Add(hexCell);
 			}
 		}
 		
@@ -202,8 +213,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 			 * PreStart 1:
 			 * Generators generates a Part if there is space (stores this part)
 			 * 
-			 * PreStart 2:
-			 * Welders check if there are any Parts over it (dropped or held) and welds them together
 			 * 
 			 * Start:
 			 * Grabber sets up instructions:
@@ -216,9 +225,12 @@ public class GameManager : SingletonBehaviour<GameManager>
 			 *		For Grab, it does nothing
 			 * 
 			 * PostStart 1:
-			 * Grabber performs Grab instruction if it has one (picks up whatever Part on the Cell under the Clamp)
+			 * Welders check if there are any Parts over it (dropped or held) and welds them together
 			 * 
 			 * PostStart 2:
+			 * Grabber performs Grab instruction if it has one (picks up whatever Part on the Cell under the Clamp)
+			 * 
+			 * PostStart 3:
 		 	 * The Parts list is checked for null (destroyed) Parts
 			 * 
 			 * MainSteps: Performs the intermedite steps to do the Movement and Rotation instructions:
@@ -231,7 +243,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 			 * 			If there is a collision, the offending Parts are highlighted and the simulation is set to a failure state
 			 * 
 			 **/
-			
+			Debug.Log("-------------------");
 			foreach (PartGenerator generator in generators)
 			{
 				GrabbablePart newPart = generator.StepPreStart();
@@ -241,26 +253,25 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 			}
 			
-			
-			foreach (WeldingRig welder in welders)
-			{
-				welder.PerformPreStart();
-//				Debug.Log("PerformPostInstruction "+grabber._instructionCounter);
-			}
-			
 			// perform instruction
 			foreach (Grabber grabber in grabbers)
 			{
 				grabber.PerformInstruction();
 //				Debug.Log("PerformInstruction "+grabber._instructionCounter);
 			}
+			
+			
+			foreach (WeldingRig welder in welders)
+			{
+				welder.PerformPostStart();
+//				Debug.Log("PerformPostInstruction "+grabber._instructionCounter);
+			}
+			
 			foreach (Grabber grabber in grabbers)
 			{
 				grabber.PerformPostInstruction();
 //				Debug.Log("PerformPostInstruction "+grabber._instructionCounter);
 			}
-			
-			parts.RemoveWhere((obj) => obj == null);
 			
 			
 			// inbetween 'steps'
@@ -269,6 +280,62 @@ public class GameManager : SingletonBehaviour<GameManager>
 			{
 				yield return new WaitForSeconds(0.2f/_instructionsPerSecond);
 			}
+			
+			
+			Debug.Log ("Checking " +finishCells.Count+ " finish cells");
+			HashSet<GrabbablePart> partsOverFinishCell = new HashSet<GrabbablePart>();
+			foreach (HexCell finishCell in finishCells)
+			{
+				GrabbablePart partOverCell = finishCell.partOverCell;
+				if (partOverCell != null)
+				{
+					partsOverFinishCell.Add(partOverCell);
+				}
+			}
+			Debug.Log ("Found " +partsOverFinishCell.Count+ " parts over finish cells");
+			
+			while (partsOverFinishCell.Count > 0)
+			{
+				Debug.Log ("Checking " +partsOverFinishCell.Count+ " parts");
+				// get a part from the ones over the finish cells
+				GrabbablePart partOverFinish = null;
+				foreach (var firstItem in partsOverFinishCell) 
+				{
+					partOverFinish = firstItem;
+					break;
+				}
+				
+				// get all the connected parts (the whole constructions) to this one
+				HashSet<GrabbablePart> constructionParts = new HashSet<GrabbablePart>(partOverFinish.GetAllConnectedPartsFromRoot());
+				
+				Debug.Log ("checking part " +partOverFinish.idNumber+ " ("+constructionParts.Count+" connected parts)");
+				
+				// check that all parts in the construction are in fact over finish cells
+				bool finishedConstruction = true;
+				foreach(GrabbablePart potentialFinishPart in constructionParts)
+				{
+					if (!partsOverFinishCell.Contains(potentialFinishPart))
+					{
+						finishedConstruction = false;
+						break;
+					}
+				}
+				// if they are, destroy them
+				if (finishedConstruction)
+				{
+					Debug.Log ("removing " +partOverFinish.idNumber+ "\'s connected parts");
+				
+					foreach (GrabbablePart toRemove in constructionParts)
+					{
+						GameObject.Destroy(toRemove.gameObject);
+					}
+				}
+				// in either case, these construction parts have been checked, remove them from the list
+				partsOverFinishCell.ExceptWith(constructionParts);
+			}
+			
+			parts.RemoveWhere((obj) => obj == null);
+			
 			
 			
 			// perform steps
@@ -293,6 +360,12 @@ public class GameManager : SingletonBehaviour<GameManager>
 				{
 					Debug.Log ("Simulation ending");
 					
+					
+					foreach (HexCell hc in GridManager.instance.GetAllCells())
+					{
+						hc.SetDebugText();
+						
+					}
 					foreach (Grabber grabber in grabbers)
 					{
 						grabber.EndSimulation();
@@ -327,7 +400,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 					spareTime = timeThisFrame - stepsToDoThisFrame*stepTime;
 //					Debug.Log (timeThisFrame+"("+spareTime+")");
 				}
-				
 				
 				
 				stepsToDoThisFrame -= 1;
@@ -365,8 +437,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 					GrabbablePart other = part.CheckForCollisions();
 					if (other != null)
 					{
-						part.selected = true;
-						other.selected = true;
+						part.highlighted = true;
+						other.highlighted = true;
 						gameState = State.SimulationFailed;
 						continue;
 					}
@@ -396,14 +468,21 @@ public class GameManager : SingletonBehaviour<GameManager>
 	{
 		_instructionsPerSecond = 0;
 		_currentSpeed = SimulationSpeed.Paused;
+		
 		PlaySimulation();
+		
+		_playNormalButton.transform.localScale = Vector3.one;
+		_pauseButton.transform.localScale = Vector3.zero;
 	}
 	
 	public void PlaySimulationNormal()
 	{
 		_instructionsPerSecond = instructionsPerSecondNormal;
 		_currentSpeed = SimulationSpeed.Normal;
+		
+		
 		PlaySimulation();
+		
 	}
 	
 	public void PlaySimulationFast()
@@ -430,6 +509,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	public void PlaySimulation()
 	{
+		
+		_playNormalButton.transform.localScale = Vector3.zero;
+		_pauseButton.transform.localScale = Vector3.one;
+		_stopButton.transform.localScale = Vector3.one;
+		
 		if (_gameState != State.Construction)
 		{
 			return;
@@ -444,7 +528,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		}
 		
 //		_playButton.transform.localScale = Vector3.zero;
-		_stopButton.transform.localScale = Vector3.one;
+		
 		
 		_currentSpeed = SimulationSpeed.Stopped;
 		
@@ -471,10 +555,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
 		{
-			GrabbablePart part = hexCell.partOnCell;
+			GrabbablePart part = hexCell.partOverCell;
 			if (part != null)
 			{
-				part.PlaceAtLocation(null);
+//				part.PlaceAtLocation(null);
 				GameObject.Destroy(part.gameObject);
 			}
 			
@@ -492,7 +576,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		}
 		
 		// change stop to play
-//		_playButton.transform.localScale = Vector3.one;
+		_playNormalButton.transform.localScale = Vector3.one;
+		_pauseButton.transform.localScale = Vector3.zero;
 		_stopButton.transform.localScale = Vector3.zero;
 		
 		

@@ -12,10 +12,10 @@ public class HexCell : MonoBehaviour
 	
 	public SpriteText debugText;
 	
-	void SetDebugText()
+	public void SetDebugText()
 	{
-		debugText.Text = ""+(_partOnCell == null ? "_" : ""+_partOnCell.idNumber) +">"+(_partHeldOverCell == null ? "_" : ""+_partHeldOverCell.idNumber)
-			+ "\n" + (placedMechanism == null? " ":""+(int)placedMechanism.MechanismType);
+		debugText.Text = ""+(partOverCell == null ? "_" : ""+partOverCell.idNumber)
+			+ "\n" + (placedMechanism == null? "_":""+(int)placedMechanism.MechanismType);
 	}
 	
 //	[System.NonSerialized]
@@ -36,54 +36,73 @@ public class HexCell : MonoBehaviour
 	
 	public GrabbablePart partOverCell
 	{
-		get { return _partOnCell ?? partHeldOverCell; }
-	}
-	
-	public GrabbablePart _partHeldOverCell;
-	public GrabbablePart partHeldOverCell
-	{
-		get { return _partHeldOverCell; }
-		set 
+//		get { return _partOnCell ?? partHeldOverCell; }
+		get
 		{
-			// Must deregister overLocation with Part
-			if (_partHeldOverCell != null)
+			Collider [] colliders = Physics.OverlapSphere(transform.position, 1, 1<<LayerMask.NameToLayer("GrabbablePart"));
+		
+			foreach(Collider c in colliders)
 			{
-				partOverCell.heldOverLocation = null;
+				return c.attachedRigidbody.GetComponent<GrabbablePart>();
 			}
-			_partHeldOverCell = value;
-			if (_partHeldOverCell != null)
-			{
-				partOverCell.heldOverLocation = location;
-			}
-			SetDebugText();
+			return null; 
 		}
 	}
+	
+////	public GrabbablePart _partHeldOverCell;
+//	public GrabbablePart partHeldOverCell
+//	{
+//		get 
+//		{ 
+//			Collider [] colliders = Physics.OverlapSphere(transform.position, 1, 1<<LayerMask.NameToLayer("GrabbablePart"));
+//		
+//			foreach(Collider c in colliders)
+//			{
+//				return c.attachedRigidbody.GetComponent<GrabbablePart>();
+//			}
+//			return _partHeldOverCell; 
+//		}
+////		set 
+////		{
+////			// Must deregister overLocation with Part
+////			if (_partHeldOverCell != null)
+////			{
+////				partOverCell.heldOverLocation = null;
+////			}
+////			_partHeldOverCell = value;
+////			if (_partHeldOverCell != null)
+////			{
+////				partOverCell.heldOverLocation = location;
+////			}
+////			SetDebugText();
+////		}
+//	}
 	
 //	GrabbablePart _part;
-	GrabbablePart _partOnCell;
-	public GrabbablePart partOnCell
-	{
-		get {return _partOnCell;}
-		set 
-		{
-			_partOnCell = value;
-			if (_partOnCell != null)
-			{
-				button.SetColor(Color.red);
-			}
-			else
-			{
-				finishCell = _finishCell;
-			}
-			SetDebugText();
-		}
-	}
+//	GrabbablePart _partOnCell;
+//	public GrabbablePart partOnCell
+//	{
+//		get {return _partOnCell;}
+//		set 
+//		{
+//			_partOnCell = value;
+//			if (_partOnCell != null)
+//			{
+//				button.SetColor(Color.red);
+//			}
+//			else
+//			{
+//				finishCell = _finishCell;
+//			}
+//			SetDebugText();
+//		}
+//	}
 	
 	public Mechanism placedMechanism { get { return placedPlaceable as Mechanism; } }
 	
 	public IntVector2 location;
 	
-	[HideInInspector]
+//	[HideInInspector]
 	[SerializeField]
 	bool _finishCell;
 	public bool finishCell

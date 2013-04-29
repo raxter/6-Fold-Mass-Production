@@ -66,7 +66,7 @@ public class WeldingRig : Mechanism
 	
 	
 	
-	public void PerformPreStart()
+	public void PerformPostStart()
 	{
 //		foreach (HexCell hc in new HexCell [4] {hexCell, leftBelow, centerBelow, rightBelow})
 //		{

@@ -1,23 +1,26 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Game\GrabbablePart.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Game\HexCell.cs">
     <Files>
-      <File FileName="Assets\Code\Managers\GameManager.cs" Line="266" Column="24" />
-      <File FileName="Assets\Code\Game\Grabber.cs" Line="231" Column="26" />
+      <File FileName="Assets\Code\Managers\GameManager.cs" Line="272" Column="1" />
       <File FileName="Assets\Code\Data\LevelSettings.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\HexCell.cs" Line="33" Column="19" />
-      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="111" Column="68" />
-      <File FileName="Assets\Code\Game\WeldingRig.cs" Line="88" Column="1" />
+      <File FileName="Assets\Code\Game\HexCell.cs" Line="44" Column="1" />
+      <File FileName="Assets\Code\Game\Grabber.cs" Line="293" Column="1" />
+      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="76" Column="3" />
+      <File FileName="Assets\Code\Game\WeldingRig.cs" Line="77" Column="6" />
       <File FileName="Assets\Code\Game\HexMetrics.cs" Line="16" Column="1" />
-      <File FileName="Assets\Plugins\RaxterFramework\IntVector2.cs" Line="36" Column="1" />
-      <File FileName="Assets\Code\Game\HexCellPlaceable.cs" Line="43" Column="24" />
-      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="25" Column="26" />
+      <File FileName="Assets\Plugins\RaxterFramework\IntVector2.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\HexCellPlaceable.cs" Line="79" Column="41" />
+      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="41" Column="92" />
+      <File FileName="Assets\Code\Game\Mechanism.cs" Line="53" Column="2" />
+      <File FileName="Assets\Plugins\EZGUI\EZ\GUI\Management\UIManager.cs" Line="1288" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="/Users/richard/Projects/Personal Development/6-Fold-Mass-Production/Assets/Code/HexCellPlaceable.cs" line="90" />
       <Breakpoint file="D:\GameDev\6-Fold-Mass-Production\Assets\Code\Game\CollisionDelegate.cs" line="17" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Grabber.cs" line="293" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches>

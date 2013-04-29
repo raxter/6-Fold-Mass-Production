@@ -49,6 +49,9 @@ public abstract class Mechanism : HexCellPlaceable
 		_dragging = false;
 	}
 	
+	
+	
+	
 	protected override void PlaceableStart()
 	{
 	}

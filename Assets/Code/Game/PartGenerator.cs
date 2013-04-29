@@ -31,19 +31,19 @@ public class PartGenerator : HexCellPlaceable
 //		Debug.Log ("StepPreStart");
 		if (hexCell != null)
 		{
-			GrabbablePart part = hexCell.partOnCell;
-			
 			if (placeOnNextTurn)
 			{
+				GrabbablePart part;
 				part = (GameObject.Instantiate(toGeneratePrefab.gameObject) as GameObject).GetComponent<GrabbablePart>();
 				part.idNumber = generatorCount;
 				part.gameObject.name = toGeneratePrefab.gameObject.name+" "+generatorCount;
-				part.PlaceAtLocation(Location);
+//				part.PlaceAtLocation(Location);
+				part.transform.position = GridManager.instance.GetHexCell(Location).transform.position;
 				placeOnNextTurn = false;
 				generatorCount += 1;
 				return part;
 			}
-			else if (hexCell.partOnCell == null)
+			else if (hexCell.partOverCell == null)
 			{ 
 				placeOnNextTurn = true;
 			}

@@ -55,7 +55,7 @@ public class Grabber : Mechanism
 	}
 	
 	GrabbablePart heldPart;
-	System.Action _doAtEndOfInstruction;
+//	System.Action _doAtEndOfInstruction;
 	
 	GrabberState _startState;
 	
@@ -151,7 +151,6 @@ public class Grabber : Mechanism
 		}
 		
 //		Debug.Log("Deregistering "+heldPart+" at "+LocationAtClampEnd().x+":"+LocationAtClampEnd().y);
-		GridManager.instance.GetHexCell(LocationAtClampEnd()).partHeldOverCell = null;
 		
 //		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
 		
@@ -165,7 +164,7 @@ public class Grabber : Mechanism
 		
 		_currentInstruction = instructions[_instructionCounter];
 		
-		_doAtEndOfInstruction = null;
+//		_doAtEndOfInstruction = null;
 		
 		switch (_currentInstruction)
 		{
@@ -216,24 +215,53 @@ public class Grabber : Mechanism
 						// trying to drop into non grid location
 						
 						GameManager.instance.gameState = GameManager.State.SimulationFailed;
-						heldPart.selected = true;
+						heldPart.highlighted = true;
 						break;
 					}
 					
-					GrabbablePart partToCheck = heldPart;
-					_doAtEndOfInstruction = () => 
-					{
-						partToCheck.CheckForFinish();
-					};
+//					GrabbablePart partToCheck = heldPart;
+//					_doAtEndOfInstruction = () => 
+//					{
+//						partToCheck.CheckForFinish();
+//					};
 //					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
 //					heldPart.gameObject.transform.parent = null;
-					// TOD drop and lower for all connected cells
-					heldPart.PlaceAtLocation(locationAtClamp);
+					// TODO drop and lower for all connected cells
+				
+//					foreach(GrabbablePart part in heldPart.GetAllConnectedPartsFromRoot())
+//					{
+//						int directionInt = (int)((-part.transform.rotation.eulerAngles.z-1)/60);
+//						directionInt = (directionInt + 6) % 6;
+////						Debug.Log ("part "+ part.idNumber+" rotation : "+directionInt+"("+((HexMetrics.Direction)directionInt)+")");
+//					}
+//				
+//					heldPart.ForEachChild((part, loc) => 
+//					{
+//						Debug.Log ("placing part "+ part.idNumber+" location : "+loc.x+":"+loc.y);
+//						part.PlaceAtLocation(loc);
+//					});
+//					heldPart.PlaceAtLocation(locationAtClamp);
+				
+				
 					heldPart = null;
 				}
 			}
 			break;
 		}
+		
+////		Deregister holdover
+////		GridManager.instance.GetHexCell(LocationAtClamp()).partHeldOverCell = null;
+////		
+//		HexCell overClampCell = GridManager.instance.GetHexCell(LocationAtClamp());
+//		if (overClampCell.partHeldOverCell != null)
+//		{
+//			overClampCell.partHeldOverCell.ForEachChild(
+//			(part, loc) => 
+//			{
+//				GridManager.instance.GetHexCell(loc).partHeldOverCell = null;
+//			});
+//		}
+		
 		_endStepState.direction = (HexMetrics.Direction)((int)_endStepState.direction % 6);
 		_endStepState.extention = Mathf.Clamp(_endStepState.extention, 0, 2);
 		
@@ -256,18 +284,26 @@ public class Grabber : Mechanism
 		{
 			if (heldPart == null)
 			{
-				// TODO grab and lift for all connected cells
 				HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
-				GrabbablePart part = underClamp.partOnCell;
-				if (part != null)
+//				GrabbablePart partUnderClamp = underClamp.partOnCell;
+				GrabbablePart partUnderClamp = underClamp.partOverCell;
+				
+				if (partUnderClamp == null) // there is nothing to grab
 				{
-					heldPart = part;
-//					part.gameObject.transform.parent = clamp.transform;
-//					foreach (part.GetAllConnectedParts())
-//					{
-						part.PlaceAtLocation(null);
-//					}
+					GrabbablePart partUnderClamp2 = underClamp.partOverCell;
+//					Debug.Break ();
+					return;
 				}
+				// else
+				
+				heldPart = partUnderClamp;
+				
+//				Debug.Log ("Unplacing all from " + partUnderClamp);
+//				foreach(GrabbablePart part in partUnderClamp.GetAllConnectedPartsFromRoot())
+//				{
+//					Debug.Log ("Unplacing " + part + " from " + part.Location.x +":"+part.Location.y);
+//					part.PlaceAtLocation(null);
+//				}
 			}
 		}
 	}
@@ -290,18 +326,30 @@ public class Grabber : Mechanism
 	// returns true if finished
 	public bool PerformStep ()
 	{
+		_stepCounter += 1 ;
 		if (StepFinished())
 		{
-			IntVector2 locationAtClampEnd = LocationAtClampEnd();
-//			Debug.Log("Registering "+heldPart+" at "+locationAtClampEnd.x+":"+locationAtClampEnd.y);
-			HexCell overClampCell = GridManager.instance.GetHexCell(locationAtClampEnd);
-			overClampCell.partHeldOverCell = heldPart;
+//			// Register hold over
+//			IntVector2 locationAtClampEnd = LocationAtClampEnd();
+////			Debug.Log("Registering "+heldPart+" at "+locationAtClampEnd.x+":"+locationAtClampEnd.y);
+//			
+//			HexCell overClampCell = GridManager.instance.GetHexCell(locationAtClampEnd);
+//			
+////			overClampCell.partHeldOverCell = heldPart;
+//			if (overClampCell.partHeldOverCell != null)
+//			{
+//				overClampCell.partHeldOverCell.ForEachChild(
+//				(part, loc) => 
+//				{
+//					GridManager.instance.GetHexCell(loc).partHeldOverCell = part;
+//				});
+//			}
 			
-			if (_doAtEndOfInstruction != null)
-			{
-				_doAtEndOfInstruction();
-				_doAtEndOfInstruction = null;
-			}
+//			if (_doAtEndOfInstruction != null)
+//			{
+//				_doAtEndOfInstruction();
+//				_doAtEndOfInstruction = null;
+//			}
 			return true;
 		}
 		
@@ -325,7 +373,7 @@ public class Grabber : Mechanism
 		MoveToState(extentionValue, angleValue);
 		
 		
-		if (_stepCounter == 0)//_stepsPerInstruction/2)
+		if (_stepCounter == 1)//_stepsPerInstruction/2)
 		{
 //			Debug.Log(_stepCounter+" == "+_stepsPerInstruction/2+":"+instructions[_instructionCounter]);
 			switch (_currentInstruction)
@@ -349,7 +397,6 @@ public class Grabber : Mechanism
 		}
 		
 		
-		_stepCounter += 1 ;
 		
 		return false;
 	}
