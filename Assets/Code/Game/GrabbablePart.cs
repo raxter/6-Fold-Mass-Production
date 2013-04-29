@@ -24,8 +24,23 @@ public class GrabbablePart : MonoBehaviour
 			_highlightItem.SetActive(value);
 		}
 	}
-	
-	
+
+	public void RegisterLocationFromPosition ()
+	{
+		HexCell zeroCell = GridManager.instance.GetHexCell(IntVector2.zero);
+		Vector3 relativeLocation =  gameObject.transform.position - zeroCell.gameObject.transform.position;
+//		Debug.Log ("regestering at "+relativeLocation);
+		float sideLength = zeroCell.SideLength;
+		int x = (int)((relativeLocation.x+1)/(sideLength*1.5f));
+//		Debug.Log ("x "+x);
+//		float yRelative = relativeLocation.y-x*
+		int y = ((int)((relativeLocation.y+1)/(zeroCell.Height/2)) - x)/2;
+//		Debug.Log ("y "+y);
+		
+		Debug.Log ("registering at "+x+":"+y);
+		//find hex cell, register
+		GridManager.instance.GetHexCell(new IntVector2(x,y)).RegisterPart(this);
+	}
 	
 //	public IntVector2 _heldOverLocation;
 //	public IntVector2 heldOverLocation

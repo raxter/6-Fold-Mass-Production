@@ -147,6 +147,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 	}
 	
 	
+	HashSet<GrabbablePart> parts = new HashSet<GrabbablePart>();
 	int stepsToDoThisFrame = 0;
 	
 	IEnumerator SimulationCoroutine()
@@ -159,7 +160,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 		List<PartGenerator> generators = new List<PartGenerator>();
 		HashSet<WeldingRig> welders = new HashSet<WeldingRig>();
 		
-		HashSet<GrabbablePart> parts = new HashSet<GrabbablePart>();
 		
 		List<HexCell> finishCells = new List<HexCell>();
 		
@@ -200,6 +200,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		{
 			grabber.StartSimulation(_stepsPerInstruction);
 		}
+		
+		parts.Clear();
 		
 		while (true)
 		{
@@ -243,6 +245,14 @@ public class GameManager : SingletonBehaviour<GameManager>
 			 * 			If there is a collision, the offending Parts are highlighted and the simulation is set to a failure state
 			 * 
 			 **/
+			
+			
+			parts.RemoveWhere((obj) => obj == null);
+			foreach(GrabbablePart part in parts)
+			{
+				part.RegisterLocationFromPosition();
+			}
+			
 			Debug.Log("-------------------");
 			foreach (PartGenerator generator in generators)
 			{
@@ -250,6 +260,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				if (newPart)
 				{
 					parts.Add(newPart);
+					newPart.RegisterLocationFromPosition();
 				}
 			}
 			
@@ -334,10 +345,13 @@ public class GameManager : SingletonBehaviour<GameManager>
 				partsOverFinishCell.ExceptWith(constructionParts);
 			}
 			
-			parts.RemoveWhere((obj) => obj == null);
 			
+			foreach(HexCell hc in GridManager.instance.GetAllCells())
+			{
+				hc.DeregisterPart();
+			}
 			
-			
+			int noGrabberSteps = 60;
 			// perform steps
 			while (true)
 			{
@@ -414,6 +428,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 						allFinished = false;
 					}
 //					Debug.Log("PerformStep "+grabber._stepCounter);
+				}
+				
+				if (grabbers.Count == 0)
+				{
+					noGrabberSteps -= 1;
+				}
+				if (noGrabberSteps <= 0)
+				{
+					allFinished = true;
 				}
 				
 				
@@ -553,21 +576,27 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 //		StartCoroutine(SimulationStopCoroutine());
 		
-		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
+		
+		foreach (GrabbablePart part in parts)
 		{
-			GrabbablePart part = hexCell.partOverCell;
-			if (part != null)
-			{
-//				part.PlaceAtLocation(null);
-				GameObject.Destroy(part.gameObject);
-			}
-			
-			Grabber grabber = hexCell.placedMechanism as Grabber;
-			if (grabber != null)
-			{
-				grabber.ClearClamp();
-			}
+			GameObject.Destroy(part.gameObject);
 		}
+		parts.Clear();
+//		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
+//		{
+//			GrabbablePart part = hexCell.partOverCell;
+//			if (part != null)
+//			{
+////				part.PlaceAtLocation(null);
+//				GameObject.Destroy(part.gameObject);
+//			}
+//			
+//			Grabber grabber = hexCell.placedMechanism as Grabber;
+//			if (grabber != null)
+//			{
+//				grabber.ClearClamp();
+//			}
+//		}
 		
 		foreach (GUIEnabler guiElement in _enableableGUIObjects)
 		{
