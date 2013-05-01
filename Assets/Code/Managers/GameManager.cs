@@ -6,48 +6,40 @@ using System.Collections.Generic;
 public class GameManager : SingletonBehaviour<GameManager> 
 {
 	
-	[SerializeField]
-	List<Mechanism> mechanismPrefabs = null;
+//	[SerializeField]
+//	List<Mechanism> mechanismPrefabs = null;
 	
 	
-	[SerializeField]
-	PartGenerator generatorPrefab = null;
+//	[SerializeField]
+//	PartGenerator generatorPrefab = null;
 	
 	Dictionary<MechanismType, Mechanism> cellMechanisms;
 	
 	Mechanism unplacedMechanism = null;
 	
-	[SerializeField]
-	GUIEnabler [] _enableableGUIObjects = null;
-	
-//	[SerializeField]
-//	UIButton _playButton = null;
-	[SerializeField]
-	UIButton _stopButton = null;
-	[SerializeField]
-	UIButton _playNormalButton = null;
-	[SerializeField]
-	UIButton _pauseButton = null;
-	
-	[SerializeField]
-	SpriteText _targetText = null;
 	
 	LevelSettings.Level _currentLevel = null;
+	public LevelSettings.Level currentLevel
+	{
+		get
+		{
+			return _currentLevel;
+		}
+	}
 	
 	int _completedConstructions = -1;
-	int completedConstructions
+	public int completedConstructions
 	{
 		get { return _completedConstructions; }
 		set 
 		{ 
 			_completedConstructions = value; 
-			_targetText.Text = "Target\n"+_completedConstructions+"/"+_currentLevel.targetConstructions;
+			ConstructionCompletedEvent();
 		}
 	}
+	public delegate void EventFunction();
 	
-	enum SimulationSpeed {Stopped, Paused, Normal, Fast, Faster, Fastest};
-	
-	SimulationSpeed _currentSpeed = SimulationSpeed.Stopped;
+	public event EventFunction ConstructionCompletedEvent;
 	
 	[SerializeField]
 	float instructionsPerSecondNormal = 1;
@@ -63,7 +55,9 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	float stepsPerSecond { get { return _stepsPerInstruction * _instructionsPerSecond; } }
 	
-	public bool guiEnabled { get; private set; }
+//	public bool guiEnabled { get; private set; }
+	
+	public event EventFunction GameStateChangedEvent;
 	
 	public enum State {Construction, Simulation, SimulationFailed};
 	
@@ -83,14 +77,17 @@ public class GameManager : SingletonBehaviour<GameManager>
 	void SetState(State newState)
 	{
 		_gameState = newState;
+		GameStateChangedEvent();
 	}
 	
 	State _gameState;
 	
 	public string loadLevelOnStart = "";
 	
-	void Start()
+	IEnumerator Start()
 	{
+		yield return null;
+		
 		LoadLevel(loadLevelOnStart);
 		
 		gameState = State.Construction;
@@ -98,7 +95,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		cellMechanisms.Add(MechanismType.None, null);
 		
-		foreach (Mechanism mechanism in mechanismPrefabs)
+		foreach (Mechanism mechanism in GameSettings.instance.mechanismPrefabs)
 		{
 			cellMechanisms.Add(mechanism.MechanismType, mechanism);
 		}
@@ -113,7 +110,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
 		{
-			PartGenerator generator = (GameObject.Instantiate(generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
+			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
 			generator.toGeneratePrefab = generatorDetails.toGeneratePrefab;
 			generator.PlaceAtLocation(generatorDetails.location);
 		}
@@ -207,7 +204,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		{
 			
 			
-			/**
+			/** TODO update this
 			 * Description of events in an instruction loop:
 			 * 
 			 * Preamble: Each instruction is split into a number of steps, simulation continuously performs instructions until win or failure
@@ -253,14 +250,14 @@ public class GameManager : SingletonBehaviour<GameManager>
 				part.RegisterLocationFromPosition();
 			}
 			
-			Debug.Log("-------------------");
+//			Debug.Log("-------------------");
 			foreach (PartGenerator generator in generators)
 			{
 				GrabbablePart newPart = generator.StepPreStart();
 				if (newPart)
 				{
 					parts.Add(newPart);
-					newPart.RegisterLocationFromPosition();
+					newPart.RegisterLocationFromPosition(); // must perform this second registration step here because generators must know when there is a part above/on it
 				}
 			}
 			
@@ -293,7 +290,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 			}
 			
 			
-			Debug.Log ("Checking " +finishCells.Count+ " finish cells");
+//			Debug.Log ("Checking " +finishCells.Count+ " finish cells");
 			HashSet<GrabbablePart> partsOverFinishCell = new HashSet<GrabbablePart>();
 			foreach (HexCell finishCell in finishCells)
 			{
@@ -303,11 +300,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 					partsOverFinishCell.Add(partOverCell);
 				}
 			}
-			Debug.Log ("Found " +partsOverFinishCell.Count+ " parts over finish cells");
+//			Debug.Log ("Found " +partsOverFinishCell.Count+ " parts over finish cells");
 			
 			while (partsOverFinishCell.Count > 0)
 			{
-				Debug.Log ("Checking " +partsOverFinishCell.Count+ " parts");
+//				Debug.Log ("Checking " +partsOverFinishCell.Count+ " parts");
 				// get a part from the ones over the finish cells
 				GrabbablePart partOverFinish = null;
 				foreach (var firstItem in partsOverFinishCell) 
@@ -319,7 +316,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				// get all the connected parts (the whole constructions) to this one
 				HashSet<GrabbablePart> constructionParts = new HashSet<GrabbablePart>(partOverFinish.GetAllConnectedPartsFromRoot());
 				
-				Debug.Log ("checking part " +partOverFinish.idNumber+ " ("+constructionParts.Count+" connected parts)");
+//				Debug.Log ("checking part " +partOverFinish.idNumber+ " ("+constructionParts.Count+" connected parts)");
 				
 				// check that all parts in the construction are in fact over finish cells
 				bool finishedConstruction = true;
@@ -331,14 +328,23 @@ public class GameManager : SingletonBehaviour<GameManager>
 						break;
 					}
 				}
-				// if they are, destroy them
+				// if they are..., destroy them
 				if (finishedConstruction)
 				{
-					Debug.Log ("removing " +partOverFinish.idNumber+ "\'s connected parts");
+					// and if they are the corrects construction
+					bool correctConstruction = false;
+					// todo correct construction check goes here
+					correctConstruction = true;
 				
-					foreach (GrabbablePart toRemove in constructionParts)
+					if (correctConstruction)
 					{
-						GameObject.Destroy(toRemove.gameObject);
+						completedConstructions += 1;
+						Debug.Log ("removing " +partOverFinish.idNumber+ "\'s connected parts");
+					
+						foreach (GrabbablePart toRemove in constructionParts)
+						{
+							GameObject.Destroy(toRemove.gameObject);
+						}
 					}
 				}
 				// in either case, these construction parts have been checked, remove them from the list
@@ -372,7 +378,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 				if (gameState == State.Construction)
 				{
-					Debug.Log ("Simulation ending");
+//					Debug.Log ("Simulation ending");
 					
 					
 					foreach (HexCell hc in GridManager.instance.GetAllCells())
@@ -391,6 +397,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 //				Debug.Log (Time.timeSinceLevelLoad);
 //				Debug.Log (Time.realtimeSinceStartup +"-"+ startFrameTime+"="+(Time.realtimeSinceStartup - startFrameTime) +">"+ Time.fixedDeltaTime);
+				
 				if ((Time.realtimeSinceStartup - startFrameTime) > (Time.fixedDeltaTime))
 				{
 					stepsToDoThisFrame = 0;
@@ -487,73 +494,78 @@ public class GameManager : SingletonBehaviour<GameManager>
 	}
 	
 	
+	public enum SimulationSpeed {Stopped, Paused, Normal, Fast, Faster, Fastest};
+	
+	public SimulationSpeed currentSpeed
+	{
+		get
+		{
+			return _currentSpeed;
+		}
+		private set
+		{
+			_currentSpeed = value;
+			SimulationSpeedChangedEvent();
+		}
+	}
+	SimulationSpeed _currentSpeed = SimulationSpeed.Stopped;
+	
+	public event EventFunction SimulationSpeedChangedEvent;
+	
 	public void PlaySimulationPaused()
 	{
-		_instructionsPerSecond = 0;
-		_currentSpeed = SimulationSpeed.Paused;
-		
-		PlaySimulation();
-		
-		_playNormalButton.transform.localScale = Vector3.one;
-		_pauseButton.transform.localScale = Vector3.zero;
+		PlaySimulation(SimulationSpeed.Paused);
 	}
 	
 	public void PlaySimulationNormal()
 	{
-		_instructionsPerSecond = instructionsPerSecondNormal;
-		_currentSpeed = SimulationSpeed.Normal;
-		
-		
-		PlaySimulation();
-		
+		PlaySimulation(SimulationSpeed.Normal);
 	}
 	
 	public void PlaySimulationFast()
 	{
-		_instructionsPerSecond = instructionsPerSecondFast;
-		_currentSpeed = SimulationSpeed.Fast;
-		PlaySimulation();
+		PlaySimulation(SimulationSpeed.Fast);
 	}
 	
 	public void PlaySimulationFaster()
 	{
-		_instructionsPerSecond = instructionsPerSecondFaster;
-		_currentSpeed = SimulationSpeed.Faster;
-		PlaySimulation();
+		PlaySimulation(SimulationSpeed.Faster);
 	}
 	
 	public void PlaySimulationFastest()
 	{
-		_instructionsPerSecond = instructionsPerSecondFastest;
-		_currentSpeed = SimulationSpeed.Fastest;
-		PlaySimulation();
+		PlaySimulation(SimulationSpeed.Fastest);
 	}
 	
 	
-	public void PlaySimulation()
+	public void PlaySimulation(SimulationSpeed newSimulationSpeed)
 	{
+		currentSpeed = newSimulationSpeed;
+		switch (currentSpeed)
+		{
+		case SimulationSpeed.Paused:
+			_instructionsPerSecond = 0;
+			break;
+		case SimulationSpeed.Normal:
+			_instructionsPerSecond = instructionsPerSecondNormal;
+			break;
+		case SimulationSpeed.Fast:
+			_instructionsPerSecond = instructionsPerSecondFast;
+			break;
+		case SimulationSpeed.Faster:
+			_instructionsPerSecond = instructionsPerSecondFaster;
+			break;
+		case SimulationSpeed.Fastest:
+			_instructionsPerSecond = instructionsPerSecondFastest;
+			break;
+		}
 		
-		_playNormalButton.transform.localScale = Vector3.zero;
-		_pauseButton.transform.localScale = Vector3.one;
-		_stopButton.transform.localScale = Vector3.one;
-		
-		if (_gameState != State.Construction)
+		if (gameState != State.Construction)
 		{
 			return;
 		}
 		
 		Debug.Log ("PlaySimulation");
-		// Disable Input
-		foreach (GUIEnabler guiElement in _enableableGUIObjects)
-		{
-			guiElement.EnableGUI(false);
-			guiEnabled = false;
-		}
-		
-//		_playButton.transform.localScale = Vector3.zero;
-		
-		
-		_currentSpeed = SimulationSpeed.Stopped;
 		
 		gameState = State.Simulation;
 		
@@ -562,19 +574,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 	}
 	
-//	IEnumerator SimulationStopCoroutine()
-//	{
-//		yield return null;
-//	}
 	
 	public void StopSimulation()
 	{
+		currentSpeed = SimulationSpeed.Stopped;
+		
 		gameState = State.Construction;
 		
 		Debug.Log ("StopSimulation");
 		// Reenable Input
-		
-//		StartCoroutine(SimulationStopCoroutine());
 		
 		
 		foreach (GrabbablePart part in parts)
@@ -582,45 +590,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 			GameObject.Destroy(part.gameObject);
 		}
 		parts.Clear();
-//		foreach (HexCell hexCell in GridManager.instance.GetAllCells())
-//		{
-//			GrabbablePart part = hexCell.partOverCell;
-//			if (part != null)
-//			{
-////				part.PlaceAtLocation(null);
-//				GameObject.Destroy(part.gameObject);
-//			}
-//			
-//			Grabber grabber = hexCell.placedMechanism as Grabber;
-//			if (grabber != null)
-//			{
-//				grabber.ClearClamp();
-//			}
-//		}
-		
-		foreach (GUIEnabler guiElement in _enableableGUIObjects)
-		{
-			guiElement.EnableGUI(true);
-			guiEnabled = true;
-		}
-		
-		// change stop to play
-		_playNormalButton.transform.localScale = Vector3.one;
-		_pauseButton.transform.localScale = Vector3.zero;
-		_stopButton.transform.localScale = Vector3.zero;
 		
 		
 		completedConstructions = 0;
 	}
 	
-//	public void UnSelecteMechanistIcon ()
-//	{
-//		if (unplacedMechanism != null)
-//		{
-//			unplacedMechanism.StopDrag();
-//			
-//		}
-//	}
 	
 	public void PartCollisionOccured (GrabbablePart part, GrabbablePart otherPart)
 	{
