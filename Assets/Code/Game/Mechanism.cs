@@ -16,7 +16,7 @@ public abstract class Mechanism : HexCellPlaceable
 		
 	public void StartDrag()
 	{
-		if (!GameManager.instance.guiEnabled)
+		if (GameManager.instance.currentSpeed != GameManager.SimulationSpeed.Stopped)
 		{
 			return;
 		}

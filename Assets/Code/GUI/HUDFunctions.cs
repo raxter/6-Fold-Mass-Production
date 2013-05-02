@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(GUIEnabler))]
 public class HUDFunctions : MonoBehaviour
 {
 	bool _inputEnabled = true;
@@ -14,7 +13,11 @@ public class HUDFunctions : MonoBehaviour
 	
 	void Start()
 	{
-		GetComponent<GUIEnabler>().onEnableGUI = (enabled) => _inputEnabled = enabled;
+//		GetComponent<GUIEnabler>().onEnableGUI = (enabled) => _inputEnabled = enabled;
+		GameManager.instance.GameStateChangedEvent += () => 
+		{
+			_inputEnabled = (GameManager.instance.gameState == GameManager.State.Construction);
+		};
 		
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
 		welderButton.AddInputDelegate(WelderInputDelegate);

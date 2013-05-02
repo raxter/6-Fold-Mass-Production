@@ -28,7 +28,7 @@ public class HexCell : MonoBehaviour
 		}
 		set
 		{
-			Debug.Log ("Placing "+value+" at "+location.x+":"+location.y);
+//			Debug.Log ("Placing "+value+" at "+location.x+":"+location.y);
 			_placedPlaceable = value;
 			SetDebugText();
 		}
@@ -43,7 +43,7 @@ public class HexCell : MonoBehaviour
 	{
 		if (_partOverCell != null)
 		{
-			Debug.Log ("DeregisterPart "+location.x+":"+location.y);
+//			Debug.Log ("DeregisterPart "+location.x+":"+location.y);
 		}
 		_partOverCell = null;
 	}

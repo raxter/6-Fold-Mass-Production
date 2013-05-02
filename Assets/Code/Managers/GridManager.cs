@@ -30,19 +30,6 @@ public class HexCellRow
 
 public class GridManager : SingletonBehaviour<GridManager> 
 {
-	[SerializeField]
-	HexCell _hexCellPrefab;
-	
-	[SerializeField]
-	int _finalCellsFromWidth;
-	[SerializeField]
-	int _finalCellsFromHeight;
-	
-	[SerializeField]
-	int _width;
-	
-	[SerializeField]
-	int _height;
 	
 	[SerializeField]
 	GameObject _hexCellHolder;
@@ -157,15 +144,16 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void CreateHexCellMap()
 	{
+		GameSettings gameSettings = GameSettings.instance;
 		DestroyHexCellMap();
-		_hexCellRows = new HexCellRow [_width];
+		_hexCellRows = new HexCellRow [gameSettings.gridWidth];
 		
-		for (int w = 0 ; w < _width ; w++)
+		for (int w = 0 ; w < gameSettings.gridWidth ; w++)
 		{
-			_hexCellRows[w] = new HexCellRow(_height);
+			_hexCellRows[w] = new HexCellRow(gameSettings.gridHeight);
 			for (int h = 0 ; h < _hexCellRows[w].row.Length ; h++)
 			{
-				GameObject go = GameObject.Instantiate(_hexCellPrefab.gameObject) as GameObject;
+				GameObject go = GameObject.Instantiate(gameSettings.hexCellPrefab.gameObject) as GameObject;
 				
 				HexCell hexCell = go.GetComponent<HexCell>();
 				
@@ -180,7 +168,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 				go.layer = _hexCellHolder.layer;
 				_hexCellRows[w][h] = hexCell;
 				
-				if (w >= _finalCellsFromWidth && h >= _finalCellsFromHeight)
+				if (w >= gameSettings.gridFinalCellsFromWidth && h >= gameSettings.gridFinalCellsFromHeight)
 				{
 					_hexCellRows[w][h].finishCell = true;
 				}

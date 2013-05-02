@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent(typeof(GUIEnabler))]
 public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 {
 	[SerializeField]
@@ -32,7 +31,10 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	void Start()
 	{
-		GetComponent<GUIEnabler>().onEnableGUI = EnableGUI;
+		GameManager.instance.GameStateChangedEvent += () => 
+		{
+			EnableGUI(GameManager.instance.gameState == GameManager.State.Construction);
+		};
 	}
 	
 	public Grabber DisplayedGrabber 

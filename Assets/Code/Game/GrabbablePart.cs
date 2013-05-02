@@ -37,7 +37,7 @@ public class GrabbablePart : MonoBehaviour
 		int y = ((int)((relativeLocation.y+1)/(zeroCell.Height/2)) - x)/2;
 //		Debug.Log ("y "+y);
 		
-		Debug.Log ("registering at "+x+":"+y);
+//		Debug.Log ("registering at "+x+":"+y);
 		//find hex cell, register
 		GridManager.instance.GetHexCell(new IntVector2(x,y)).RegisterPart(this);
 	}
