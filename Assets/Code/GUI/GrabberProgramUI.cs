@@ -67,7 +67,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 
 	public void InstructionSetAt (int _index)
 	{
-		if (_index + 1 < _instructionSlots.Length && DisplayedGrabber.instructions[_index+1] == Grabber.Instruction.None)
+		if (_index + 1 < _instructionSlots.Length && DisplayedGrabber.GetInstruction(_index+1) == Grabber.Instruction.None)
 		{
 			_instructionSlots[_index+1].ToggleInstructionPanel();
 		}

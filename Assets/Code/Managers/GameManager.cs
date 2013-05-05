@@ -15,7 +15,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	Dictionary<MechanismType, Mechanism> cellMechanisms;
 	
-	Mechanism unplacedMechanism = null;
 	
 	
 	LevelSettings.Level _currentLevel = null;
@@ -100,6 +99,9 @@ public class GameManager : SingletonBehaviour<GameManager>
 			cellMechanisms.Add(mechanism.MechanismType, mechanism);
 		}
 		StopSimulation();
+		
+		
+		GridManager.instance.LoadLayout();
 	}
 
 	void LoadLevel (string leveName)
@@ -131,13 +133,17 @@ public class GameManager : SingletonBehaviour<GameManager>
 		throw new System.NotImplementedException ();
 	}
 	
+	public Mechanism InstantiateMechanism(MechanismType cellMechanismType)
+	{
+		return (GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<Mechanism>();
+	}
 	
-	public void CreateMechanism(MechanismType cellMechanismType)
+	public void CreateMechanismForDragging(MechanismType cellMechanismType)
 	{
 		if (cellMechanismType == MechanismType.None)
 			return;
 		
-		unplacedMechanism = (GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<Mechanism>();
+		Mechanism unplacedMechanism = InstantiateMechanism(cellMechanismType);//(GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<Mechanism>();
 		
 		InputManager.instance.StartDraggingUnplaced(unplacedMechanism);
 		
@@ -261,6 +267,12 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 			}
 			
+			foreach (WeldingRig welder in welders)
+			{
+				welder.PerformPostStart();
+//				Debug.Log("PerformPostInstruction "+grabber._instructionCounter);
+			}
+			
 			// perform instruction
 			foreach (Grabber grabber in grabbers)
 			{
@@ -268,12 +280,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 //				Debug.Log("PerformInstruction "+grabber._instructionCounter);
 			}
 			
-			
-			foreach (WeldingRig welder in welders)
-			{
-				welder.PerformPostStart();
-//				Debug.Log("PerformPostInstruction "+grabber._instructionCounter);
-			}
 			
 			foreach (Grabber grabber in grabbers)
 			{
@@ -335,7 +341,9 @@ public class GameManager : SingletonBehaviour<GameManager>
 					bool correctConstruction = false;
 					// todo correct construction check goes here
 					correctConstruction = true;
-				
+					
+					correctConstruction = currentLevel.targetConstruction.CompareTo(partOverFinish) == 0;
+					
 					if (correctConstruction)
 					{
 						completedConstructions += 1;
@@ -467,9 +475,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 					GrabbablePart other = part.CheckForCollisions();
 					if (other != null)
 					{
-						part.highlighted = true;
-						other.highlighted = true;
-						gameState = State.SimulationFailed;
+						PartCollisionOccured(part, other);
 						continue;
 					}
 				}
@@ -493,6 +499,23 @@ public class GameManager : SingletonBehaviour<GameManager>
 		yield break; 
 	}
 	
+	
+	public void PartCollisionOccured (GrabbablePart part, GrabbablePart otherPart)
+	{
+		Debug.Log ("SimulationFailed");
+		part.highlighted = true;
+		otherPart.highlighted = true;
+		gameState = State.SimulationFailed;
+	}
+	
+	public void MultipleGrabOccured (Grabber grabber, Grabber otherGrabber)
+	{
+		grabber.selected = true;
+		otherGrabber.selected = true;
+		grabber.heldPart.highlighted = true;
+		otherGrabber.heldPart.highlighted = true;
+		gameState = State.SimulationFailed;
+	}
 	
 	public enum SimulationSpeed {Stopped, Paused, Normal, Fast, Faster, Fastest};
 	
@@ -596,11 +619,6 @@ public class GameManager : SingletonBehaviour<GameManager>
 	}
 	
 	
-	public void PartCollisionOccured (GrabbablePart part, GrabbablePart otherPart)
-	{
-		Debug.Log ("SimulationFailed");
-//		gameState = State.SimulationFailed;
-	}
 }
 
 

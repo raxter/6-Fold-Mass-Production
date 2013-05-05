@@ -19,6 +19,15 @@ public class WeldingRig : Mechanism
 	
 	HexCell leftBelow = null, centerBelow = null, rightBelow = null;
 	
+	public override string Encode()
+	{
+		return "";
+	}
+	
+	public override bool Decode(string encoded)
+	{
+		return true;
+	}
 	
 	public override void PlaceAtLocation(IntVector2 location)
 	{

@@ -41,7 +41,7 @@ public class HUDFunctions : MonoBehaviour
 		switch (ptr.evt)
 		{
 			case POINTER_INFO.INPUT_EVENT.PRESS:
-				GameManager.instance.CreateMechanism(mechanismType);
+				GameManager.instance.CreateMechanismForDragging(mechanismType);
 				break;
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:

@@ -21,10 +21,9 @@ public abstract class Mechanism : HexCellPlaceable
 			return;
 		}
 		Debug.Log ("StartDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
-		if (hexCell != null)
-		{
-			hexCell.placedPlaceable = null;
-		}
+		
+		PlaceAtLocation(null);
+		
 		_dragging = true;
 	}
 	public void StopDrag()
@@ -34,6 +33,7 @@ public abstract class Mechanism : HexCellPlaceable
 			return;
 		}
 		Debug.Log ("StopDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
+		
 		
 		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedPlaceable == null)
 		{
@@ -47,9 +47,17 @@ public abstract class Mechanism : HexCellPlaceable
 		}
 		
 		_dragging = false;
+		
+		StartCoroutine(WaitOneFrameAndSaveLayout());
 	}
 	
-	
+	IEnumerator WaitOneFrameAndSaveLayout()
+	{
+		yield return null;
+		
+		Debug.Log("Saving Layout");
+		GridManager.instance.SaveLayout();
+	}
 	
 	
 	protected override void PlaceableStart()
@@ -65,5 +73,38 @@ public abstract class Mechanism : HexCellPlaceable
 	}
 	
 	protected abstract void MechanismUpdate();
+	
+	public abstract string Encode();
+	
+	public abstract bool Decode(string encoded);
+	
+	public static int CodeToNumber(char c)
+	{
+		if (c >= '0' && c <= '9')
+		{
+			return c-'0';
+		}
+		if (c >= 'a' && c <= 'z')
+		{
+			return c-'a';
+		}
+		
+		return -1;
+	}
+	
+	public static char NumberToCode(int i)
+	{
+		if (i <= 9)
+		{
+			return (char)('0'+i);
+		}
+		
+		if (i > 9)
+		{
+			return (char)('a'+(i-10));
+		}
+		
+		return '!';
+	}
 	
 }

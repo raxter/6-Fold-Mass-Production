@@ -2,11 +2,46 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+public enum PartType {None, Standard6Sided}
 
 public class GrabbablePart : MonoBehaviour
 {
 	SphereCollider _sphereCollider;
 	
+	public PartType partType;
+	
+	public bool weldsUp = false;
+	public bool weldsRightUp = false;
+	public bool weldsRightDown = false;
+	public bool weldsDown = false;
+	public bool weldsLeftDown = false;
+	public bool weldsLeftUp = false;
+	
+	public bool Weldable(HexMetrics.Direction dir)
+	{
+		switch (dir)
+		{
+		case HexMetrics.Direction.Up:
+			return weldsUp;
+		case HexMetrics.Direction.RightUp:
+			return weldsRightUp;
+		case HexMetrics.Direction.LeftUp:
+			return weldsLeftUp;
+		case HexMetrics.Direction.Down:
+			return weldsDown;
+		case HexMetrics.Direction.RightDown:
+			return weldsRightDown;
+		case HexMetrics.Direction.LeftDown:
+			return weldsLeftDown;
+		}
+		return false;
+	}
+	
+	
+	public bool Weldable(int i)
+	{
+		return Weldable((HexMetrics.Direction)i);
+	}
 	
 	
 	[SerializeField]
@@ -37,41 +72,11 @@ public class GrabbablePart : MonoBehaviour
 		int y = ((int)((relativeLocation.y+1)/(zeroCell.Height/2)) - x)/2;
 //		Debug.Log ("y "+y);
 		
-//		Debug.Log ("registering at "+x+":"+y);
+//		Debug.Log ("registering at "+x+":"+oy);
 		//find hex cell, register
 		GridManager.instance.GetHexCell(new IntVector2(x,y)).RegisterPart(this);
 	}
 	
-//	public IntVector2 _heldOverLocation;
-//	public IntVector2 heldOverLocation
-//	{
-//		get
-//		{
-//			return _heldOverLocation;
-//		}
-//		set
-//		{
-//			if (value == null)
-//			{
-//				Debug.Log ("part "+idNumber+" no longer held over "+_heldOverLocation.x +":"+ _heldOverLocation.y);
-//			}
-//			_heldOverLocation = value;
-//			if (_heldOverLocation != null)
-//			{
-//				Debug.Log ("part "+idNumber+" held over "+_heldOverLocation.x +":"+ _heldOverLocation.y);
-//			}
-//		}
-//	}
-//	
-//	public IntVector2 OverLocation { get { return Location ?? heldOverLocation; } }
-	
-//	public IntVector2 OverLocation 
-//	{ 
-//		get 
-//		{ 
-//			return 
-//		} 
-//	}
 	
 	public int idNumber = -1;
 	
@@ -95,13 +100,17 @@ public class GrabbablePart : MonoBehaviour
 		public PhysicalConnectionType connectionType = GrabbablePart.PhysicalConnectionType.None;
 	}
 	
-	protected ConnectionDescription [] connectedParts = new ConnectionDescription [6];
+	public Grabber heldAndMovingGrabber { get; set; }
 	
+	public ConnectionDescription [] connectedParts = new ConnectionDescription [6];
+	
+	public HexMetrics.Direction orientation { get { return _orientation; } }
+	HexMetrics.Direction _orientation;
 	
 	
 	public bool ConnectPart(GrabbablePart otherPart)
 	{
-		Debug.Log("Connecting: "+this+" : "+otherPart);
+		Debug.Log("Connecting: "+this.idNumber+" : "+otherPart.idNumber);
 		ConnectionDescription connectionDesc = null;
 		ConnectionDescription otherConnectionDesc = null;
 		
@@ -119,9 +128,9 @@ public class GrabbablePart : MonoBehaviour
 //			if (offsetLocation.IsEqualTo(otherPart.OverLocation)) // part might not be dropped, must use an over location
 			{
 //				directionToOther = (HexMetrics.Direction)i;
-				if (connectedParts[i] != null)
+				if (connectedParts[i] != null && connectedParts[i].connectedPart != null)
 				{
-					Debug.Log("Connecting part "+otherPart+" to a direction that is already connected");
+					Debug.Log("Connecting part "+otherPart.idNumber+" to a direction that is already connected");
 					return false;
 				}
 				otherPart.gameObject.transform.parent = gameObject.transform;

@@ -127,7 +127,7 @@ public class InstructionSlot : MonoBehaviour
 		if (_grabberProgramUI.DisplayedGrabber != null)
 		{
 			gameObject.SetActive(true);
-			currentInstruction = _grabberProgramUI.DisplayedGrabber.instructions[_index];
+			currentInstruction = _grabberProgramUI.DisplayedGrabber.GetInstruction(_index);
 		}
 		else
 		{
@@ -143,7 +143,7 @@ public class InstructionSlot : MonoBehaviour
 		
 		if (_grabberProgramUI.DisplayedGrabber != null)
 		{
-			_grabberProgramUI.DisplayedGrabber.instructions[_index] = currentInstruction;
+			_grabberProgramUI.DisplayedGrabber.SetInstruction(_index, currentInstruction);
 		}
 		RefreshInstuctionIcons();
 		

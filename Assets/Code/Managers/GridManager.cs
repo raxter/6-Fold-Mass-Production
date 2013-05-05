@@ -178,6 +178,78 @@ public class GridManager : SingletonBehaviour<GridManager>
 		BuildDictionary();
 	}
 	
+	private char GetMechanismCode(MechanismType mechanismType)
+	{
+		return new Dictionary<MechanismType, char>()
+		{
+			{MechanismType.None, 	   '!'},
+			{MechanismType.Grabber,    'G'},
+			{MechanismType.WeldingRig, 'W'}
+		}[mechanismType];
+	
+	}
+	
+	private MechanismType GetMechanismType(char c)
+	{
+		foreach(MechanismType type in System.Enum.GetValues(typeof(MechanismType)))
+		{
+			if (c == GetMechanismCode(type))
+			{
+				return type;
+			}
+		}
+		
+		return MechanismType.None;
+	}
+	
+	public void SaveLayout()
+	{
+		HashSet<Mechanism> savedMechanisms = new HashSet<Mechanism>();
+		string saveString = "";
+		foreach(HexCell hc in GetAllCells())
+		{
+			Mechanism mech = hc.placedMechanism;
+			if (mech != null && !savedMechanisms.Contains(mech))
+			{
+				if (saveString != "")
+				{
+					saveString += ':';
+				}
+				saveString += GetMechanismCode(mech.MechanismType)+","+mech.Location.x+","+mech.Location.y+","+mech.Encode();
+				
+				savedMechanisms.Add(mech);
+			}
+		}
+		Debug.Log("Saveing: "+saveString);
+		
+		PlayerPrefs.SetString("save string", saveString);
+		PlayerPrefs.Save();
+	}
+	
+	public void LoadLayout()
+	{
+		string saveString = PlayerPrefs.GetString("save string");
+		if (saveString == "")
+		{
+			return;
+		}
+		
+		Debug.Log("Loading: "+saveString);
+		
+		string [] mechanismCodes = saveString.Split(':');
+		
+		foreach (string code in mechanismCodes)
+		{
+			MechanismType codeType = GetMechanismType(code[0]);
+			
+			string [] codeData = code.Split(',');
+			
+			Mechanism newMechanism = GameManager.instance.InstantiateMechanism(codeType);
+			newMechanism.Decode(codeData[3]);
+			newMechanism.PlaceAtLocation(new IntVector2(int.Parse(codeData[1]), int.Parse(codeData[2])));
+		}
+	}
+	
 }
 
 
