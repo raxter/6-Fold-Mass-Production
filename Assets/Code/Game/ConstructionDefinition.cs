@@ -10,12 +10,15 @@ public class ConstructionDefinition : ScriptableObject, System.IComparable<Const
 	{
 		public ConstructionElement(GrabbablePart part)
 		{
-			orientation = part.orientation;
+//			orientation = part.orientation;
 			
 			for (int i = 0 ; i < 6 ; i++)
 			{
-				GrabbablePart.ConnectionDescription connectionDescription = part.connectedParts[i];
-				physicalConnectionType[i] = connectionDescription.connectionType;
+//				GrabbablePart.ConnectionDescription connectionDescription = part.connectedParts[i];
+//				GrabbablePart.ConnectionDescription connectionDescription = part.GetConnectedPart((HexMetrics.Direction)i);
+//				physicalConnectionType[i] = connectionDescription.connectionType;
+				physicalConnectionType[i] = part.GetConnectionType((HexMetrics.Direction)i);
+				
 				weldedInDirection[i] = null;
 			}
 		}
@@ -71,8 +74,9 @@ public class ConstructionDefinition : ScriptableObject, System.IComparable<Const
 			
 			for (int i = 0 ; i < 6 ; i++)
 			{
-				GrabbablePart.ConnectionDescription connectionDescription = currentPart.connectedParts[i];
-				GrabbablePart connectedPart = connectionDescription.connectedPart;
+//				GrabbablePart.ConnectionDescription connectionDescription = currentPart.connectedParts[i];
+//				GrabbablePart connectedPart = connectionDescription.connectedPart;
+				GrabbablePart connectedPart = currentPart.GetConnectedPart((HexMetrics.Direction)i);
 				if (!checkedParts.ContainsKey(connectedPart))
 				{
 					checkedParts[connectedPart] = new ConstructionElement(connectedPart);

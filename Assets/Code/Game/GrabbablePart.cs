@@ -85,34 +85,116 @@ public class GrabbablePart : MonoBehaviour
 	public bool IsFinished { get { return finished; } }
 	
 	public enum PhysicalConnectionType {None = 0, Weld = 1, Magentic = 2};
-	public enum AuxilaryConnectionType {None = 0, Electric = 1, Belt = 2};
+	public enum AuxilaryConnectionType {Electric = 1, Belt = 2, Hydraulic = 4};
 	// weld is a normal connection, will physically keep the parts together
 	// magnet is a connection with string magnets, will physically keep the parts together
 	// wired means it is electrically connected (though not physically, just wired connections alone won't keep them together)
 	// belt means that a rotary part is connected (engine, wheel, gun, anything operated by an engine)
 	
 	[System.Serializable]
-	public class ConnectionDescription
+	class ConnectionDescription
 	{
 		public GrabbablePart connectedPart;
 		
 		
 		public PhysicalConnectionType connectionType = GrabbablePart.PhysicalConnectionType.None;
+		public int auxConnectionTypes = 0;
 	}
 	
 	public Grabber heldAndMovingGrabber { get; set; }
 	
-	public ConnectionDescription [] connectedParts = new ConnectionDescription [6];
-	
-	public HexMetrics.Direction orientation { get { return _orientation; } }
-	HexMetrics.Direction _orientation;
+	[SerializeField]
+	ConnectionDescription [] _connectedParts = new ConnectionDescription [6];
 	
 	
-	public bool ConnectPart(GrabbablePart otherPart)
+	
+	public GrabbablePart GetConnectedPart(HexMetrics.Direction inDirection)
+	{
+		return _connectedParts[(int)inDirection].connectedPart;
+	}
+	
+	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction inDirection)
+	{
+		GrabbablePart ret = _connectedParts[(int)inDirection].connectedPart;
+		_connectedParts[(int)inDirection].connectedPart = null;
+		_connectedParts[(int)inDirection].connectionType = PhysicalConnectionType.None;
+		_connectedParts[(int)inDirection].auxConnectionTypes = 0;
+		
+		return ret;
+	}
+	
+	public void ConnectPartAndPlace(GrabbablePart otherPart, HexMetrics.Direction direction, HexMetrics.Direction newOrientation)
+	{
+		ConnectionDescription connDesc = _connectedParts[(int)direction];
+		ConnectionDescription otherConnDesc = otherPart._connectedParts[((int)newOrientation+3)%6];
+		
+		connDesc.connectedPart = otherPart;
+		otherConnDesc.connectedPart = this;
+		
+		connDesc.connectedPart.transform.parent = transform;
+		HexMetrics.Direction simulationDirection = (HexMetrics.Direction)(( (int)SimulationOrientation + (int)direction ) % 6);
+		
+		connDesc.connectedPart.transform.position = transform.position + (Vector3)GameSettings.instance.hexCellPrefab.GetDirection(simulationDirection);
+		connDesc.connectedPart.transform.localRotation = Quaternion.Euler(0, 0, ( (int)simulationDirection + (int)newOrientation ) * -60);
+	}
+	
+	
+	public PhysicalConnectionType GetConnectionType(HexMetrics.Direction inDirection)
+	{
+		if (GetConnectedPart(inDirection) == null)
+		{
+			return PhysicalConnectionType.None;
+		}
+		return _connectedParts[(int)inDirection].connectionType;
+	}
+	
+	public void SetPhysicalConnection(HexMetrics.Direction direction, PhysicalConnectionType newConnectionType)
+	{
+		ConnectionDescription connDesc = _connectedParts[(int)direction];
+		if (_connectedParts[(int)direction].connectedPart == null)
+		{
+			connDesc.connectionType = newConnectionType;
+			return;
+		}
+		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[((int)direction+3)%6];
+		
+		connDesc.connectionType = newConnectionType;
+		otherConnDesc.connectionType = newConnectionType;
+	}
+	
+	public int GetAuxilaryConnectionTypes(HexMetrics.Direction direction)
+	{
+		if (GetConnectedPart(direction) == null)
+		{
+			return 0;
+		}
+		return _connectedParts[(int)direction].auxConnectionTypes;
+	}
+	
+	public void SetAuxilaryConnections(HexMetrics.Direction direction, int newConnectionTypes)
+	{
+		if (_connectedParts[(int)direction].connectedPart == null)
+		{
+			_connectedParts[(int)direction].auxConnectionTypes = 0;
+			return;
+		}
+		ConnectionDescription connDesc = _connectedParts[(int)direction];
+		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[((int)direction+3)%6];
+		
+		connDesc.auxConnectionTypes = newConnectionTypes;
+		otherConnDesc.auxConnectionTypes = newConnectionTypes;
+	}
+	
+	
+//	public HexMetrics.Direction orientation { get { return _orientation; } }
+//	HexMetrics.Direction _orientation;
+	
+	
+	public bool ConnectPartOnGrid(GrabbablePart otherPart)
 	{
 		Debug.Log("Connecting: "+this.idNumber+" : "+otherPart.idNumber);
-		ConnectionDescription connectionDesc = null;
-		ConnectionDescription otherConnectionDesc = null;
+//		ConnectionDescription connectionDesc = null;
+//		ConnectionDescription otherConnectionDesc = null;
 		
 //		HexMetrics.Direction directionToOther;
 		for (int i = 0 ; i < 6 ; i++)
@@ -128,20 +210,20 @@ public class GrabbablePart : MonoBehaviour
 //			if (offsetLocation.IsEqualTo(otherPart.OverLocation)) // part might not be dropped, must use an over location
 			{
 //				directionToOther = (HexMetrics.Direction)i;
-				if (connectedParts[i] != null && connectedParts[i].connectedPart != null)
+				if (_connectedParts[i] != null && _connectedParts[i].connectedPart != null)
 				{
 					Debug.Log("Connecting part "+otherPart.idNumber+" to a direction that is already connected");
 					return false;
 				}
 				otherPart.gameObject.transform.parent = gameObject.transform;
 				
-				connectedParts[i] = new ConnectionDescription();
-				connectedParts[i].connectedPart = otherPart;
-				connectedParts[i].connectionType = PhysicalConnectionType.Weld;
+				_connectedParts[i] = new ConnectionDescription();
+				_connectedParts[i].connectedPart = otherPart;
+				_connectedParts[i].connectionType = PhysicalConnectionType.Weld;
 				
-				otherPart.connectedParts[(i+3)%6] = new ConnectionDescription();
-				otherPart.connectedParts[(i+3)%6].connectedPart = this;
-				otherPart.connectedParts[(i+3)%6].connectionType = PhysicalConnectionType.Weld;
+				otherPart._connectedParts[(i+3)%6] = new ConnectionDescription();
+				otherPart._connectedParts[(i+3)%6].connectedPart = this;
+				otherPart._connectedParts[(i+3)%6].connectionType = PhysicalConnectionType.Weld;
 				
 				return true;
 			}
@@ -155,7 +237,7 @@ public class GrabbablePart : MonoBehaviour
 	{
 		yield return this;
 		// else, this is the root
-		foreach (ConnectionDescription connectionDesc in connectedParts)
+		foreach (ConnectionDescription connectionDesc in _connectedParts)
 		{
 			if (connectionDesc != null && 
 				connectionDesc.connectedPart != null && 

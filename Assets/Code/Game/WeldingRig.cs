@@ -93,14 +93,14 @@ public class WeldingRig : Mechanism
 		
 		if (topPart != null)
 		{
-			if (leftPart   != null) topPart.ConnectPart(leftPart);
-			if (bottomPart != null) topPart.ConnectPart(bottomPart);
-			if (rightPart  != null) topPart.ConnectPart(rightPart);
+			if (leftPart   != null) topPart.ConnectPartOnGrid(leftPart);
+			if (bottomPart != null) topPart.ConnectPartOnGrid(bottomPart);
+			if (rightPart  != null) topPart.ConnectPartOnGrid(rightPart);
 		}
 		if (bottomPart != null)
 		{
-			if (leftPart  != null) bottomPart.ConnectPart(leftPart);
-			if (rightPart != null) bottomPart.ConnectPart(rightPart);
+			if (leftPart  != null) bottomPart.ConnectPartOnGrid(leftPart);
+			if (rightPart != null) bottomPart.ConnectPartOnGrid(rightPart);
 		}
 		
 //		if (hexCell.partOverCell)
