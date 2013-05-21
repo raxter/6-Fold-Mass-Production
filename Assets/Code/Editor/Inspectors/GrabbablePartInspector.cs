@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(GrabbablePart))]
 public class GrabbablePartInspector : Editor
@@ -10,8 +11,46 @@ public class GrabbablePartInspector : Editor
 	
 	GrabbablePart part = null;
 	
+	public class MyClass
+	{
+	}
+	
+	IEnumerable MyEnumerable()
+	{
+		yield return null;
+		yield return "hello";
+		yield return new MyClass();
+	}
+	
+	IEnumerable<string> StringEnumerable()
+	{
+		yield return "I";
+		yield return "must";
+		yield return "enumerate!";
+	}
+	
 	public override void OnInspectorGUI()
 	{
+		if (GUILayout.Button("Test Button"))
+		{
+//			foreach (string s in StringEnumerable())
+//			{
+//				Debug.Log(o);
+//			}
+			int i = 10;
+			IEnumerator enumer = MyEnumerable().GetEnumerator();
+			while (enumer.MoveNext())
+			{
+				Debug.Log (enumer.Current);
+				i--;
+				if (i == 0)
+					break;
+			}
+		}
+		
+		
+		
+		
 		part = target as GrabbablePart;
 		DrawDefaultInspector();
 		
