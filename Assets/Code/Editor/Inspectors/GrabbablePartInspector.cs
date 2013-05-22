@@ -11,43 +11,9 @@ public class GrabbablePartInspector : Editor
 	
 	GrabbablePart part = null;
 	
-	public class MyClass
-	{
-	}
-	
-	IEnumerable MyEnumerable()
-	{
-		yield return null;
-		yield return "hello";
-		yield return new MyClass();
-	}
-	
-	IEnumerable<string> StringEnumerable()
-	{
-		yield return "I";
-		yield return "must";
-		yield return "enumerate!";
-	}
 	
 	public override void OnInspectorGUI()
 	{
-		if (GUILayout.Button("Test Button"))
-		{
-//			foreach (string s in StringEnumerable())
-//			{
-//				Debug.Log(o);
-//			}
-			int i = 10;
-			IEnumerator enumer = MyEnumerable().GetEnumerator();
-			while (enumer.MoveNext())
-			{
-				Debug.Log (enumer.Current);
-				i--;
-				if (i == 0)
-					break;
-			}
-		}
-		
 		
 		
 		
@@ -55,9 +21,12 @@ public class GrabbablePartInspector : Editor
 		DrawDefaultInspector();
 		
 		
-		
+		HexMetrics.Direction oldOrietation = part.SimulationOrientation;
 		HexMetrics.Direction newOrietation = (HexMetrics.Direction)EditorGUILayout.EnumPopup( part.SimulationOrientation );
-		part.SetAbsoluteOrientation(newOrietation);
+//		if (newOrietation != oldOrietation)
+		{
+			part.SetAbsoluteOrientation(newOrietation);
+		}
 		
 		for (int i = 0 ; i < 6 ; i++)
 		{
@@ -65,9 +34,25 @@ public class GrabbablePartInspector : Editor
 			GrabbablePart connectedPart = part.GetConnectedPart(iDir);
 			EditorGUILayout.BeginHorizontal();
 //			EditorGUILayout.Label(""+iDir);
-			if (GUILayout.Button("GOTO" + ( connectedPart != null && connectedPart.transform == part.transform.parent ? "(P)" : "" ), GUILayout.Width(75)))
+			string relation = "";
+			if (connectedPart != null)
 			{
-				Selection.activeObject = connectedPart;
+				if (connectedPart.transform == part.transform.parent)
+				{
+					relation = "(P)";
+				}
+				if (connectedPart.transform.parent == part.transform)
+				{
+					relation = "(C)";
+				}
+			}
+			
+			if (GUILayout.Button("GOTO" + relation, GUILayout.Width(75)))
+			{
+				if (connectedPart != null)
+				{
+					Selection.activeObject = connectedPart;
+				}
 			}
 			
 			PartType newPartType = (PartType)EditorGUILayout.EnumPopup( connectedPart == null ? PartType.None : connectedPart.partType );
@@ -109,35 +94,7 @@ public class GrabbablePartInspector : Editor
 		}
 		
 		EditorUtility.SetDirty(part);
-//		
-//		selectedDirection = (HexMetrics.Direction)EditorGUILayout.EnumPopup("Selected Direction", selectedDirection);
-//		selectedOrientation = (HexMetrics.Direction)EditorGUILayout.EnumPopup("Selected Orientation", selectedOrientation);
-//		
-////		GrabbablePart.ConnectionDescription connDesc = part.connectedParts[(int)selectedDirection];
-//		GrabbablePart connectedPartInDirection = part.GetConnectedPart(selectedDirection);
-//		
-//		if ( connectedPartInDirection == null )
-//		{
-//			EditorGUILayout.ObjectField("Object at "+selectedDirection, connectedPartInDirection, typeof(GrabbablePart), false);
-//		}
-//		else if ( GUILayout.Button("Delete Part") )
-//		{
-//			GameObject toDestroy = part.RemoveConnectedPart(selectedDirection).gameObject;
-//			GameObject.DestroyImmediate(toDestroy);
-//			
-//		}
-//		PartType newPart = (PartType)EditorGUILayout.EnumPopup("Create new part", PartType.None);
-//		
-//		if (newPart != PartType.None)
-//		{
-//			if (part.GetConnectedPart(selectedDirection) == null)
-//			{
-//				GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPart);
-//				GrabbablePart newConnectedPart = GameObject.Instantiate(partPrefab) as GrabbablePart;
-//				part.ConnectPartAndPlace(newConnectedPart, selectedDirection, selectedOrientation);
-////				
-//			}
-//		}
+
 		
 		
 	}
@@ -160,17 +117,51 @@ public class GrabbablePartInspector : Editor
 					
 					HexMetrics.Direction iDir = (HexMetrics.Direction)i;
 					GrabbablePart connectedPart = lpart.GetConnectedPart(iDir);
+//					Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(iDir);
 					
+//					if (connectedPart != null)
+//					{
+//						Handles.DrawWireDisc(lpart.transform.position + (relativeLocation)/5, Vector3.forward, 1);
+//					}
 					if (connectedPart != null)
 					{
-						HexMetrics.Direction direction = (HexMetrics.Direction)(((int)lpart.SimulationOrientation + i)%6);
-						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection((HexMetrics.Direction)(((int)direction+5)%6));
-						relativeLocation.Normalize();
-						relativeLocation *= 3;
-						Handles.DrawLine(lpart.transform.position+relativeLocation,   connectedPart.transform.position+relativeLocation);
-						Handles.DrawLine(lpart.transform.position+relativeLocation*2, connectedPart.transform.position+relativeLocation);
-//						Handles.DrawLine(lpart.transform.position, lpart.transform.position+(relativeLocation*10));
 						
+						
+						HexMetrics.Direction direction = (HexMetrics.Direction)(((int)lpart.SimulationOrientation + i)%6);
+						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(direction);
+					
+						float inRad  = 0.5f;
+						float midRad = 0.5f;
+						float outRad = 0.5f;
+						Handles.color = Color.red;
+						if (connectedPart != null)
+						{
+							if (connectedPart.transform == lpart.transform.parent)
+							{
+								outRad = 1.50f;
+								midRad = 1.33f;
+								inRad  = 1.16f;
+								Handles.color = Color.black;
+							}
+							if (connectedPart.transform.parent == lpart.transform)
+							{
+								outRad = 1.66f;
+								midRad = 1.82f;
+								inRad  = 2.00f;
+								Handles.color = Color.blue;
+							}
+						}
+//						Handles.DrawWireDisk
+						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*3f, Vector3.forward, outRad*2);
+						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*2f, Vector3.forward, midRad*2);
+						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*1f, Vector3.forward, inRad*2);
+//						Handles.DrawLine(lpart.transform.position, lpart.transform.position + (relativeLocation)/3f);
+//						relativeLocation.Normalize();
+//						relativeLocation *= 3;
+//						Handles.DrawLine(lpart.transform.position+relativeLocation,   connectedPart.transform.position+relativeLocation);
+//						Handles.DrawLine(lpart.transform.position+relativeLocation*2, connectedPart.transform.position+relativeLocation);
+////						Handles.DrawLine(lpart.transform.position, lpart.transform.position+(relativeLocation*10));
+//						
 					}
 				}
 			}

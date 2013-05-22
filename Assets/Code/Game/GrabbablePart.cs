@@ -173,7 +173,7 @@ public class GrabbablePart : MonoBehaviour
 			GrabbablePart part = partDictionary[partLocation];
 			for (int i = 0 ; i < 6 ; i++)
 			{
-				HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+				HexMetrics.Direction iDir = (HexMetrics.Direction)((i+(int)SimulationOrientation)%6);
 				IntVector2 otherLocation = partLocation + HexMetrics.GetRelativeLocation(iDir);
 				if (partDictionary.ContainsKey(otherLocation)) // there is a part in this direction
 				{
@@ -197,6 +197,10 @@ public class GrabbablePart : MonoBehaviour
 						//part.ConnectPartAndPlace(otherPart, iDir, false);
 					}
 				}
+				else
+				{
+					part.RemoveConnectedPart(iDir);
+				}
 			}
 		}
 		
@@ -208,7 +212,31 @@ public class GrabbablePart : MonoBehaviour
 	
 	public void SetAbsoluteOrientation (HexMetrics.Direction orientation)
 	{
+		List<Transform> children = new List<Transform>();
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			GrabbablePart childPart = _connectedParts[i].connectedPart;
+			if (childPart != null && childPart.transform != transform.parent && childPart.transform.parent == transform) 
+			{
+				children.Add(childPart.transform);
+			}
+		}
+		
+		children.ForEach((obj) => obj.parent = null);
+		int directionChange = ((int)orientation - (int)SimulationOrientation + 6)%6;
 		transform.rotation = Quaternion.Euler(0, 0, (int)orientation * -60);
+		ConnectionDescription [] newParts = new ConnectionDescription [6];
+		
+		children.ForEach((obj) => obj.parent = transform);
+		
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			newParts[i] = _connectedParts[(i+directionChange)%6];
+		}
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			_connectedParts[i] = newParts[i];
+		}
 	}
 	
 	
