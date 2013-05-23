@@ -25,7 +25,7 @@ public class GrabbablePartInspector : Editor
 		HexMetrics.Direction newOrietation = (HexMetrics.Direction)EditorGUILayout.EnumPopup( part.SimulationOrientation );
 //		if (newOrietation != oldOrietation)
 		{
-			part.SetAbsoluteOrientation(newOrietation);
+			part.SimulationOrientation = newOrietation;
 		}
 		
 		for (int i = 0 ; i < 6 ; i++)
@@ -127,8 +127,8 @@ public class GrabbablePartInspector : Editor
 					{
 						
 						
-						HexMetrics.Direction direction = (HexMetrics.Direction)(((int)lpart.SimulationOrientation + i)%6);
-						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(direction);
+						//HexMetrics.Direction direction = (HexMetrics.Direction)(((int)lpart.SimulationOrientation + i)%6);
+						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(iDir);
 					
 						float inRad  = 0.5f;
 						float midRad = 0.5f;

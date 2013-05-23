@@ -84,6 +84,70 @@ public class GrabbablePart : MonoBehaviour
 	
 	public bool IsFinished { get { return finished; } }
 	
+	
+	
+	//=========================================================================================
+	#region Direction Functions
+	
+	/*
+	 * SimulationOrientation - Orientation the cell is oriented relative to up
+	 * RelativeDirection - a direction relative to SimulationOrientation
+	 * AbsoluteDirection - a direction relative to Up
+	 * 
+	 * */
+	
+	public HexMetrics.Direction SimulationOrientation
+	{
+		get 
+		{
+			int directionInt = (int)((-transform.rotation.eulerAngles.z-1)/60);
+			directionInt = (directionInt + 6) % 6;
+			return (HexMetrics.Direction)directionInt;
+		}
+		set
+		{
+			HexMetrics.Direction orientation = value;
+			List<Transform> children = new List<Transform>();
+			for (int i = 0 ; i < 6 ; i++)
+			{
+				GrabbablePart childPart = _connectedParts[i].connectedPart;
+				if (childPart != null && childPart.transform != transform.parent && childPart.transform.parent == transform) 
+				{
+					children.Add(childPart.transform);
+				}
+			}
+			
+			children.ForEach((obj) => obj.parent = null);
+			int directionChange = ((int)orientation - (int)SimulationOrientation + 6)%6;
+			transform.rotation = Quaternion.Euler(0, 0, (int)orientation * -60);
+			ConnectionDescription [] newParts = new ConnectionDescription [6];
+			
+			children.ForEach((obj) => obj.parent = transform);
+			
+			for (int i = 0 ; i < 6 ; i++)
+			{
+				newParts[i] = _connectedParts[(i+directionChange)%6];
+			}
+			for (int i = 0 ; i < 6 ; i++)
+			{
+				_connectedParts[i] = newParts[i];
+			}
+		}
+	}
+	
+	
+	
+	
+	public HexMetrics.Direction GetAbsoluteDirectionFromRelative(HexMetrics.Direction relativeDirection)
+	{
+		return (HexMetrics.Direction)( ((int)relativeDirection + 6 - (int)SimulationOrientation) % 6);
+	}
+	
+	#endregion
+	//=========================================================================================
+	
+	#region Connection Descriptions (all relative to Up)
+	
 	public enum PhysicalConnectionType {None = 0, Weld = 1, Magentic = 2};
 	public enum AuxilaryConnectionType {Electric = 1, Belt = 2, Hydraulic = 4};
 	// weld is a normal connection, will physically keep the parts together
@@ -106,27 +170,24 @@ public class GrabbablePart : MonoBehaviour
 	[SerializeField]
 	ConnectionDescription [] _connectedParts = new ConnectionDescription [6];
 	
+	#endregion
 	
-	
-	public GrabbablePart GetConnectedPart(HexMetrics.Direction inDirection)
+	#region Connection Access
+	public GrabbablePart GetConnectedPart(HexMetrics.Direction absoluteDirection)
 	{
-		return _connectedParts[(int)inDirection].connectedPart;
+		return _connectedParts[(int)absoluteDirection].connectedPart;
 	}
 	
-	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction inDirection)
+	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction absoluteDirection)
 	{
-		GrabbablePart ret = _connectedParts[(int)inDirection].connectedPart;
-		_connectedParts[(int)inDirection].connectedPart = null;
-		_connectedParts[(int)inDirection].connectionType = PhysicalConnectionType.None;
-		_connectedParts[(int)inDirection].auxConnectionTypes = 0;
+		GrabbablePart ret = _connectedParts[(int)absoluteDirection].connectedPart;
+		_connectedParts[(int)absoluteDirection].connectedPart = null;
+		_connectedParts[(int)absoluteDirection].connectionType = PhysicalConnectionType.None;
+		_connectedParts[(int)absoluteDirection].auxConnectionTypes = 0;
 		
 		return ret;
 	}
 	
-//	public void ConnectPartAndPlace(GrabbablePart otherPart, HexMetrics.Direction direction)
-//	{
-//		ConnectPartAndPlace(otherPart, direction, true);
-//	}
 	public void ConnectPartAndPlace(GrabbablePart otherPart, HexMetrics.Direction direction)
 	{
 		ConnectionDescription connDesc = _connectedParts[(int)direction];
@@ -152,7 +213,6 @@ public class GrabbablePart : MonoBehaviour
 	}
 	
 	
-	
 	private void ConnectUnconnectedParts()
 	{
 //		List<GrabbablePart> connection1 = new List<GrabbablePart>();
@@ -173,7 +233,7 @@ public class GrabbablePart : MonoBehaviour
 			GrabbablePart part = partDictionary[partLocation];
 			for (int i = 0 ; i < 6 ; i++)
 			{
-				HexMetrics.Direction iDir = (HexMetrics.Direction)((i+(int)SimulationOrientation)%6);
+				HexMetrics.Direction iDir = GetAbsoluteDirectionFromRelative((HexMetrics.Direction)i);
 				IntVector2 otherLocation = partLocation + HexMetrics.GetRelativeLocation(iDir);
 				if (partDictionary.ContainsKey(otherLocation)) // there is a part in this direction
 				{
@@ -184,17 +244,7 @@ public class GrabbablePart : MonoBehaviour
 					{
 						Debug.Log("Connecting "+part+":"+otherPart +" in "+iDir);
 						
-//						connection1.Add(part);
-//						connection2.Add(otherPart);
-//						location1.Add(partLocation);
-//						location2.Add(otherLocation);
-//						connectionDirection.Add(iDir);
 						part._connectedParts[(int)iDir].connectedPart = otherPart;
-//						ConnectionDescription otherConnDesc = otherPart._connectedParts[((int)iDir+3)%6];
-		
-//						connDesc.connectedPart = otherPart;
-//						otherConnDesc.connectedPart = part;
-						//part.ConnectPartAndPlace(otherPart, iDir, false);
 					}
 				}
 				else
@@ -210,34 +260,7 @@ public class GrabbablePart : MonoBehaviour
 //		}
 	}
 	
-	public void SetAbsoluteOrientation (HexMetrics.Direction orientation)
-	{
-		List<Transform> children = new List<Transform>();
-		for (int i = 0 ; i < 6 ; i++)
-		{
-			GrabbablePart childPart = _connectedParts[i].connectedPart;
-			if (childPart != null && childPart.transform != transform.parent && childPart.transform.parent == transform) 
-			{
-				children.Add(childPart.transform);
-			}
-		}
-		
-		children.ForEach((obj) => obj.parent = null);
-		int directionChange = ((int)orientation - (int)SimulationOrientation + 6)%6;
-		transform.rotation = Quaternion.Euler(0, 0, (int)orientation * -60);
-		ConnectionDescription [] newParts = new ConnectionDescription [6];
-		
-		children.ForEach((obj) => obj.parent = transform);
-		
-		for (int i = 0 ; i < 6 ; i++)
-		{
-			newParts[i] = _connectedParts[(i+directionChange)%6];
-		}
-		for (int i = 0 ; i < 6 ; i++)
-		{
-			_connectedParts[i] = newParts[i];
-		}
-	}
+	#endregion
 	
 	
 	public PhysicalConnectionType GetConnectionType(HexMetrics.Direction inDirection)
@@ -286,20 +309,10 @@ public class GrabbablePart : MonoBehaviour
 		otherConnDesc.auxConnectionTypes = newConnectionTypes;
 	}
 	
-	public HexMetrics.Direction GetAbsoluteDirection(HexMetrics.Direction direction)
-	{
-		return (HexMetrics.Direction)( ((int)direction + 6 - (int)SimulationOrientation) % 6);
-	}
-	
-//	public HexMetrics.Direction orientation { get { return _orientation; } }
-//	HexMetrics.Direction _orientation;
-	
 	
 	public bool ConnectPartOnGrid(GrabbablePart otherPart)
 	{
 		Debug.Log("Connecting: "+this.idNumber+" : "+otherPart.idNumber);
-//		ConnectionDescription connectionDesc = null;
-//		ConnectionDescription otherConnectionDesc = null;
 		
 //		HexMetrics.Direction directionToOther;
 		for (int i = 0 ; i < 6 ; i++)
@@ -338,33 +351,11 @@ public class GrabbablePart : MonoBehaviour
 		
 	}
 	
+	//=========================================================================================
+	#region Construction tree traveral and access
+	
 	IEnumerable<GrabbablePart> GetAllChildConnectedParts(HashSet<GrabbablePart> exploredParts)
 	{
-//		HashSet<GrabbablePart> exploredParts = new HashSet<GrabbablePart>();
-//		
-//		Queue<GrabbablePart> queue = new Queue<GrabbablePart>();
-//		queue.Enqueue(this);
-//		
-//		while (queue.Count > 0)
-//		{
-//			GrabbablePart qPart = queue.Dequeue();
-//			
-//			yield return qPart;
-//			
-//			exploredParts.Add(qPart);
-//			
-//			for(int i = 0 ; i < 6 ; i++)
-//			{
-//				HexMetrics.Direction iDir = (HexMetrics.Direction)i;
-//				
-//				GrabbablePart partInDirection = qPart.GetConnectedPart(iDir);
-//				
-//				if (!exploredParts.Contains(partInDirection))
-//				{
-//					queue.Enqueue(qPart);
-//				}
-//			}
-//		}
 		
 		if (exploredParts.Contains(this))
 		{
@@ -388,21 +379,13 @@ public class GrabbablePart : MonoBehaviour
 			}
 		}
 	}
+	
 		
 	public IEnumerable<GrabbablePart> GetAllConnectedPartsFromRoot()
 	{
 		return RootPart.GetAllChildConnectedParts(new HashSet<GrabbablePart>());
 	}
 	
-	public HexMetrics.Direction SimulationOrientation
-	{
-		get 
-		{
-			int directionInt = (int)((-transform.rotation.eulerAngles.z-1)/60);
-			directionInt = (directionInt + 6) % 6;
-			return (HexMetrics.Direction)directionInt;
-		}
-	}
 	
 	public GrabbablePart ParentPart
 	{
@@ -435,35 +418,6 @@ public class GrabbablePart : MonoBehaviour
 			}
 		}
 	}
-	
-	
-//	public IntVector2 RootLocation
-//	{
-//		get 
-//		{
-//			GrabbablePart parentPart = ParentPart;
-//			if (parentPart == null)
-//			{
-//				return this.OverLocation;
-//			}
-//			else
-//			{
-//				for (int i = 0 ; i < 6 ; i++)
-//				{
-//					ConnectionDescription connectionDesc = connectedParts[i];
-//					if (connectionDesc != null && connectionDesc.connectedPart == parentPart)
-//					{
-//						HexMetrics.Direction thisOrientation = SimulationOrientation;
-//						
-//						HexMetrics.Direction combinedDirection = (HexMetrics.Direction)(((int)thisOrientation + i)%6);
-//						
-//						return HexMetrics.GetRelativeLocation(combinedDirection) + parentPart.RootLocation;
-//					}
-//				}
-//				return null;
-//			}
-//		}
-//	}
 	
 	public class LocatedPart
 	{
@@ -502,7 +456,7 @@ public class GrabbablePart : MonoBehaviour
 			GrabbablePart connectedPart = _connectedParts[i].connectedPart;
 			if (connectedPart != null && connectedPart != parentPart)
 			{
-				HexMetrics.Direction absoluteDirection = GetAbsoluteDirection((HexMetrics.Direction)i);
+				HexMetrics.Direction absoluteDirection = GetAbsoluteDirectionFromRelative((HexMetrics.Direction)i);
 				
 				foreach (LocatedPart loactedPart in connectedPart.GetAllPartWithLocationFromThisPart(HexMetrics.GetRelativeLocation(absoluteDirection) + thisLocation, exploredParts))
 				{
@@ -556,6 +510,11 @@ public class GrabbablePart : MonoBehaviour
 //			}
 //		}
 //	}
+	
+	#endregion
+	//=========================================================================================
+	
+	
 	
 	
 	
