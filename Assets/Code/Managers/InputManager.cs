@@ -17,6 +17,10 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	public bool OverCell { get; private set; }
 	
+	public delegate void OnSelectionChangeDelegate (List<HexCellPlaceable> selectedPlacables);
+	
+	public event OnSelectionChangeDelegate OnSelectionChange = (selectionList) => {};
+	
 	List<HexCellPlaceable> selectedPlacables = new List<HexCellPlaceable>();
 	
 	public void SelectUniqueMechanism(HexCellPlaceable mechanism)
@@ -57,6 +61,8 @@ public class InputManager : SingletonBehaviour<InputManager>
 		{
 			GrabberProgramUI.instance.DisplayedGrabber = null;
 		}
+		
+		OnSelectionChange(selectedPlacables);
 	}
 	
 	void DeselectMechanism(HexCellPlaceable mechanism)

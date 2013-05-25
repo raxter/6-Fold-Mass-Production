@@ -6,12 +6,6 @@ using System.Collections.Generic;
 public class GameManager : SingletonBehaviour<GameManager> 
 {
 	
-//	[SerializeField]
-//	List<Mechanism> mechanismPrefabs = null;
-	
-	
-//	[SerializeField]
-//	PartGenerator generatorPrefab = null;
 	
 	Dictionary<MechanismType, Mechanism> cellMechanisms;
 	

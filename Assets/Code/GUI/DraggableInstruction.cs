@@ -6,15 +6,9 @@ public class DraggableInstruction : MonoBehaviour
 	
 	public UIButton button;
 	
-	// Use this for initialization
-	void Start () {
+	public Grabber.Instruction instructionRepresented = Grabber.Instruction.NoOp;
 	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+	public EmptyInstructionSlot occupiedSlot { get; set; }
 	
 	bool _isClone = false;
 	
