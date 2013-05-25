@@ -72,55 +72,55 @@ public class InstructionSlot : MonoBehaviour
 		SetCurrentSelected ();
 	}
 	
-	public void CloseInstructionPanel()
-	{
-		UpdateInstructionsPanel(false);
-	}
-	
-	public void ToggleInstructionPanel()
-	{
-		UpdateInstructionsPanel(!panelExpanded);
-	}
+//	public void CloseInstructionPanel()
+//	{
+//		UpdateInstructionsPanel(false);
+//	}
+//	
+//	public void ToggleInstructionPanel()
+//	{
+//		UpdateInstructionsPanel(!panelExpanded);
+//	}
 	
 	// Update is called once per frame
-	void UpdateInstructionsPanel (bool newExpanded) 
-	{
-		if (GameManager.instance.gameState != GameManager.State.Construction)
-		{
-			return;
-		}
-		if (_inputEnabled == false)
-		{
-			if (!panelExpanded)
-			{
-				return;
-				// panel is closed, do nothing
-			}
-			else
-			{
-				// panel is open, make it closed
-				newExpanded = false;
-			}
-		}
-		
-		
-		if (newExpanded)
-		{
-			_grabberProgramUI.CloseAllSlots();
-			if (!panelExpanded) // only bring in if in construction state
-			{
-				_otherInstructionsPanel.BringIn();
-			}
-		}
-		else
-		{
-			if (panelExpanded)
-			{
-				_otherInstructionsPanel.Dismiss();
-			}
-		}
-		panelExpanded = newExpanded;
-	}
+//	void UpdateInstructionsPanel (bool newExpanded) 
+//	{
+//		if (GameManager.instance.gameState != GameManager.State.Construction)
+//		{
+//			return;
+//		}
+//		if (_inputEnabled == false)
+//		{
+//			if (!panelExpanded)
+//			{
+//				return;
+//				// panel is closed, do nothing
+//			}
+//			else
+//			{
+//				// panel is open, make it closed
+//				newExpanded = false;
+//			}
+//		}
+//		
+//		
+//		if (newExpanded)
+//		{
+//			_grabberProgramUI.CloseAllSlots();
+//			if (!panelExpanded) // only bring in if in construction state
+//			{
+//				_otherInstructionsPanel.BringIn();
+//			}
+//		}
+//		else
+//		{
+//			if (panelExpanded)
+//			{
+//				_otherInstructionsPanel.Dismiss();
+//			}
+//		}
+//		panelExpanded = newExpanded;
+//	}
 	
 	void SetCurrentSelected ()
 	{
@@ -170,7 +170,7 @@ public class InstructionSlot : MonoBehaviour
 			}
 		}
 		
-		_grabberProgramUI.RefreshDisplayedSlots();
+//		_grabberProgramUI.RefreshDisplayedSlots();
 	}
 }
 

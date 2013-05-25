@@ -138,9 +138,13 @@ public class GrabbablePart : MonoBehaviour
 	
 	
 	
+	public HexMetrics.Direction GetRelativeDirectionFromAbsolute(HexMetrics.Direction absoluteDirection)
+	{
+		return (HexMetrics.Direction)( ((int)absoluteDirection + 6 - (int)SimulationOrientation) % 6);
+	}
 	public HexMetrics.Direction GetAbsoluteDirectionFromRelative(HexMetrics.Direction relativeDirection)
 	{
-		return (HexMetrics.Direction)( ((int)relativeDirection + 6 - (int)SimulationOrientation) % 6);
+		return (HexMetrics.Direction)( ((int)relativeDirection + (int)SimulationOrientation) % 6);
 	}
 	
 	#endregion

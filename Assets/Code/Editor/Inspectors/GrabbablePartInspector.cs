@@ -127,8 +127,8 @@ public class GrabbablePartInspector : Editor
 					{
 						
 						
-						//HexMetrics.Direction direction = (HexMetrics.Direction)(((int)lpart.SimulationOrientation + i)%6);
-						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(iDir);
+						HexMetrics.Direction direction = lpart.GetAbsoluteDirectionFromRelative(iDir);
+						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(direction);
 					
 						float inRad  = 0.5f;
 						float midRad = 0.5f;

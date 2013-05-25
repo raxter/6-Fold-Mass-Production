@@ -20,7 +20,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 		}
 		if (!enabled)
 		{
-			CloseAllSlots();
+//			CloseAllSlots();
 		}
 		RefreshGrabberUIObjects();
 	}
@@ -51,7 +51,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 			SetAllIndecies();
 			
 			EnableGUI (value != null);
-//			RefreshGrabberUIObjects();
+			RefreshGrabberUIObjects();
 		}
 	}
 	
@@ -69,7 +69,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	{
 		if (_index + 1 < _instructionSlots.Length && DisplayedGrabber.GetInstruction(_index+1) == Grabber.Instruction.None)
 		{
-			_instructionSlots[_index+1].ToggleInstructionPanel();
+//			_instructionSlots[_index+1].ToggleInstructionPanel();
 		}
 	}
 	
@@ -106,55 +106,55 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	void SetAllIndecies()
 	{
-		for (int i = 0 ; i < _instructionSlots.Length ; i++)
-		{
-			_instructionSlots[i].SetIndex(i);
-		}
-		RefreshDisplayedSlots();
+//		for (int i = 0 ; i < _instructionSlots.Length ; i++)
+//		{
+//			_instructionSlots[i].SetIndex(i);
+//		}
+//		RefreshDisplayedSlots();
 	}
 	
 	public void RefreshDisplayedSlots()
 	{
-		bool noneOpFound = false;
-		for (int i = 0 ; i < _instructionSlots.Length ; i++)
-		{
-			
-			if (noneOpFound)
-			{
-				_instructionSlots[i].Display(false);
-				_instructionSlots[i].EnableGUI(false);
-			}
-			else
-			{
-				_instructionSlots[i].Display(true);
-				_instructionSlots[i].EnableGUI(true);
-			}
-			
-			_instructionSlots[i].DisplayNoneOperation(false);
-			
-			
-			if (!noneOpFound && _instructionSlots[i].currentInstruction == Grabber.Instruction.None)
-			{
-				noneOpFound = true;
-				
-				if (i == 0)
-				{
-					_instructionSlots[i].DisplayNoneOperation(false);
-				}
-				else
-				{
-					_instructionSlots[i-1].DisplayNoneOperationAfterTransision(true);
-				}
-			}
-		}
+//		bool noneOpFound = false;
+//		for (int i = 0 ; i < _instructionSlots.Length ; i++)
+//		{
+//			
+//			if (noneOpFound)
+//			{
+//				_instructionSlots[i].Display(false);
+//				_instructionSlots[i].EnableGUI(false);
+//			}
+//			else
+//			{
+//				_instructionSlots[i].Display(true);
+//				_instructionSlots[i].EnableGUI(true);
+//			}
+//			
+//			_instructionSlots[i].DisplayNoneOperation(false);
+//			
+//			
+//			if (!noneOpFound && _instructionSlots[i].currentInstruction == Grabber.Instruction.None)
+//			{
+//				noneOpFound = true;
+//				
+//				if (i == 0)
+//				{
+//					_instructionSlots[i].DisplayNoneOperation(false);
+//				}
+//				else
+//				{
+//					_instructionSlots[i-1].DisplayNoneOperationAfterTransision(true);
+//				}
+//			}
+//		}
 	}
 	
 	
 	public void CloseAllSlots ()
 	{
-		foreach (InstructionSlot instructionSlot in _instructionSlots)
-		{
-			instructionSlot.CloseInstructionPanel();
-		}
+//		foreach (InstructionSlot instructionSlot in _instructionSlots)
+//		{
+//			instructionSlot.CloseInstructionPanel();
+//		}
 	}
 }
