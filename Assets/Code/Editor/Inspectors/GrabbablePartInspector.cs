@@ -32,8 +32,9 @@ public class GrabbablePartInspector : Editor
 		{
 			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
 			GrabbablePart connectedPart = part.GetConnectedPart(iDir);
+			
 			EditorGUILayout.BeginHorizontal();
-//			EditorGUILayout.Label(""+iDir);
+			
 			string relation = "";
 			if (connectedPart != null)
 			{
@@ -77,20 +78,15 @@ public class GrabbablePartInspector : Editor
 					GameObject.DestroyImmediate(toDestroy);
 				}
 			}
-//			else 
-//				//if (GUILayout.Button(""+connectedPart.partType+(connectedPart.transform.parent == part.transform ? "(p)" : "")))
-//			{
-//				PartType newPart = (PartType)EditorGUILayout.EnumPopup(PartType.None);
-//				Selection.activeObject = connectedPart;
-//			}
-//			EditorGUILayout.ObjectField(, typeof(GrabbablePart), false);
+			
 			part.SetPhysicalConnection(iDir, (GrabbablePart.PhysicalConnectionType)EditorGUILayout.EnumPopup(part.GetConnectionType(iDir)));
 			part.SetAuxilaryConnections(iDir, EditorGUILayout.MaskField(	
 																	part.GetAuxilaryConnectionTypes(iDir), 
 																	System.Enum.GetNames(typeof(GrabbablePart.AuxilaryConnectionType))  ));
 			
-//			EditorGUILayout.EnumPopup(part.GetAbsoluteDirection(iDir));
+			
 			EditorGUILayout.EndHorizontal();
+			
 		}
 		
 		EditorUtility.SetDirty(part);

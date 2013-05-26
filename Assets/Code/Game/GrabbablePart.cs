@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public enum PartType {None, Standard6Sided}
+public enum PartType {None, Standard6Sided, Standard3Sided}
 
 public class GrabbablePart : MonoBehaviour
 {

@@ -9,16 +9,41 @@ public class Grabber : Mechanism
 	
 	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, RestartMark, NoOp};
 	
-	Instruction [] instructions = new Instruction [16];
+	public static int maximumInstuctions { get { return 12; } }
+//	Instruction [] instructions = new Instruction [16];
+	List<Instruction> instructions = new List<Instruction>();
 	
+	bool saveOnUpdate = false;
+	
+	public void ReplaceInstruction(int i, Instruction instruction)
+	{
+		SetInstruction(i, Instruction.None);
+		SetInstruction(i, instruction);
+	}
 	public void SetInstruction(int i, Instruction instruction)
 	{
-		instructions[i] = instruction;
-		GridManager.instance.SaveLayout();
+		if (instruction == Instruction.None)
+		{
+			if (i < instructions.Count)
+			{
+				instructions.RemoveAt(i);
+			}
+		}
+		else
+		{
+			if (i < instructions.Count)
+				instructions.Insert(i, instruction);
+			else
+				instructions.Add(instruction);
+		}
+		saveOnUpdate = true;
 	}
 	public Instruction GetInstruction(int i)
 	{
-		return instructions[i];
+		if (i < instructions.Count)
+			return instructions[i];
+		else
+			return Instruction.None;
 	}
 	
 	public int _instructionCounter = -1;
@@ -65,14 +90,14 @@ public class Grabber : Mechanism
 		_startState.extention = CodeToNumber(encoded[1]);
 		MoveToStartState();
 		
-		for (int i = 0 ; i < instructions.Length ; i++)
+		for (int i = 0 ; i < instructions.Count ; i++)
 		{
 			instructions[i] = Instruction.None;
 		}
 		int instructionOffset = 2;
 		for (int i = 0 ; i < encoded.Length-instructionOffset ; i++)
 		{
-			instructions[i] = (Instruction)CodeToNumber(encoded[i+instructionOffset]);
+			instructions.Add((Instruction)CodeToNumber(encoded[i+instructionOffset]));
 		}
 		
 		return true;
@@ -346,7 +371,7 @@ public class Grabber : Mechanism
 		
 		_stepCounter = 0;
 		_instructionCounter += 1;
-		if (_instructionCounter == instructions.Length)
+		if (_instructionCounter == instructions.Count)
 		{
 			_instructionCounter = 0;
 		}
@@ -361,6 +386,10 @@ public class Grabber : Mechanism
 			if (_heldPart == null)
 			{
 				HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
+				if (underClamp == null)// clamp is over a non cell
+				{
+					return;
+				}
 				GrabbablePart partUnderClamp = underClamp.partOverCell;
 				
 				if (partUnderClamp == null || partUnderClamp.RootPart.heldAndMovingGrabber != null) // there is nothing to grab *or* there is a part, but it is held and is about to move this turn
@@ -462,6 +491,17 @@ public class Grabber : Mechanism
 	
 	protected override void MechanismUpdate()
 	{
+		if (saveOnUpdate)
+		{
+			GridManager.instance.SaveLayout();
+			saveOnUpdate = false;
+		}
+	}
+	
+//	protected override void MechanismUpdate()
+//	{	
+//		
+//			
 //		if (Input.GetKeyDown(KeyCode.Alpha1))
 //		{
 //			ExtendArm(0, 1f);
@@ -522,8 +562,8 @@ public class Grabber : Mechanism
 //			rotationTimeRemaining -= Time.deltaTime;
 //			transform.localRotation = Quaternion.Euler(0,0,transform.localRotation.eulerAngles.z + amountToRotate);
 //		}
-		
-	}
+//		
+//	}
 	
 	
 //	public void ExtendArm(int length, float time)
@@ -543,3 +583,15 @@ public class Grabber : Mechanism
 //	}
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,28 +11,88 @@ public class DraggableInstructions : MonoBehaviour
 	[SerializeField]
 	List<DraggableInstruction> draggableInstructions = null;
 	
+	[SerializeField]
+	EmptyInstructionSlot emptyInstructionPrefab = null;
 	
-	Dictionary<IUIObject, DraggableInstruction> copyObject = new Dictionary<IUIObject, DraggableInstruction>();
+	[SerializeField]
+	GameObject emptyInstructionsRoot = null;
 	
-	public DraggableInstruction GetDraggableInstructionClone(Grabber.Instruction instruction)
-	{
-		foreach (DraggableInstruction draggableInstruction in draggableInstructions)
-		{
-			if (draggableInstruction.instructionRepresented == instruction)
-			{
-				DraggableInstruction clone = draggableInstruction.GetClone();
-				SetupDragDropBehaviour(clone);
-				return clone;
-			}
-		}
-		
-		return null;
-	}
+	
+	EmptyInstructionSlot [] emptyInstructions = null;
+	
+	Grabber selectedGrabber = null;
+	
+	
 	
 	void Start()
 	{
+		
+		emptyInstructions = new EmptyInstructionSlot[Grabber.maximumInstuctions];
+		
+		for (int i = 0 ; i < Grabber.maximumInstuctions ; i++)
+		{
+			emptyInstructions[i] = Instantiate(emptyInstructionPrefab) as EmptyInstructionSlot;
+			
+			emptyInstructions[i].gameObject.name = "Instruction "+i;
+			emptyInstructions[i].transform.parent = emptyInstructionsRoot.transform;
+			emptyInstructions[i].transform.localPosition = Vector3.zero + (Vector3.down*60f*i);
+			
+			emptyInstructions[i].instructionIndex = i;
+			emptyInstructions[i].draggableInstructions = draggableInstructions.ConvertAll<DraggableInstruction>( (di) => 
+			{
+				var clone = di.GetClone();
+				
+				clone.transform.parent = emptyInstructions[i].transform;
+				clone.transform.localPosition = Vector3.zero - Vector3.forward;
+				SetupDragDropBehaviour(clone);
+				clone.occupiedSlot = emptyInstructions[i];
+				return clone;
+			});
+			
+			emptyInstructions[i].CurrentInstruction = Grabber.Instruction.None;
+		}
+		
+		InputManager.instance.OnSelectionChange += (selectedPlacables) => 
+		{
+			
+			if (selectedPlacables.Count == 1 && selectedPlacables[0] is Grabber)
+			{
+				selectedGrabber = selectedPlacables[0] as Grabber;
+				RefreshEmptyInstructions();
+			}
+			else
+			{
+				HideUI();
+			}
+		};
+		
 		foreach (var db in draggableInstructions)
 			SetupDragDropBehaviour(db);
+		
+		
+		HideUI();
+	}
+	
+	void HideUI()
+	{
+		gameObject.SetActive(false);
+	}
+	
+	void RefreshEmptyInstructions()
+	{
+		gameObject.SetActive(true);
+		bool blankRemaining = false;
+		for (int i = 0 ; i < Grabber.maximumInstuctions ; i++)
+		{
+			
+			emptyInstructions[i].CurrentInstruction = selectedGrabber.GetInstruction(i);
+			emptyInstructions[i].gameObject.SetActive(!blankRemaining);
+			if (emptyInstructions[i].CurrentInstruction == Grabber.Instruction.None)
+			{
+				blankRemaining = true;
+			}
+			
+		}
 	}
 	
 	public void SetupDragDropBehaviour(DraggableInstruction draggableButton)
@@ -41,42 +101,40 @@ public class DraggableInstructions : MonoBehaviour
 		{
 			if (parms.evt == EZDragDropEvent.Begin)
 			{
-//				Debug.Log ("Begin "+parms.dragObj);
-				if (!draggableButton.isClone)
-				{
-					copyObject[parms.dragObj] = draggableButton.GetClone();
-				}
-				else
-				{
-					copyObject[parms.dragObj] = draggableButton;
-				}
+				Debug.Log ("Begin "+parms.dragObj);
 					
 			}
 			if (parms.evt == EZDragDropEvent.Cancelled)
 			{
-//				Debug.Log ("Cancelled "+parms.dragObj);
-				EmptyInstructionSlot emptySlot = parms.dragObj.DropTarget == null? null : parms.dragObj.DropTarget.GetComponent<EmptyInstructionSlot>();
+				Debug.Log ("Cancelled "+parms.dragObj);
+				Debug.Log ("DropTarget: "+parms.dragObj.DropTarget);
 				
-				if (emptySlot != null)
+				
+				if (draggableButton.occupiedSlot != null)
 				{
-					emptySlot.InsertInstruction(copyObject[parms.dragObj]);
-					SetupDragDropBehaviour(copyObject[parms.dragObj]);
-					copyObject.Remove(parms.dragObj);
-					
+					selectedGrabber.SetInstruction(draggableButton.occupiedSlot.instructionIndex, Grabber.Instruction.None);
+					RefreshEmptyInstructions();
 				}
+				
+				EmptyInstructionSlot instructionSlot = parms.dragObj.DropTarget == null ? null : parms.dragObj.DropTarget.GetComponent<EmptyInstructionSlot>();
+				
+				
+				if (instructionSlot != null && selectedGrabber != null)
+				{
+					selectedGrabber.SetInstruction(instructionSlot.instructionIndex, draggableButton.instructionRepresented);
+//					instructionSlot.CurrentInstruction = draggableButton.instructionRepresented;
+					RefreshEmptyInstructions();
+				}
+//				else
+//				{
+//					Debug.Log(draggableButton.occupiedSlot);
+//				}
+				
 			}
 			if (parms.evt == EZDragDropEvent.CancelDone)
 			{
-//				Debug.Log ("CancelDone "+parms.dragObj);
-				if (copyObject.ContainsKey(parms.dragObj))
-				{
-					if (copyObject[parms.dragObj].occupiedSlot != null)
-					{
-						copyObject[parms.dragObj].occupiedSlot.InsertInstruction(null);
-					}
-					Destroy(copyObject[parms.dragObj].gameObject);
-					copyObject.Remove(parms.dragObj);
-				}
+				Debug.Log ("CancelDone "+parms.dragObj);
+				
 			}
 		});
 	}

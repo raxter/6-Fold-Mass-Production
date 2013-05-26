@@ -70,6 +70,9 @@ public abstract class Mechanism : HexCellPlaceable
 		{
 			PlaceOverLocation(InputManager.instance.ClosestHexCell.location);
 		}
+		
+		MechanismUpdate();
+		
 	}
 	
 	protected abstract void MechanismUpdate();

@@ -336,7 +336,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 					// todo correct construction check goes here
 					correctConstruction = true;
 					
-					correctConstruction = currentLevel.targetConstruction.CompareTo(partOverFinish) == 0;
+//					correctConstruction = currentLevel.targetConstruction.CompareTo(partOverFinish) == 0;
 					
 					if (correctConstruction)
 					{

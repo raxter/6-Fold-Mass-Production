@@ -1,117 +1,32 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EmptyInstructionSlot : MonoBehaviour 
 {
+	public List<DraggableInstruction> draggableInstructions = null;
 	
-	DraggableInstruction currentInstruction = null;
+	Grabber.Instruction currentInstruction = Grabber.Instruction.None;
+	public int instructionIndex = -1;
 	
-	public EmptyInstructionSlot nextEmptySlot = null;
-	public EmptyInstructionSlot previousEmptySlot = null;
-	
-	public delegate void OnInstructionChangeDelegate(Grabber.Instruction instruction);
-	
-	public event OnInstructionChangeDelegate OnInstructionChange = null; 
-	
-	public void ClearInstructionChangeEvent()
+	public Grabber.Instruction CurrentInstruction
 	{
-		OnInstructionChange = null;
-	}
-	
-	
-	void ClearCurrentInstruction()
-	{
-		Debug.Log ("Clear "+this.name);
-		
-		if (currentInstruction != null)
+		get
 		{
-			currentInstruction.occupiedSlot = null;
+			return currentInstruction;
 		}
-		ReplaceCurrentInstruction(null);
-	}
-	
-	
-	void ReplaceCurrentInstruction(DraggableInstruction newInstruction)
-	{
-		Debug.Log ("Replace "+this.name+": "+currentInstruction+" -> "+newInstruction);
-		if (currentInstruction != null)
+		set
 		{
-			if (currentInstruction.occupiedSlot == null)
+			currentInstruction = value;
+			foreach(DraggableInstruction draggableInstruction in draggableInstructions)
 			{
-				Destroy(currentInstruction.gameObject);
+				draggableInstruction.gameObject.SetActive(draggableInstruction.instructionRepresented == currentInstruction);
 			}
-		}
-		currentInstruction = newInstruction;
-		
-		if (OnInstructionChange != null)
-		{
-			OnInstructionChange(currentInstruction == null ? Grabber.Instruction.NoOp : currentInstruction.instructionRepresented);
-		}
-		
-		if (currentInstruction != null)
-		{
-			currentInstruction.transform.parent = transform;
-			currentInstruction.transform.localPosition = Vector3.zero-Vector3.forward;
-	//				
-			currentInstruction.occupiedSlot = this;
-		}
-	}
-	
-	void ShiftCurrentInstructionUp()
-	{
-		Debug.Log ("ShiftCurrentInstructionUp "+this.name);
-		if (nextEmptySlot != null)
-		{
-			nextEmptySlot.ShiftCurrentInstructionUp();
-			nextEmptySlot.ReplaceCurrentInstruction(currentInstruction);
-		}
-		
-	}
-	
-	void ShiftNextInstructionDown()
-	{
-		Debug.Log ("ShiftNextInstructionDown "+this.name);
-		if (nextEmptySlot != null)
-		{
-			ReplaceCurrentInstruction(nextEmptySlot.currentInstruction);
-			nextEmptySlot.ShiftNextInstructionDown();
-		}
-		
-	}
-	
-	
-	public void InsertInstruction(DraggableInstruction newInstruction)
-	{
-		Debug.Log("newInstruction: "+newInstruction);
-		Debug.Log("currentInstruction: "+currentInstruction);
-		
-		if (newInstruction != null)
-		{
-			if (currentInstruction != null)
-			{
-				ShiftCurrentInstructionUp();
-			}
-			if (previousEmptySlot != null && previousEmptySlot.currentInstruction == null)
-			{
-				previousEmptySlot.InsertInstruction(newInstruction);
-			}
-			else
-			{
-				ReplaceCurrentInstruction(newInstruction);
-			}
-		}
-		else // deleting
-		{
 			
-			if (currentInstruction != null)
-			{
-				ClearCurrentInstruction();
-				ShiftNextInstructionDown();
-			}
-			else
-			{
-			}
+//			if (onInstructionChange != null)
+//				onInstructionChange(currentInstruction);
 		}
-		
 	}
+	
+	
 }
