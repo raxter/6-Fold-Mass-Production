@@ -104,6 +104,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		_currentLevel = LevelSettings.instance.GetLevel(leveName);
 		
+		GridManager.instance.SetTarget(_currentLevel.targetConstruction);
+		
 		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
 		{
 			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();

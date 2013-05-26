@@ -20,7 +20,7 @@ public class LevelSettings : ScriptableObjectSingleton<LevelSettings>
 		
 		public int targetConstructions;
 		
-		public ConstructionDefinition targetConstruction;
+		public string targetConstruction;
 	}
 	
 	

@@ -9,7 +9,7 @@ public static class HexMetrics {
 	public static readonly Direction RightDirection = Direction.RightUp;
 	
 
-	public static IntVector2 GetRelativeLocation (HexMetrics.Direction direction)
+	public static IntVector2 GetGridOffset (HexMetrics.Direction direction)
 	{
 		switch (direction)
 		{

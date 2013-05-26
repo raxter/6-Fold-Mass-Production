@@ -34,6 +34,10 @@ public class GridManager : SingletonBehaviour<GridManager>
 	[SerializeField]
 	GameObject _hexCellHolder;
 	
+	
+	[SerializeField]
+	GameObject _targetHolder;
+	
 	[SerializeField]
 	HexCellRow [] _hexCellRows;
 	
@@ -51,6 +55,15 @@ public class GridManager : SingletonBehaviour<GridManager>
 		return null;
 	}
 	
+	public ConstructionDefinition target { get; private set; }
+	
+	public void SetTarget(string encodedTarget)
+	{
+		target = ConstructionDefinition.Decode(encodedTarget);
+		GrabbablePart targetPart = target.GenerateConnectedParts();
+		targetPart.transform.parent = _targetHolder.transform;
+		targetPart.transform.localPosition = Vector3.zero;
+	}
 	
 	
 	public void DestroyHexCellMap()

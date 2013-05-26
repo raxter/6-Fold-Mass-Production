@@ -16,17 +16,32 @@ public class GrabbablePartInspector : Editor
 	{
 		
 		
-		
 		part = target as GrabbablePart;
 		DrawDefaultInspector();
 		
 		
+		if (EditorApplication.isPlaying)
+		{
+			GUILayout.Label("Construction editor disabled while playing");
+			return;
+		}
+		
+		EditorGUILayout.BeginHorizontal();
 		HexMetrics.Direction oldOrietation = part.SimulationOrientation;
 		HexMetrics.Direction newOrietation = (HexMetrics.Direction)EditorGUILayout.EnumPopup( part.SimulationOrientation );
 //		if (newOrietation != oldOrietation)
 		{
 			part.SimulationOrientation = newOrietation;
 		}
+		if (GUILayout.Button("<-"))
+		{
+			part.SimulationOrientation = (HexMetrics.Direction)(((int)(part.SimulationOrientation) - 1) % 6);
+		}
+		if (GUILayout.Button("->"))
+		{
+			part.SimulationOrientation = (HexMetrics.Direction)(((int)(part.SimulationOrientation) + 1) % 6);
+		}
+		EditorGUILayout.EndHorizontal();
 		
 		for (int i = 0 ; i < 6 ; i++)
 		{
@@ -67,7 +82,8 @@ public class GrabbablePartInspector : Editor
 					
 					GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
 					GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
-					part.ConnectPartAndPlace(newConnectedPart, iDir);
+					part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, iDir);
+					part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld);
 				}
 			}
 			else
@@ -79,10 +95,15 @@ public class GrabbablePartInspector : Editor
 				}
 			}
 			
-			part.SetPhysicalConnection(iDir, (GrabbablePart.PhysicalConnectionType)EditorGUILayout.EnumPopup(part.GetConnectionType(iDir)));
-			part.SetAuxilaryConnections(iDir, EditorGUILayout.MaskField(	
-																	part.GetAuxilaryConnectionTypes(iDir), 
-																	System.Enum.GetNames(typeof(GrabbablePart.AuxilaryConnectionType))  ));
+			GrabbablePart.PhysicalConnectionType oldConnectionType = part.GetPhysicalConnectionType(iDir);
+			GrabbablePart.PhysicalConnectionType newConnectionType = (GrabbablePart.PhysicalConnectionType)EditorGUILayout.EnumPopup(oldConnectionType);
+			if (oldConnectionType != newConnectionType)
+				part.SetPhysicalConnection(iDir, newConnectionType);
+			
+			int oldAuxTypes = part.GetAuxilaryConnectionTypes(iDir);
+			int newAuxTypes = EditorGUILayout.MaskField(	oldAuxTypes, System.Enum.GetNames(typeof(GrabbablePart.AuxilaryConnectionType)) );
+			if (oldAuxTypes != newAuxTypes)
+				part.SetAuxilaryConnections(iDir, newAuxTypes);
 			
 			
 			EditorGUILayout.EndHorizontal();
@@ -92,7 +113,10 @@ public class GrabbablePartInspector : Editor
 		EditorUtility.SetDirty(part);
 
 		
-		
+		if (GUILayout.Button("Print encoded construction"))
+		{
+			Debug.Log(ConstructionDefinition.ToConstructionDefinition(part).Encode());
+		}
 	}
 	
 	
@@ -101,6 +125,7 @@ public class GrabbablePartInspector : Editor
 		bool debugVal = true;
 		if (part != null && debugVal)
 		{
+//			Debug.Log ("----");
 			foreach(var locatedPart in part.GetAllPartsWithLocation())
 			{
 				GrabbablePart lpart = locatedPart.part;
@@ -123,7 +148,7 @@ public class GrabbablePartInspector : Editor
 					{
 						
 						
-						HexMetrics.Direction direction = lpart.GetAbsoluteDirectionFromRelative(iDir);
+						HexMetrics.Direction direction = lpart.AbsoluteDirectionFromRelative(iDir);
 						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(direction);
 					
 						float inRad  = 0.5f;
@@ -148,9 +173,13 @@ public class GrabbablePartInspector : Editor
 							}
 						}
 //						Handles.DrawWireDisk
-						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*3f, Vector3.forward, outRad*2);
-						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*2f, Vector3.forward, midRad*2);
 						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*1f, Vector3.forward, inRad*2);
+						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*2f, Vector3.forward, midRad*2);
+						if (lpart.GetPhysicalConnectionType(iDir) != GrabbablePart.PhysicalConnectionType.None)
+						{
+							Handles.color = Color.green;
+						}
+						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*3f, Vector3.forward, outRad*2);
 //						Handles.DrawLine(lpart.transform.position, lpart.transform.position + (relativeLocation)/3f);
 //						relativeLocation.Normalize();
 //						relativeLocation *= 3;
@@ -161,6 +190,7 @@ public class GrabbablePartInspector : Editor
 					}
 				}
 			}
+//			Debug.Log ("----");
 			
 		}
 	}

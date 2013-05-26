@@ -36,9 +36,9 @@ public class WeldingRig : Mechanism
 		if (location != null)
 		{
 			hexCell     = GridManager.instance.GetHexCell(location);
-			leftBelow   = GridManager.instance.GetHexCell(location+HexMetrics.GetRelativeLocation(HexMetrics.Direction.LeftDown));
-			centerBelow = GridManager.instance.GetHexCell(location+HexMetrics.GetRelativeLocation(HexMetrics.Direction.Down));
-			rightBelow  = GridManager.instance.GetHexCell(location+HexMetrics.GetRelativeLocation(HexMetrics.Direction.RightDown));
+			leftBelow   = GridManager.instance.GetHexCell(location+HexMetrics.GetGridOffset(HexMetrics.Direction.LeftDown));
+			centerBelow = GridManager.instance.GetHexCell(location+HexMetrics.GetGridOffset(HexMetrics.Direction.Down));
+			rightBelow  = GridManager.instance.GetHexCell(location+HexMetrics.GetGridOffset(HexMetrics.Direction.RightDown));
 			
 			if (hexCell != null && leftBelow != null && centerBelow != null && rightBelow != null)
 			{
@@ -93,14 +93,14 @@ public class WeldingRig : Mechanism
 		
 		if (topPart != null)
 		{
-			if (leftPart   != null) topPart.ConnectPartOnGrid(leftPart);
-			if (bottomPart != null) topPart.ConnectPartOnGrid(bottomPart);
-			if (rightPart  != null) topPart.ConnectPartOnGrid(rightPart);
+			if (leftPart   != null) topPart.ConnectPartOnGrid(leftPart, GrabbablePart.PhysicalConnectionType.Weld);
+			if (bottomPart != null) topPart.ConnectPartOnGrid(bottomPart, GrabbablePart.PhysicalConnectionType.Weld);
+			if (rightPart  != null) topPart.ConnectPartOnGrid(rightPart, GrabbablePart.PhysicalConnectionType.Weld);
 		}
 		if (bottomPart != null)
 		{
-			if (leftPart  != null) bottomPart.ConnectPartOnGrid(leftPart);
-			if (rightPart != null) bottomPart.ConnectPartOnGrid(rightPart);
+			if (leftPart  != null) bottomPart.ConnectPartOnGrid(leftPart, GrabbablePart.PhysicalConnectionType.Weld);
+			if (rightPart != null) bottomPart.ConnectPartOnGrid(rightPart, GrabbablePart.PhysicalConnectionType.Weld);
 		}
 		
 //		if (hexCell.partOverCell)

@@ -22,6 +22,11 @@ public class IntVector2
 		}
 	}
 	
+	public string ToString()
+	{
+		return "("+x+","+y+")";
+	}
+	
 	
 	public class IntVectorEqualityComparer : IEqualityComparer<IntVector2>
 	{

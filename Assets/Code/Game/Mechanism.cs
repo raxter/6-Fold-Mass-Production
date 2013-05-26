@@ -81,33 +81,5 @@ public abstract class Mechanism : HexCellPlaceable
 	
 	public abstract bool Decode(string encoded);
 	
-	public static int CodeToNumber(char c)
-	{
-		if (c >= '0' && c <= '9')
-		{
-			return c-'0';
-		}
-		if (c >= 'a' && c <= 'z')
-		{
-			return c-'a';
-		}
-		
-		return -1;
-	}
-	
-	public static char NumberToCode(int i)
-	{
-		if (i <= 9)
-		{
-			return (char)('0'+i);
-		}
-		
-		if (i > 9)
-		{
-			return (char)('a'+(i-10));
-		}
-		
-		return '!';
-	}
 	
 }

@@ -6,40 +6,41 @@ using System.Collections;
 public class ConstructionDefinitionCreatorInspector : Editor
 {
 	
-	GrabbablePart GetPartPrefabFromType(PartType type)
-	{
-		foreach(GrabbablePart partPrefab in GameSettings.instance.partPrefabs)
-		{
-			if (partPrefab.partType == type)
-			{
-				return partPrefab;
-			}
-		}
-		return null;
-	}
 	
 	
+	string constructionText = "";
 	public override void OnInspectorGUI()
 	{
-		ConstructionDefinitionCreator creator = (target as ConstructionDefinitionCreator);
-		if (GUILayout.Button("Create new Construction Definition"))
+		constructionText = EditorGUILayout.TextField("Create Construction", constructionText);
+		
+		if (GUILayout.Button("Generate Construction"))
 		{
-			ConstructionDefinition newDefinition = ScriptableObject.CreateInstance<ConstructionDefinition>();
+			ConstructionDefinition constructionDef = ConstructionDefinition.Decode(constructionText);
+			Debug.Log (constructionDef.constructionElements.Count);
 			
-			AssetDatabase.CreateAsset(newDefinition, "Assets/Data/NewConstruction.asset");
-			AssetDatabase.SaveAssets();
+			GrabbablePart constructed = constructionDef.GenerateConnectedParts();
+			constructed.transform.position = (target as ConstructionDefinitionCreator).transform.position;
 		}
 		
-		ConstructionDefinition selectedConstruction = EditorGUILayout.ObjectField("Load Construction", null, typeof(ConstructionDefinition), false) as ConstructionDefinition;
-		
-		if (selectedConstruction != null)
-		{
-			while(creator.gameObject.transform.GetChildCount() > 0)
-			{
-				DestroyImmediate(creator.gameObject.transform.GetChild(0));
-			}
-		}
-		
+//		ConstructionDefinitionCreator creator = (target as ConstructionDefinitionCreator);
+//		if (GUILayout.Button("Create new Construction Definition"))
+//		{
+//			ConstructionDefinitionAsset newDefinition = ScriptableObject.CreateInstance<ConstructionDefinitionAsset>();
+//			
+//			AssetDatabase.CreateAsset(newDefinition, "Assets/Data/NewConstruction.asset");
+//			AssetDatabase.SaveAssets();
+//		}
+//		
+//		ConstructionDefinitionAsset selectedConstruction = EditorGUILayout.ObjectField("Load Construction", null, typeof(ConstructionDefinitionAsset), false) as ConstructionDefinitionAsset;
+//		
+//		if (selectedConstruction != null)
+//		{
+//			while(creator.gameObject.transform.GetChildCount() > 0)
+//			{
+//				DestroyImmediate(creator.gameObject.transform.GetChild(0));
+//			}
+//		}
+//		
 //		GameObject constructionObject = creator.transform.GetChild
 		
 	}

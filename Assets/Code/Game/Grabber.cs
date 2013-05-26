@@ -78,7 +78,7 @@ public class Grabber : Mechanism
 			{
 				break;
 			}
-			code += NumberToCode((int)instruction);
+			code += CharSerializer.ToCode((int)instruction);
 		}
 		
 		return code;
@@ -86,8 +86,8 @@ public class Grabber : Mechanism
 	
 	public override bool Decode(string encoded)
 	{
-		_startState.direction = (HexMetrics.Direction)CodeToNumber(encoded[0]);
-		_startState.extention = CodeToNumber(encoded[1]);
+		_startState.direction = (HexMetrics.Direction)CharSerializer.ToNumber(encoded[0]);
+		_startState.extention = CharSerializer.ToNumber(encoded[1]);
 		MoveToStartState();
 		
 		for (int i = 0 ; i < instructions.Count ; i++)
@@ -97,7 +97,7 @@ public class Grabber : Mechanism
 		int instructionOffset = 2;
 		for (int i = 0 ; i < encoded.Length-instructionOffset ; i++)
 		{
-			instructions.Add((Instruction)CodeToNumber(encoded[i+instructionOffset]));
+			instructions.Add((Instruction)CharSerializer.ToNumber(encoded[i+instructionOffset]));
 		}
 		
 		return true;
@@ -409,11 +409,11 @@ public class Grabber : Mechanism
 	
 	IntVector2 LocationAtClampEnd()
 	{
-		return Location+HexMetrics.GetRelativeLocation(_endStepState.direction)*(_endStepState.extention+1);
+		return Location+HexMetrics.GetGridOffset(_endStepState.direction)*(_endStepState.extention+1);
 	}
 	IntVector2 LocationAtClamp()
 	{
-		return Location+HexMetrics.GetRelativeLocation(_startStepState.direction)*(_startStepState.extention+1);
+		return Location+HexMetrics.GetGridOffset(_startStepState.direction)*(_startStepState.extention+1);
 	}
 	
 	void EndOfInstruction()

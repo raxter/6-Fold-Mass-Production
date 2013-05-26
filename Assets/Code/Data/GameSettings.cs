@@ -32,4 +32,5 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 		
 		return null;
 	}
+	
 }
