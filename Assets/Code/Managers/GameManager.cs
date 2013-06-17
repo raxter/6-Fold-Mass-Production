@@ -109,7 +109,9 @@ public class GameManager : SingletonBehaviour<GameManager>
 		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
 		{
 			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
-			generator.toGeneratePrefab = GameSettings.instance.GetPartPrefab(generatorDetails.toGenerate);
+			
+			generator.toGeneratePrefab = Construction.Decode(generatorDetails.toGenerate, (prefab) => Instantiate(prefab) as GameObject);
+			generator.toGeneratePrefab.ignoreCollisions = true;
 			generator.PlaceAtLocation(generatorDetails.location);
 		}
 		completedConstructions = 0;
@@ -258,11 +260,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 //			Debug.Log("-------------------");
 			foreach (PartGenerator generator in generators)
 			{
-				GrabbablePart newPart = generator.StepPreStart();
-				if (newPart)
+				Construction newConstruction = generator.StepPreStart();
+				if (newConstruction)
 				{
-					parts.Add(newPart);
-					newPart.RegisterLocationFromPosition(); // must perform this second registration step here because generators must know when there is a part above/on it
+					foreach (GrabbablePart newPart in newConstruction.Parts)
+					{
+						parts.Add(newPart);
+						newPart.RegisterLocationFromPosition(); // must perform this second registration step here because generators must know when there is a part above/on it
+						
+					}
 				}
 			}
 			
@@ -338,7 +344,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 				// and if they are the corrects construction
 				bool correctConstruction = false;
-				// todo correct construction check goes here
+				
 				correctConstruction = true;
 				
 				correctConstruction = GridManager.instance.target.CompareTo(constructionOverFinish) == 0;
@@ -574,6 +580,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 			break;
 		}
 		
+		Debug.Log (gameState);
 		if (gameState != State.Construction)
 		{
 			return;

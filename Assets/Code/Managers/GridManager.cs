@@ -60,6 +60,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 	public void SetTarget(string encodedTarget)
 	{
 		target = Construction.Decode(encodedTarget, (prefab) => Instantiate(prefab) as GameObject);
+		target.ignoreCollisions = true;
 //		GrabbablePart targetPart = target.GenerateConnectedParts();
 		target.transform.parent = _targetHolder.transform;
 		target.transform.localPosition = Vector3.zero;

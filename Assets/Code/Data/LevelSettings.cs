@@ -7,8 +7,26 @@ public class LevelSettings : ScriptableObjectSingleton<LevelSettings>
 	[System.Serializable]
 	public class GeneratorDetails
 	{
-		public PartType toGenerate;
+//		public PartType toGenerate;
+		public string toGenerate;
 		public IntVector2 location;
+		
+//		public PartType GetPartType()
+//		{
+//			if (toGenerate.Length == 1)
+//			{
+//				return (PartType)CharSerializer.CodeToNumber(toGenerate[0]);
+//			}
+//			return PartType.None;
+//		}
+//		public string GetConstructionDefinition()
+//		{
+//			if (toGenerate.Length == 1)
+//			{
+//				return "";
+//			}
+//			return toGenerate;
+//		}
 	}
 	
 	
@@ -40,8 +58,8 @@ public class LevelSettings : ScriptableObjectSingleton<LevelSettings>
 public static class ListExtentention
 {
 	
-	public static bool TrueForOne <T> (this List<T> list, System.Predicate<T> checkFunc)
-	{
-		return false;
-	}
+//	public static bool TrueForOne <T> (this List<T> list, System.Predicate<T> checkFunc)
+//	{
+//		return false;
+//	}
 }

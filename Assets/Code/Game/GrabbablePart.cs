@@ -416,11 +416,11 @@ public class GrabbablePart : MonoBehaviour
 	{
 		if (connectionType == PhysicalConnectionType.None)
 		{
-			Debug.Log("Not Connecting: "+this.idNumber+" : "+otherPart.idNumber);
+//			Debug.Log("Not Connecting: "+this.idNumber+" : "+otherPart.idNumber);
 			return false;
 		}
 		
-		Debug.Log("Connecting: "+this.idNumber+" : "+otherPart.idNumber);
+//		Debug.Log("Connecting: "+this.idNumber+" : "+otherPart.idNumber);
 		
 //		HexMetrics.Direction directionToOther;
 		for (int i = 0 ; i < 6 ; i++)
@@ -433,12 +433,12 @@ public class GrabbablePart : MonoBehaviour
 			{
 				HexMetrics.Direction relativeDirection = Relative(iDir);
 				int r = (int)relativeDirection;
-				Debug.Log ("Found Direction A: "+iDir+", R: "+relativeDirection);
+//				Debug.Log ("Found Direction A: "+iDir+", R: "+relativeDirection);
 				if (_connectedParts[r] != null && _connectedParts[r].connectedPart != null)
 				{
 					// if this happens twice in a step, remember that it is actually happening over 2 steps. 
 					// It weld at the beginning of each step, i.e. as it comes into the welder and as it leaves
-					Debug.Log("Connecting part "+otherPart.idNumber+" to a direction that is already connected (connected to "+_connectedParts[r].connectedPart.idNumber+")");
+//					Debug.Log("Connecting part "+otherPart.idNumber+" to a direction that is already connected (connected to "+_connectedParts[r].connectedPart.idNumber+")");
 					return false;
 				}
 //				otherPart.gameObject.transform.parent = gameObject.transform;
@@ -765,6 +765,13 @@ public class GrabbablePart : MonoBehaviour
 //		}
 		if (otherPart != null)
 		{
+			
+			if ((          ParentConstruction != null &&           ParentConstruction.ignoreCollisions) ||
+				(otherPart.ParentConstruction != null && otherPart.ParentConstruction.ignoreCollisions))
+			{
+				return;
+			}
+		
 			GameManager.instance.PartCollisionOccured(this, otherPart);
 		}
 	}

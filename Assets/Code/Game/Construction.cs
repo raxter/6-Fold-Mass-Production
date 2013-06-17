@@ -12,6 +12,8 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	
 	public int idNumber = -1;
 	
+	public bool ignoreCollisions = false;
+	
 	public bool HasChild
 	{
 		get 
@@ -19,7 +21,20 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			return FirstPart != null;
 		}
 	}
-	
+	public GrabbablePart CenterPart
+	{
+		get 
+		{
+			foreach (GrabbablePart part in Parts)
+			{
+				if (part.transform.localPosition == Vector3.zero)
+				{
+					return part;
+				}
+			}
+			return null;
+		}
+	}
 	public GrabbablePart FirstPart
 	{
 		get 
@@ -105,6 +120,22 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		CheckForSplit();
 	}
 	
+	private void CenterConstruction (GrabbablePart childPart)
+	{
+		if (childPart.ParentConstruction != this)
+		{
+			return;
+		}
+		
+		Vector3 diff = childPart.transform.localPosition;
+		
+		foreach (GrabbablePart part in Parts)
+		{
+			part.transform.localPosition -= diff;
+		}
+		
+	}
+	
 	public void CheckForSplit()
 	{
 		// TODO split if necessary
@@ -139,6 +170,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				Debug.Log ("Creating Construction "+splitId);
 				GameObject constructionObject = new GameObject(this.name+"."+splitId);
 				splitConstruction = constructionObject.AddComponent<Construction>();
+				splitConstruction.ignoreCollisions = ignoreCollisions;
 			}
 			else
 			{
@@ -160,6 +192,17 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	public static Construction Decode(string encoded, InstantiatePrefabDelegate instantiateFunction)
 //	public static Construction Decode(string encoded)
 	{
+		if (encoded.Length == 1)
+		{
+			GameObject singleConstructionObject = new GameObject("Decoded Construction");
+			Construction singleConstruction = singleConstructionObject.AddComponent<Construction>();
+			PartType partType = (PartType)CharSerializer.CodeToNumber(encoded[0]);
+			GameObject singlePartObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
+			singleConstruction.AddToConstruction(singlePartObject.GetComponent<GrabbablePart>());
+			singlePartObject.transform.localPosition = Vector3.zero;
+			return singleConstruction;
+		}
+		
 		
 		Dictionary<int, GrabbablePart> idParts = new Dictionary<int, GrabbablePart>();
 		Dictionary<GrabbablePart, string> partEncodings = new Dictionary<GrabbablePart, string>();
@@ -167,9 +210,15 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 //		List<GrabbablePart> elements = new List<GrabbablePart>();
 		List<string> encodedElements = new List<string>(encoded.Split(','));
 //		
+		int centerId = -1;
+		
 		for (int i = 0 ; i < encodedElements.Count ; i++)
 		{
 			int id = CharSerializer.ToNumber(encodedElements[i][0]);
+			if (centerId == -1)
+			{
+				centerId = id;
+			}
 			PartType partType = (PartType)CharSerializer.ToNumber(encodedElements[i][1]);
 			
 			GameObject partObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
@@ -200,8 +249,9 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			
 			string code = partEncodings[newPart];
 			int id = CharSerializer.ToNumber(code[0]);
+			PartType type = (PartType)CharSerializer.ToNumber(code[1]);
 			
-			Debug.Log ("Connecting part "+id);
+			Debug.Log ("Connecting part "+id+"("+type+")");
 			
 			for (int i = 0 ; i < 6 ; i++)
 			{
@@ -210,7 +260,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				GrabbablePart.PhysicalConnectionType physicalConnType = (GrabbablePart.PhysicalConnectionType)CharSerializer.ToNumber(code[3+(i*3)+1]);
 				int auxilaryConnectionType = CharSerializer.ToNumber(code[3+(i*3)+2]);
 				
-				
+				Debug.Log("Connection Def: "+id+"->"+otherId+":"+iDir+":"+physicalConnType);
 				GrabbablePart otherPart = otherId == 0 ? null : idParts[otherId];
 				if (otherPart != null)
 				{
@@ -235,11 +285,12 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		};
 		
 		
-		if (idParts.ContainsKey(1))
+		if (idParts.ContainsKey(centerId))
 		{
-			idParts[1].transform.position = construction.transform.position;
-			addToConstructionRecursively(idParts[1]);
+			idParts[centerId].transform.position = construction.transform.position;
+			addToConstructionRecursively(idParts[centerId]);
 		}
+		construction.CenterConstruction(idParts[centerId]);
 		
 		// do this in such a way that they are placed properly
 //		for (int i = 1 ; i < encodedElements.Count ; i++)
@@ -270,11 +321,10 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 		List<string> encodedElements = new List<string>();
 		// <Type><Orientation>,<PhysicalConn0>,<AuxConnect0>,<Child0??_>,<PhysicalConn1>...
-		foreach (GrabbablePart element in Parts)
+		foreach (GrabbablePart element in CenterPart.GetAllConnectedParts())
+//		foreach (GrabbablePart element in Parts)
 		{
-			
 			encodedElements.Add(element.Encode(partID));
-			
 		}
 		
 		return string.Join(",", encodedElements.ToArray());
