@@ -92,7 +92,6 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		else
 		{
 			newPart.transform.parent = this.transform;
-			newPart.ConnectUnconnectedParts();
 		}
 		
 	}
@@ -123,7 +122,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		Debug.Log("Starting with "+remainingParts.Count+ " parts");
 		
 		bool usedThisConstruction = false;
-		int splitId = 0;
+		int splitId = -1;
 		// create new constructionf for each split
 		while(remainingParts.Count != 0)
 		{

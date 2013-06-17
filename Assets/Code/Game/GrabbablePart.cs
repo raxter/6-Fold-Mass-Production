@@ -249,6 +249,7 @@ public class GrabbablePart : MonoBehaviour
 	// wired means it is electrically connected (though not physically, just wired connections alone won't keep them together)
 	// belt means that a rotary part is connected (engine, wheel, gun, anything operated by an engine)
 	
+	
 	[System.Serializable]
 	class ConnectionDescription
 	{
@@ -260,32 +261,43 @@ public class GrabbablePart : MonoBehaviour
 	}
 	
 	
+	// parts are stored by relative direction
 	[SerializeField]
 	ConnectionDescription [] _connectedParts = new ConnectionDescription [6];
 	
 	#endregion
 	
 	#region Connection Access
+	
+//	public GrabbablePart GetConnectedPartAtRelative(HexMetrics.Direction relativeDirection)
+//	{
+//		return _connectedParts[Absolute(relativeDirection)].connectedPart;
+//	}
+	
 	public GrabbablePart GetConnectedPart(HexMetrics.Direction absoluteDirection)
 	{
 		return _connectedParts[(int)absoluteDirection].connectedPart;
 	}
 	
-	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction absoluteDirection)
+	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction relativeDirection)
 	{
-		GrabbablePart ret = _connectedParts[(int)absoluteDirection].connectedPart;
+		GrabbablePart ret = _connectedParts[(int)relativeDirection].connectedPart;
 		
 //		if ( transform.parent != null && ret != null && ret.transform == transform.parent )
 //		{
 //			transform.parent = null;
 //		}
-		_connectedParts[(int)absoluteDirection].connectedPart = null;
-		_connectedParts[(int)absoluteDirection].connectionType = PhysicalConnectionType.None;
-		_connectedParts[(int)absoluteDirection].auxConnectionTypes = 0;
+		_connectedParts[(int)relativeDirection].connectedPart = null;
+		_connectedParts[(int)relativeDirection].connectionType = PhysicalConnectionType.None;
+		_connectedParts[(int)relativeDirection].auxConnectionTypes = 0;
 		
 		return ret;
 	}
 	
+//	public void ConnectPartAndPlaceAtAbsoluteDirection(GrabbablePart otherPart, PhysicalConnectionType connectionType, HexMetrics.Direction absoluteDirection)
+//	{
+//		ConnectPartAndPlaceAtRelativeDirection(otherPart, connectionType, Relative(absoluteDirection));
+//	}
 	
 	public void ConnectPartAndPlaceAtRelativeDirection(GrabbablePart otherPart, PhysicalConnectionType connectionType, HexMetrics.Direction relativeDirection)
 	{
@@ -315,18 +327,18 @@ public class GrabbablePart : MonoBehaviour
 	#endregion
 	
 	
-	public PhysicalConnectionType GetPhysicalConnectionType(HexMetrics.Direction inDirection)
+	public PhysicalConnectionType GetPhysicalConnectionType(HexMetrics.Direction relativeDirection)
 	{
-		if (GetConnectedPart(inDirection) == null)
+		if (GetConnectedPart(relativeDirection) == null)
 		{
 			return PhysicalConnectionType.None;
 		}
-		return _connectedParts[(int)inDirection].connectionType;
+		return _connectedParts[(int)relativeDirection].connectionType;
 	}
 	
-	public void SetPhysicalConnection(HexMetrics.Direction direction, PhysicalConnectionType newConnectionType)
+	public void SetPhysicalConnection(HexMetrics.Direction relativeDirection, PhysicalConnectionType newConnectionType)
 	{
-		ConnectionDescription connDesc = _connectedParts[(int)direction];
+		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
 		if (connDesc.connectedPart == null)
 		{
 			connDesc.connectionType = PhysicalConnectionType.None;
@@ -336,10 +348,10 @@ public class GrabbablePart : MonoBehaviour
 			}
 			return;
 		}
-		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(direction);
+		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
 		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[(int)oppositeDirection];
 		
-		bool weldableHere = Weldable(direction);
+		bool weldableHere = Weldable(relativeDirection);
 		bool weldabelThere = connDesc.connectedPart.Weldable(oppositeDirection);
 //		Debug.Log("Checking weldability: "+direction+"("+weldableHere+") <-> "+oppositeDirection+"("+weldabelThere+")");
 		if (weldableHere && weldabelThere)
@@ -364,27 +376,27 @@ public class GrabbablePart : MonoBehaviour
 		}
 	}
 	
-	public int GetAuxilaryConnectionTypes(HexMetrics.Direction direction)
+	public int GetAuxilaryConnectionTypes(HexMetrics.Direction relativeDirection)
 	{
-		if (GetConnectedPart(direction) == null)
+		if (GetConnectedPart(relativeDirection) == null)
 		{
 			return 0;
 		}
-		return _connectedParts[(int)direction].auxConnectionTypes;
+		return _connectedParts[(int)relativeDirection].auxConnectionTypes;
 	}
 	
-	public void SetAuxilaryConnections(HexMetrics.Direction direction, int newConnectionTypes)
+	public void SetAuxilaryConnections(HexMetrics.Direction relativeDirection, int newConnectionTypes)
 	{
-		ConnectionDescription connDesc = _connectedParts[(int)direction];
+		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
 		if (connDesc.connectedPart == null)
 		{
 			connDesc.auxConnectionTypes = 0;
 			return;
 		}
-		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(direction);
+		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
 		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[(int)oppositeDirection];
 		
-		bool weldableHere = Weldable(direction);
+		bool weldableHere = Weldable(relativeDirection);
 		bool weldabelThere = connDesc.connectedPart.Weldable(oppositeDirection);
 //		Debug.Log("Checking weldability: "+direction+"("+weldableHere+") <-> "+oppositeDirection+"("+weldabelThere+")");
 		if (weldableHere && weldabelThere)
@@ -451,54 +463,54 @@ public class GrabbablePart : MonoBehaviour
 		
 	}
 	
-	
-	public void ConnectUnconnectedParts()
-	{
-//		List<GrabbablePart> connection1 = new List<GrabbablePart>();
-//		List<GrabbablePart> connection2 = new List<GrabbablePart>();
-//		List<IntVector2> location1 = new List<IntVector2>();
-//		List<IntVector2> location2 = new List<IntVector2>();
-//		List<HexMetrics.Direction> connectionDirection = new List<HexMetrics.Direction>();
-		
-		Dictionary<IntVector2, GrabbablePart> partDictionary = new Dictionary<IntVector2, GrabbablePart>(new IntVector2.IntVectorEqualityComparer ());
-		foreach(var locatedPart in GetAllConnectedPartsWithLocation())
-		{
-//			GrabbablePart thisPart = locatedPart.part;
-			partDictionary[locatedPart.location] = locatedPart.part;
-		}
-		
-		foreach (IntVector2 partLocation in partDictionary.Keys)
-		{
-			GrabbablePart part = partDictionary[partLocation];
-			for (int i = 0 ; i < 6 ; i++)
-			{
-				HexMetrics.Direction iDir = (HexMetrics.Direction)i;
-				IntVector2 otherLocation = partLocation + HexMetrics.GetGridOffset(part.Absolute(iDir));
-				if (partDictionary.ContainsKey(otherLocation)) // there is a part in this direction
-				{
-					Debug.Log("Found at A:"+Absolute(iDir)+", R:"+iDir +" @ "+partLocation.x+":"+partLocation.y);
-					GrabbablePart otherPart = partDictionary[otherLocation];
-					
-					Debug.Log("Connected already in "+iDir+" -> "+part.GetConnectedPart(iDir));
-					if (part.GetConnectedPart(iDir) == null)
-					{
-						Debug.Log("Connecting "+part+":"+otherPart +" in "+iDir);
-						
-						part._connectedParts[(int)iDir].connectedPart = otherPart;
-					}
-				}
-				else
-				{
-					part.RemoveConnectedPart(iDir);
-				}
-			}
-		}
-		
-//		for (int i = 0 ; i < connection1.Count ; i++)
+	// NOTE we are not using this because if side are not connected then it's connectedPart MUST be null!
+//	public void ConnectUnconnectedParts()
+//	{
+////		List<GrabbablePart> connection1 = new List<GrabbablePart>();
+////		List<GrabbablePart> connection2 = new List<GrabbablePart>();
+////		List<IntVector2> location1 = new List<IntVector2>();
+////		List<IntVector2> location2 = new List<IntVector2>();
+////		List<HexMetrics.Direction> connectionDirection = new List<HexMetrics.Direction>();
+//		
+//		Dictionary<IntVector2, GrabbablePart> partDictionary = new Dictionary<IntVector2, GrabbablePart>(new IntVector2.IntVectorEqualityComparer ());
+//		foreach(var locatedPart in GetAllConnectedPartsWithLocation())
 //		{
-//			Debug.Log ("Connection "+i+" "+location1[i].x+":"+location1[i].y+" to "+location2[i].x+":"+location2[i].y +" ("+connectionDirection[i]+")");
+////			GrabbablePart thisPart = locatedPart.part;
+//			partDictionary[locatedPart.location] = locatedPart.part;
 //		}
-	}
+//		
+//		foreach (IntVector2 partLocation in partDictionary.Keys)
+//		{
+//			GrabbablePart part = partDictionary[partLocation];
+//			for (int i = 0 ; i < 6 ; i++)
+//			{
+//				HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+//				IntVector2 otherLocation = partLocation + HexMetrics.GetGridOffset(part.Absolute(iDir));
+//				if (partDictionary.ContainsKey(otherLocation)) // there is a part in this direction
+//				{
+//					Debug.Log("Found at A:"+Absolute(iDir)+", R:"+iDir +" @ "+partLocation.x+":"+partLocation.y);
+//					GrabbablePart otherPart = partDictionary[otherLocation];
+//					
+//					Debug.Log("Connected already in "+iDir+" -> "+part.GetConnectedPart(iDir));
+//					if (part.GetConnectedPart(iDir) == null)
+//					{
+//						Debug.Log("Connecting "+part+":"+otherPart +" in "+iDir);
+//						
+//						part._connectedParts[(int)iDir].connectedPart = otherPart;
+//					}
+//				}
+//				else
+//				{
+//					part.RemoveConnectedPart(iDir);
+//				}
+//			}
+//		}
+//		
+////		for (int i = 0 ; i < connection1.Count ; i++)
+////		{
+////			Debug.Log ("Connection "+i+" "+location1[i].x+":"+location1[i].y+" to "+location2[i].x+":"+location2[i].y +" ("+connectionDirection[i]+")");
+////		}
+//	}
 	
 #region Connected parts
 	public IEnumerable<GrabbablePart> GetAllConnectedParts()

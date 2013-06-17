@@ -49,7 +49,8 @@ public class GrabbablePartInspector : Editor
 		for (int i = 0 ; i < 6 ; i++)
 		{
 			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
-			GrabbablePart connectedPart = part.GetConnectedPart(iDir);
+			HexMetrics.Direction iDirRelative = part.Relative(iDir);
+			GrabbablePart connectedPart = part.GetConnectedPart(iDirRelative);
 			
 			EditorGUILayout.BeginHorizontal();
 			
@@ -91,51 +92,72 @@ public class GrabbablePartInspector : Editor
 					if (GUILayout.Button("Connect ("+(GrabbablePart.PhysicalConnectionType)1+")"))
 					{
 						part.ParentConstruction.AddToConstruction(contact);
-						part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDir);
-//						part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld);
+						part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
+						part.SetPhysicalConnection(iDirRelative, GrabbablePart.PhysicalConnectionType.Weld);
 					}
+				}
+			}
+			else if (
+				contact != null && contact.ParentConstruction != null && contact.ParentConstruction == part.ParentConstruction && 
+				part.GetPhysicalConnectionType(iDirRelative) == GrabbablePart.PhysicalConnectionType.None)
+			{
+				if (GUILayout.Button((GrabbablePart.PhysicalConnectionType)1+" connect "+contact.partType))
+				{
+					part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
 				}
 			}
 			else
 			{
-				PartType newPartType = (PartType)EditorGUILayout.EnumPopup( connectedPart == null ? PartType.None : connectedPart.partType );
+				PartType oldType = connectedPart == null ? PartType.None : connectedPart.partType;
+				PartType newPartType = (PartType)EditorGUILayout.EnumPopup( oldType );
+				
+				bool changingPart = newPartType != oldType;
 			
-			
-				if (connectedPart == null)
+				// if we are changing part and we have one there already, remove it
+				if (connectedPart != null && changingPart)
 				{
-					if (newPartType != PartType.None)
-					{
-						// create part
-						
-						
-						GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
-						GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
-						part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, GrabbablePart.PhysicalConnectionType.Weld, iDir);
-						part.SimulationOrientation = part.SimulationOrientation;
-//						part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld, instantiateFunction);
-					}
+					GameObject toDestroy = part.RemoveConnectedPart(iDirRelative).gameObject;
+					GameObject.DestroyImmediate(toDestroy);
+					
 				}
-				else
+				if (changingPart && newPartType != PartType.None)
 				{
-					if (newPartType == PartType.None)
-					{
-						GameObject toDestroy = part.RemoveConnectedPart(iDir).gameObject;
-						GameObject.DestroyImmediate(toDestroy);
-					}
+					// create part
+					
+					GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
+					GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
+					part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
+					part.SimulationOrientation = part.SimulationOrientation;
+//					part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld, instantiateFunction);
+					
 				}
 			
-				GrabbablePart.PhysicalConnectionType oldConnectionType = part.GetPhysicalConnectionType(iDir);
+				GrabbablePart.PhysicalConnectionType oldConnectionType = part.GetPhysicalConnectionType(iDirRelative);
 				GrabbablePart.PhysicalConnectionType newConnectionType = (GrabbablePart.PhysicalConnectionType)EditorGUILayout.EnumPopup(oldConnectionType);
 				if (oldConnectionType != newConnectionType)
 				{
-					part.SetPhysicalConnection(iDir, newConnectionType);
+					part.SetPhysicalConnection(iDirRelative, newConnectionType);
 				}
 				
-				int oldAuxTypes = part.GetAuxilaryConnectionTypes(iDir);
+				int oldAuxTypes = part.GetAuxilaryConnectionTypes(iDirRelative);
 				int newAuxTypes = EditorGUILayout.MaskField(	oldAuxTypes, System.Enum.GetNames(typeof(GrabbablePart.AuxilaryConnectionType)) );
 				if (oldAuxTypes != newAuxTypes)
-					part.SetAuxilaryConnections(iDir, newAuxTypes);
+					part.SetAuxilaryConnections(iDirRelative, newAuxTypes);
 				
+			}
+			if (GUILayout.Button("<-"))
+			{
+				if (contact != null)
+				{
+					contact.SimulationOrientation = (HexMetrics.Direction)(((int)(contact.SimulationOrientation) - 1) % 6);
+				}
+			}
+			if (GUILayout.Button("->"))
+			{
+				if (contact != null)
+				{
+					contact.SimulationOrientation = (HexMetrics.Direction)(((int)(contact.SimulationOrientation) + 1) % 6);
+				}
 			}
 			
 			EditorGUILayout.EndHorizontal();
