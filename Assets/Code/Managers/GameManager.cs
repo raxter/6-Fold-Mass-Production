@@ -27,7 +27,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 		set 
 		{ 
 			_completedConstructions = value; 
-			ConstructionCompletedEvent();
+			if (ConstructionCompletedEvent != null)
+			{
+				ConstructionCompletedEvent();
+			}
 		}
 	}
 	public delegate void EventFunction();
@@ -70,7 +73,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 	void SetState(State newState)
 	{
 		_gameState = newState;
-		GameStateChangedEvent();
+		if (GameStateChangedEvent != null)
+		{
+			GameStateChangedEvent();
+		}
 	}
 	
 	State _gameState;
@@ -110,8 +116,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 		{
 			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
 			
-			generator.toGeneratePrefab = Construction.Decode(generatorDetails.toGenerate, (prefab) => Instantiate(prefab) as GameObject);
-			generator.toGeneratePrefab.ignoreCollisions = true;
+			generator.toGenerateConstruction = Construction.Decode(generatorDetails.toGenerate, (prefab) => Instantiate(prefab) as GameObject);
+			generator.toGenerateConstruction.ignoreCollisions = true;
 			generator.PlaceAtLocation(generatorDetails.location);
 		}
 		completedConstructions = 0;
@@ -525,7 +531,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 		private set
 		{
 			_currentSpeed = value;
-			SimulationSpeedChangedEvent();
+			if (SimulationSpeedChangedEvent != null)
+			{
+				SimulationSpeedChangedEvent();
+			}
 		}
 	}
 	SimulationSpeed _currentSpeed = SimulationSpeed.Stopped;

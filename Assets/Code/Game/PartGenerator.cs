@@ -4,7 +4,7 @@ using System.Collections;
 public class PartGenerator : HexCellPlaceable
 {
 	
-	public Construction toGeneratePrefab;
+	public Construction toGenerateConstruction;
 	
 	bool placeOnNextTurn = false;
 	
@@ -35,9 +35,9 @@ public class PartGenerator : HexCellPlaceable
 			if (placeOnNextTurn)
 			{
 				Construction construction;
-				construction = (GameObject.Instantiate(toGeneratePrefab.gameObject) as GameObject).GetComponent<Construction>();
+				construction = (GameObject.Instantiate(toGenerateConstruction.gameObject) as GameObject).GetComponent<Construction>();
 				construction.idNumber = generatorCount;
-				construction.gameObject.name = toGeneratePrefab.gameObject.name+" "+generatorCount;
+				construction.gameObject.name = toGenerateConstruction.gameObject.name+" "+generatorCount;
 //				part.PlaceAtLocation(Location);
 				
 				construction.transform.position = GridManager.instance.GetHexCell(Location).transform.position;

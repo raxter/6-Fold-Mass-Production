@@ -96,12 +96,6 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	Mechanism draggingMechanism = null;
 	
-	IEnumerator Start () 
-	{
-		yield return null;
-		GrabberProgramUI.instance.DisplayedGrabber = null;
-	}
-	
 	
 	// Update is called once per frame
 	void Update () 

@@ -23,7 +23,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	Grabber _displayedGrabber = null;
 	
 	
-	void Start()
+	IEnumerator Start () 
 	{
 //		GameManager.instance.GameStateChangedEvent += () => 
 //		{
@@ -34,6 +34,11 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 		{
 			RefreshGrabberUIObjects();
 		};
+		
+	
+		yield return null;
+		DisplayedGrabber = null;
+	
 	}
 	
 	public Grabber DisplayedGrabber 

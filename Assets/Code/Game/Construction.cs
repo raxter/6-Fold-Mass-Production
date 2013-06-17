@@ -189,18 +189,24 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	
 	
 	#region Construction tree encoding and decoding
+	
+	public static Construction CreateSimpleConstruction(PartType partType, InstantiatePrefabDelegate instantiateFunction)	
+	{
+		GameObject singleConstructionObject = new GameObject("Decoded Construction");
+		Construction singleConstruction = singleConstructionObject.AddComponent<Construction>();
+		GameObject singlePartObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
+		singleConstruction.AddToConstruction(singlePartObject.GetComponent<GrabbablePart>());
+		singlePartObject.transform.localPosition = Vector3.zero;
+		return singleConstruction;
+	}
+		
 	public static Construction Decode(string encoded, InstantiatePrefabDelegate instantiateFunction)
 //	public static Construction Decode(string encoded)
 	{
 		if (encoded.Length == 1)
 		{
-			GameObject singleConstructionObject = new GameObject("Decoded Construction");
-			Construction singleConstruction = singleConstructionObject.AddComponent<Construction>();
 			PartType partType = (PartType)CharSerializer.CodeToNumber(encoded[0]);
-			GameObject singlePartObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
-			singleConstruction.AddToConstruction(singlePartObject.GetComponent<GrabbablePart>());
-			singlePartObject.transform.localPosition = Vector3.zero;
-			return singleConstruction;
+			return CreateSimpleConstruction(partType, instantiateFunction);
 		}
 		
 		
