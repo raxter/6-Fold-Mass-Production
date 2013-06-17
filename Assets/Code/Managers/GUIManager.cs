@@ -31,20 +31,20 @@ public class GUIManager : MonoBehaviour
 			if (currentSpeed == GameManager.SimulationSpeed.Stopped)
 			{
 				// change stop to play
-				_playNormalButton.transform.localScale = Vector3.one;
-				_pauseButton.transform.localScale = Vector3.zero;
+//				_playNormalButton.transform.localScale = Vector3.one;
+//				_pauseButton.transform.localScale = Vector3.zero;
 				_stopButton.transform.localScale = Vector3.zero;
 						
 			}
-			else if (currentSpeed == GameManager.SimulationSpeed.Paused)
-			{
-				_playNormalButton.transform.localScale = Vector3.one;
-				_pauseButton.transform.localScale = Vector3.zero;
-			}
+//			else if (currentSpeed == GameManager.SimulationSpeed.Paused)
+//			{
+////				_playNormalButton.transform.localScale = Vector3.one;
+////				_pauseButton.transform.localScale = Vector3.zero;
+//			}
 			else
 			{
-				_playNormalButton.transform.localScale = Vector3.zero;
-				_pauseButton.transform.localScale = Vector3.one;
+//				_playNormalButton.transform.localScale = Vector3.zero;
+//				_pauseButton.transform.localScale = Vector3.one;
 				_stopButton.transform.localScale = Vector3.one;
 			}
 		};

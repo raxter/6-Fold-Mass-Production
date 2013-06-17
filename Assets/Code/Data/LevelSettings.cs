@@ -7,7 +7,7 @@ public class LevelSettings : ScriptableObjectSingleton<LevelSettings>
 	[System.Serializable]
 	public class GeneratorDetails
 	{
-		public GrabbablePart toGeneratePrefab;
+		public PartType toGenerate;
 		public IntVector2 location;
 	}
 	

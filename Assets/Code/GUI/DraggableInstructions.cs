@@ -17,6 +17,9 @@ public class DraggableInstructions : MonoBehaviour
 	[SerializeField]
 	GameObject emptyInstructionsRoot = null;
 	
+	[SerializeField]
+	GameObject instructionsRoot = null;
+	
 	
 	EmptyInstructionSlot [] emptyInstructions = null;
 	
@@ -26,6 +29,21 @@ public class DraggableInstructions : MonoBehaviour
 	
 	void Start()
 	{
+		
+//		GameManager.instance.GameStateChangedEvent += () =>
+//		{
+////			instructionsRoot.transform.localScale = Vector3.one*(GameManager.instance.gameState == GameManager.State.Construction ? 1f : 0f);
+//			
+//			foreach (DraggableInstruction draggableInstruction in draggableInstructions)
+//			{
+//				draggableInstruction.button.IsDraggable = GameManager.instance.gameState == GameManager.State.Construction;
+//			}
+//			foreach (EmptyInstructionSlot emptyInstructionSlot in emptyInstructions)
+//			{
+//				emptyInstructionSlot.button.IsDraggable = GameManager.instance.gameState == GameManager.State.Construction;
+//			}
+//		};
+		
 		
 		emptyInstructions = new EmptyInstructionSlot[Grabber.maximumInstuctions];
 		
@@ -89,7 +107,7 @@ public class DraggableInstructions : MonoBehaviour
 			emptyInstructions[i].gameObject.SetActive(!blankRemaining);
 			if (emptyInstructions[i].CurrentInstruction == Grabber.Instruction.None)
 			{
-				blankRemaining = true;
+//				blankRemaining = true;
 			}
 			
 		}
@@ -97,11 +115,15 @@ public class DraggableInstructions : MonoBehaviour
 	
 	public void SetupDragDropBehaviour(DraggableInstruction draggableButton)
 	{
+		
 		draggableButton.button.SetDragDropDelegate((parms) => 
 		{
 			if (parms.evt == EZDragDropEvent.Begin)
 			{
-				Debug.Log ("Begin "+parms.dragObj);
+				Debug.Log ("Begin "+parms.dragObj/*+":"+parms.dragObj.transform.position+":"+parms.ptr.ray*/);
+//				Vector3 origin = parms.ptr.ray.origin;
+//				origin.z = 0;
+//				parms.dragObj.transform.position = origin;
 					
 			}
 			if (parms.evt == EZDragDropEvent.Cancelled)
@@ -109,6 +131,10 @@ public class DraggableInstructions : MonoBehaviour
 				Debug.Log ("Cancelled "+parms.dragObj);
 				Debug.Log ("DropTarget: "+parms.dragObj.DropTarget);
 				
+				if (GameManager.instance.gameState != GameManager.State.Construction)
+				{
+					return;
+				}
 				
 				if (draggableButton.occupiedSlot != null)
 				{

@@ -62,6 +62,7 @@ public abstract class Mechanism : HexCellPlaceable
 	
 	protected override void PlaceableStart()
 	{
+		MechanismStart();
 	}
 	
 	protected override void PlaceableUpdate()
@@ -76,6 +77,7 @@ public abstract class Mechanism : HexCellPlaceable
 	}
 	
 	protected abstract void MechanismUpdate();
+	protected abstract void MechanismStart();
 	
 	public abstract string Encode();
 	

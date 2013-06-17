@@ -3,27 +3,21 @@ using System.Collections;
 
 public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 {
-	[SerializeField]
-	InstructionSlot [] _instructionSlots = null;
+//	[SerializeField]
+//	InstructionSlot [] _instructionSlots = null;
 	
 	[SerializeField]
 	GameObject [] _grabberUIObjects = null;
 	
-	bool guiEnabled = false;
+//	bool guiEnabled = false;
 	
-	void EnableGUI (bool enabled)
-	{
-		guiEnabled = enabled;
-		foreach (InstructionSlot instructionSlot in _instructionSlots)
-		{
-			instructionSlot.EnableGUI(enabled);
-		}
-		if (!enabled)
-		{
-//			CloseAllSlots();
-		}
-		RefreshGrabberUIObjects();
-	}
+//	void EnableGUI (bool enabled)
+//	{
+//		guiEnabled = enabled;
+//
+//
+//		RefreshGrabberUIObjects();
+//	}
 	
 	
 	Grabber _displayedGrabber = null;
@@ -31,9 +25,14 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	void Start()
 	{
-		GameManager.instance.GameStateChangedEvent += () => 
+//		GameManager.instance.GameStateChangedEvent += () => 
+//		{
+//			EnableGUI(GameManager.instance.gameState == GameManager.State.Construction);
+//		};
+		
+		GameManager.instance.GameStateChangedEvent += () =>
 		{
-			EnableGUI(GameManager.instance.gameState == GameManager.State.Construction);
+			RefreshGrabberUIObjects();
 		};
 	}
 	
@@ -48,9 +47,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 			_displayedGrabber = value;
 			
 			
-			SetAllIndecies();
-			
-			EnableGUI (value != null);
+//			EnableGUI (value != null);
 			RefreshGrabberUIObjects();
 		}
 	}
@@ -61,17 +58,17 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	{
 		foreach (GameObject uiObject in _grabberUIObjects)
 		{
-			uiObject.transform.localScale = Vector3.one * (_displayedGrabber != null && guiEnabled && GameManager.instance.gameState == GameManager.State.Construction ? 1f : 0f);
+			uiObject.transform.localScale = Vector3.one * (_displayedGrabber != null && /*guiEnabled &&*/ GameManager.instance.gameState == GameManager.State.Construction ? 1f : 0f);
 		}
 	}
 
-	public void InstructionSetAt (int _index)
-	{
-		if (_index + 1 < _instructionSlots.Length && DisplayedGrabber.GetInstruction(_index+1) == Grabber.Instruction.None)
-		{
+//	public void InstructionSetAt (int _index)
+//	{
+//		if (_index + 1 < _instructionSlots.Length && DisplayedGrabber.GetInstruction(_index+1) == Grabber.Instruction.None)
+//		{
 //			_instructionSlots[_index+1].ToggleInstructionPanel();
-		}
-	}
+//		}
+//	}
 	
 	void ExtendGrabber()
 	{
@@ -104,57 +101,5 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	#endregion
 	
-	void SetAllIndecies()
-	{
-//		for (int i = 0 ; i < _instructionSlots.Length ; i++)
-//		{
-//			_instructionSlots[i].SetIndex(i);
-//		}
-//		RefreshDisplayedSlots();
-	}
 	
-	public void RefreshDisplayedSlots()
-	{
-//		bool noneOpFound = false;
-//		for (int i = 0 ; i < _instructionSlots.Length ; i++)
-//		{
-//			
-//			if (noneOpFound)
-//			{
-//				_instructionSlots[i].Display(false);
-//				_instructionSlots[i].EnableGUI(false);
-//			}
-//			else
-//			{
-//				_instructionSlots[i].Display(true);
-//				_instructionSlots[i].EnableGUI(true);
-//			}
-//			
-//			_instructionSlots[i].DisplayNoneOperation(false);
-//			
-//			
-//			if (!noneOpFound && _instructionSlots[i].currentInstruction == Grabber.Instruction.None)
-//			{
-//				noneOpFound = true;
-//				
-//				if (i == 0)
-//				{
-//					_instructionSlots[i].DisplayNoneOperation(false);
-//				}
-//				else
-//				{
-//					_instructionSlots[i-1].DisplayNoneOperationAfterTransision(true);
-//				}
-//			}
-//		}
-	}
-	
-	
-	public void CloseAllSlots ()
-	{
-//		foreach (InstructionSlot instructionSlot in _instructionSlots)
-//		{
-//			instructionSlot.CloseInstructionPanel();
-//		}
-	}
 }

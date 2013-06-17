@@ -11,6 +11,10 @@ public class WeldingRig : Mechanism
 		}
 	}
 
+	protected override void MechanismStart ()
+	{
+		
+	}
 	protected override void MechanismUpdate ()
 	{
 		
@@ -85,6 +89,9 @@ public class WeldingRig : Mechanism
 //			// tl, tr, bl, br, tb
 //			
 //		}
+		
+		
+		//InstantiatePrefabDelegate instantiateFunction = (prefab) => Instantiate(prefab) as GameObject;
 		
 		GrabbablePart topPart = hexCell.partOverCell;
 		GrabbablePart bottomPart = centerBelow.partOverCell;

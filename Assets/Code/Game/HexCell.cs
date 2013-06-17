@@ -14,6 +14,8 @@ public class HexCell : MonoBehaviour
 	
 	public void SetDebugText()
 	{
+		debugText.gameObject.SetActive(GameSettings.instance.debugOutput);
+			
 		debugText.Text = ""+(partOverCell == null ? "_" : ""+partOverCell.idNumber)
 			+ "\n" + (placedMechanism == null? "_":""+(int)placedMechanism.MechanismType);
 	}

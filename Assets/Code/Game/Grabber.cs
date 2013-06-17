@@ -7,7 +7,7 @@ public class Grabber : Mechanism
 	
 	public override MechanismType MechanismType { get { return MechanismType.Grabber; } }
 	
-	public enum Instruction {None, RotateClock, RotateAnti, Extend, Retract, Grab, Drop, GrabDrop, RestartMark, NoOp};
+	public enum Instruction {None, TurnClock, TurnAnti, Extend, Retract, RotateClock, RotateAnti, Grab, Drop, GrabDrop, RestartMark, NoOp};
 	
 	public static int maximumInstuctions { get { return 12; } }
 //	Instruction [] instructions = new Instruction [16];
@@ -51,6 +51,8 @@ public class Grabber : Mechanism
 	public int _stepsPerInstruction = -1;
 	
 	public int _stepCounter = -1;
+	
+	int _restartMark = 0;
 	
 	[SerializeField]
 	GameObject [] _arms;
@@ -123,8 +125,10 @@ public class Grabber : Mechanism
 			direction = dir;
 			extention = ext;
 			this.clampOpen = clampOpen;
+			rotation = 0;
 		}
 		public HexMetrics.Direction direction;
+		public int rotation;
 		public int extention;
 		public bool clampOpen;
 	}
@@ -148,10 +152,6 @@ public class Grabber : Mechanism
 		}
 	}
 	
-	protected override void PlaceableStart()
-	{
-//		_startState = new GrabberState(HexMetrics.Direction.Up, 0, true);
-	}
 	
 	
 	public void ExtendStartState()
@@ -184,6 +184,7 @@ public class Grabber : Mechanism
 	{
 		_stepsPerInstruction = stepsPerInstruction;
 		_instructionCounter = 0;
+		_restartMark = 0;
 		_endStepState = _startState;
 		ClampOpen = _startState.clampOpen;
 	}
@@ -201,16 +202,19 @@ public class Grabber : Mechanism
 	
 	void MoveToState(GrabberState grabberState)
 	{
-		MoveToState(grabberState.extention, ((int)grabberState.direction)*-60f);
+		MoveToState(grabberState.extention, ((int)grabberState.direction)*-60f, 0f);
 	}
 	
-	void MoveToState(float extentionValue, float directionValue)
+	void MoveToState(float extentionValue, float directionValue, float rotationValue)
 	{
 		if (_heldPart != null) 
 		{
-			_heldPart.RootPart.gameObject.transform.parent = clamp.transform;
+			_heldPart.ParentConstruction.gameObject.transform.parent = clamp.transform;
 		}
 		
+		clamp.transform.localRotation = Quaternion.Euler(0, 0, rotationValue);
+		
+//		Debug.Log(clamp.transform.localRotation.eulerAngles);
 		
 		transform.localRotation = Quaternion.Euler(0, 0, directionValue);
 		for (int i = 0 ; i < _arms.Length ; i++)
@@ -220,26 +224,25 @@ public class Grabber : Mechanism
 		
 		if (_heldPart != null) 
 		{
-			_heldPart.RootPart.gameObject.transform.parent = null;
+			_heldPart.ParentConstruction.gameObject.transform.parent = null;
 		}
 		
+//		clamp.transform.localRotation = Quaternion.Euler(0, 0, 0);
 	}
 	
 	// returns true for succesful
 	public void PerformInstruction ()
 	{
-		if (instructions[_instructionCounter] == Instruction.None)
-		{
-			// goto mark if there is a mark
-			// TODO
-			// otherwise go to start
-			_instructionCounter = 0;
-		}
+//		if (instructions[_instructionCounter] == Instruction.None)
+//		{
+//			_instructionCounter = _restartMark; // will be 0 is no restart mark set
+//		}
 		
 //		Debug.Log("Deregistering "+heldPart+" at "+LocationAtClampEnd().x+":"+LocationAtClampEnd().y);
 		
 //		Debug.Log ("PerformInstruction "+_currentInstruction+": "+instructions[_instructionCounter]);
 		
+		_startStepState.rotation = 0;
 		_startStepState = _endStepState;
 	
 //		Debug.Break ();
@@ -255,13 +258,13 @@ public class Grabber : Mechanism
 		bool isMoveing = false;
 		switch (_currentInstruction)
 		{
-			case Instruction.RotateClock:
+			case Instruction.TurnClock:
 			{
 				_endStepState.direction += 5;
 				isMoveing = true;
 			}
 			break;
-			case Instruction.RotateAnti:
+			case Instruction.TurnAnti:
 			{
 				_endStepState.direction += 1;
 				isMoveing = true;
@@ -279,20 +282,26 @@ public class Grabber : Mechanism
 				isMoveing = true;
 			}
 			break;
+			case Instruction.RotateClock:
+			{
+				_endStepState.rotation -= 1;
+				isMoveing = true;
+			}
+			break;
+			case Instruction.RotateAnti:
+			{
+				_endStepState.rotation += 1;
+				isMoveing = true;
+			}
+			break;
+			case Instruction.RestartMark:
+			{
+				_restartMark = _instructionCounter+1;
+			}
+			break;
 			case Instruction.Grab:
 			{
-			// performed in post
-//				if (heldPart == null)
-//				{
-//					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
-//					GrabbablePart part = underClamp.part;
-//					if (part != null)
-//					{
-//						part.PlaceAtLocation(null);
-//						part.gameObject.transform.parent = clamp.transform;
-//						heldPart = part;
-//					}
-//				}
+				// dealt with in another function
 			}
 			break;
 			case Instruction.Drop:
@@ -310,29 +319,6 @@ public class Grabber : Mechanism
 						break;
 					}
 					
-//					GrabbablePart partToCheck = heldPart;
-//					_doAtEndOfInstruction = () => 
-//					{
-//						partToCheck.CheckForFinish();
-//					};
-//					HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
-//					heldPart.gameObject.transform.parent = null;
-					// TODO drop and lower for all connected cells
-				
-//					foreach(GrabbablePart part in heldPart.GetAllConnectedPartsFromRoot())
-//					{
-//						int directionInt = (int)((-part.transform.rotation.eulerAngles.z-1)/60);
-//						directionInt = (directionInt + 6) % 6;
-////						Debug.Log ("part "+ part.idNumber+" rotation : "+directionInt+"("+((HexMetrics.Direction)directionInt)+")");
-//					}
-//				
-//					heldPart.ForEachChild((part, loc) => 
-//					{
-//						Debug.Log ("placing part "+ part.idNumber+" location : "+loc.x+":"+loc.y);
-//						part.PlaceAtLocation(loc);
-//					});
-//					heldPart.PlaceAtLocation(locationAtClamp);
-				
 				
 					_heldPart = null;
 				}
@@ -355,12 +341,12 @@ public class Grabber : Mechanism
 		
 		if (isMoveing && _heldPart != null)
 		{
-			if (_heldPart.RootPart.heldAndMovingGrabber != null)
+			if (_heldPart.ParentConstruction.heldAndMovingGrabber != null)
 			{
-				GameManager.instance.MultipleGrabOccured(this, _heldPart.RootPart.heldAndMovingGrabber);
+				GameManager.instance.MultipleGrabOccured(this, _heldPart.ParentConstruction.heldAndMovingGrabber);
 				return;
 			}
-			_heldPart.RootPart.heldAndMovingGrabber = this;
+			_heldPart.ParentConstruction.heldAndMovingGrabber = this;
 		}
 		
 		_endStepState.direction = (HexMetrics.Direction)((int)_endStepState.direction % 6);
@@ -373,7 +359,11 @@ public class Grabber : Mechanism
 		_instructionCounter += 1;
 		if (_instructionCounter == instructions.Count)
 		{
-			_instructionCounter = 0;
+			_instructionCounter = _restartMark;
+			if (_instructionCounter == instructions.Count)
+			{
+				_instructionCounter = instructions.Count - 1;
+			}
 		}
 		
 	}
@@ -392,7 +382,7 @@ public class Grabber : Mechanism
 				}
 				GrabbablePart partUnderClamp = underClamp.partOverCell;
 				
-				if (partUnderClamp == null || partUnderClamp.RootPart.heldAndMovingGrabber != null) // there is nothing to grab *or* there is a part, but it is held and is about to move this turn
+				if (partUnderClamp == null || partUnderClamp.ParentConstruction.heldAndMovingGrabber != null) // there is nothing to grab *or* there is a part, but it is held and is about to move this turn
 				{
 					return;
 				}
@@ -420,7 +410,7 @@ public class Grabber : Mechanism
 	{
 		if (_heldPart != null)
 		{
-			_heldPart.RootPart.heldAndMovingGrabber = null;
+			_heldPart.ParentConstruction.heldAndMovingGrabber = null;
 		}
 	}
 	
@@ -435,6 +425,17 @@ public class Grabber : Mechanism
 		}
 		
 		float percStep = (float)_stepCounter/(float)_stepsPerInstruction;
+		
+		
+		float startRotation = (int)_startStepState.rotation*-60f;
+		float endRotation = (int)_endStepState.rotation*-60f;
+		
+		if (endRotation - startRotation > 180)
+			endRotation -= 360;
+		if (endRotation - startRotation < -180)
+			endRotation += 360;
+		
+		float rotationValue = (startRotation*(1f-percStep)) + (endRotation*percStep);
 		
 		float startAngle = (int)_startStepState.direction*-60f;
 		float endAngle = (int)_endStepState.direction*-60f;
@@ -451,7 +452,7 @@ public class Grabber : Mechanism
 		
 		float extentionValue = (startExtention*(1f-percStep)) + (endExtention*percStep);
 		
-		MoveToState(extentionValue, angleValue);
+		MoveToState(extentionValue, angleValue, rotationValue);
 		
 		
 		if (_stepCounter == /*1)/*/_stepsPerInstruction/2)
@@ -496,6 +497,15 @@ public class Grabber : Mechanism
 			GridManager.instance.SaveLayout();
 			saveOnUpdate = false;
 		}
+	}
+	
+	protected override void MechanismStart()
+	{
+		Quaternion rotation = transform.rotation;
+		transform.rotation = Quaternion.Euler(0,0,0);
+		clamp.transform.position = transform.position+new Vector3(0,GameSettings.instance.hexCellPrefab.Height*(_startState.extention+1),0);
+		transform.rotation = rotation;
+//		_startState = new GrabberState(HexMetrics.Direction.Up, 0, true);
 	}
 	
 //	protected override void MechanismUpdate()

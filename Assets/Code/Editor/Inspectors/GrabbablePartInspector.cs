@@ -26,10 +26,13 @@ public class GrabbablePartInspector : Editor
 			return;
 		}
 		
+		
+		InstantiatePrefabDelegate instantiateFunction = (prefab) => PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+		
 		EditorGUILayout.BeginHorizontal();
 		HexMetrics.Direction oldOrietation = part.SimulationOrientation;
 		HexMetrics.Direction newOrietation = (HexMetrics.Direction)EditorGUILayout.EnumPopup( part.SimulationOrientation );
-//		if (newOrietation != oldOrietation)
+		if (newOrietation != oldOrietation)
 		{
 			part.SimulationOrientation = newOrietation;
 		}
@@ -50,20 +53,8 @@ public class GrabbablePartInspector : Editor
 			
 			EditorGUILayout.BeginHorizontal();
 			
-			string relation = "";
-			if (connectedPart != null)
-			{
-				if (connectedPart.transform == part.transform.parent)
-				{
-					relation = "(P)";
-				}
-				if (connectedPart.transform.parent == part.transform)
-				{
-					relation = "(C)";
-				}
-			}
 			
-			if (GUILayout.Button("GOTO" + relation, GUILayout.Width(75)))
+			if (GUILayout.Button("GOTO", GUILayout.Width(75)))
 			{
 				if (connectedPart != null)
 				{
@@ -71,40 +62,81 @@ public class GrabbablePartInspector : Editor
 				}
 			}
 			
-			PartType newPartType = (PartType)EditorGUILayout.EnumPopup( connectedPart == null ? PartType.None : connectedPart.partType );
+			// check for other components
+			Vector3 connectedPosition = part.transform.position + (Vector3)GameSettings.instance.hexCellPrefab.GetDirection(iDir);
+			Collider [] colliders = Physics.OverlapSphere(connectedPosition, 1);
 			
-			if (connectedPart == null)
+			GrabbablePart contact = null;
+			foreach(Collider c in colliders)
 			{
-				if (newPartType != PartType.None)
+				contact = c.attachedRigidbody.GetComponent<GrabbablePart>();
+				
+				if (contact != null) break;
+			}
+			if (contact != null && contact.ParentConstruction != null && contact.ParentConstruction != part.ParentConstruction )
+			{
+				Vector3 difference = contact.transform.position - connectedPosition;
+//				Debug.Log(difference);
+				if (difference != Vector3.zero)
 				{
-					// create part
-					
-					
-					GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
-					GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
-					part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, iDir);
-					part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld);
+					if (GUILayout.Button("Line Up"))
+					{
+						Debug.Log (difference);
+						Transform toMove = (contact.ParentConstruction == null ? null : contact.ParentConstruction.transform) ?? contact.transform;
+						toMove.position -= difference;
+					}
+				}
+				else
+				{
+					if (GUILayout.Button("Connect ("+(GrabbablePart.PhysicalConnectionType)1+")"))
+					{
+						part.ParentConstruction.AddToConstruction(contact);
+						part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDir);
+//						part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld);
+					}
 				}
 			}
 			else
 			{
-				if (newPartType == PartType.None)
+				PartType newPartType = (PartType)EditorGUILayout.EnumPopup( connectedPart == null ? PartType.None : connectedPart.partType );
+			
+			
+				if (connectedPart == null)
 				{
-					GameObject toDestroy = part.RemoveConnectedPart(iDir).gameObject;
-					GameObject.DestroyImmediate(toDestroy);
+					if (newPartType != PartType.None)
+					{
+						// create part
+						
+						
+						GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
+						GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
+						part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, GrabbablePart.PhysicalConnectionType.Weld, iDir);
+						part.SimulationOrientation = part.SimulationOrientation;
+//						part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld, instantiateFunction);
+					}
 				}
+				else
+				{
+					if (newPartType == PartType.None)
+					{
+						GameObject toDestroy = part.RemoveConnectedPart(iDir).gameObject;
+						GameObject.DestroyImmediate(toDestroy);
+					}
+				}
+			
+				GrabbablePart.PhysicalConnectionType oldConnectionType = part.GetPhysicalConnectionType(iDir);
+				GrabbablePart.PhysicalConnectionType newConnectionType = (GrabbablePart.PhysicalConnectionType)EditorGUILayout.EnumPopup(oldConnectionType);
+				if (oldConnectionType != newConnectionType)
+				{
+					part.SetPhysicalConnection(iDir, newConnectionType);
+				}
+				
+				int oldAuxTypes = part.GetAuxilaryConnectionTypes(iDir);
+				int newAuxTypes = EditorGUILayout.MaskField(	oldAuxTypes, System.Enum.GetNames(typeof(GrabbablePart.AuxilaryConnectionType)) );
+				if (oldAuxTypes != newAuxTypes)
+					part.SetAuxilaryConnections(iDir, newAuxTypes);
+				
 			}
-			
-			GrabbablePart.PhysicalConnectionType oldConnectionType = part.GetPhysicalConnectionType(iDir);
-			GrabbablePart.PhysicalConnectionType newConnectionType = (GrabbablePart.PhysicalConnectionType)EditorGUILayout.EnumPopup(oldConnectionType);
-			if (oldConnectionType != newConnectionType)
-				part.SetPhysicalConnection(iDir, newConnectionType);
-			
-			int oldAuxTypes = part.GetAuxilaryConnectionTypes(iDir);
-			int newAuxTypes = EditorGUILayout.MaskField(	oldAuxTypes, System.Enum.GetNames(typeof(GrabbablePart.AuxilaryConnectionType)) );
-			if (oldAuxTypes != newAuxTypes)
-				part.SetAuxilaryConnections(iDir, newAuxTypes);
-			
 			
 			EditorGUILayout.EndHorizontal();
 			
@@ -112,88 +144,95 @@ public class GrabbablePartInspector : Editor
 		
 		EditorUtility.SetDirty(part);
 
-		
-		if (GUILayout.Button("Print encoded construction"))
-		{
-			Debug.Log(ConstructionDefinition.ToConstructionDefinition(part).Encode());
-		}
 	}
 	
 	
 	public void OnSceneGUI()
 	{
-		bool debugVal = true;
-		if (part != null && debugVal)
+		if (part == null)
 		{
-//			Debug.Log ("----");
-			foreach(var locatedPart in part.GetAllPartsWithLocation())
-			{
-				GrabbablePart lpart = locatedPart.part;
-				Handles.Label(lpart.transform.position-(Vector3.forward*4), ""+locatedPart.location.x+":"+locatedPart.location.y);
-				Handles.color = (lpart == part ? Color.blue : Color.red);
-				Handles.DrawWireDisc(lpart.transform.position, Vector3.forward, 20);
-				Handles.color = Color.red;
-				for(int i = 0 ; i < 6 ; i++)
-				{
-					
-					HexMetrics.Direction iDir = (HexMetrics.Direction)i;
-					GrabbablePart connectedPart = lpart.GetConnectedPart(iDir);
-//					Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(iDir);
-					
-//					if (connectedPart != null)
-//					{
-//						Handles.DrawWireDisc(lpart.transform.position + (relativeLocation)/5, Vector3.forward, 1);
-//					}
-					if (connectedPart != null)
-					{
-						
-						
-						HexMetrics.Direction direction = lpart.AbsoluteDirectionFromRelative(iDir);
-						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(direction);
-					
-						float inRad  = 0.5f;
-						float midRad = 0.5f;
-						float outRad = 0.5f;
-						Handles.color = Color.red;
-						if (connectedPart != null)
-						{
-							if (connectedPart.transform == lpart.transform.parent)
-							{
-								outRad = 1.50f;
-								midRad = 1.33f;
-								inRad  = 1.16f;
-								Handles.color = Color.black;
-							}
-							if (connectedPart.transform.parent == lpart.transform)
-							{
-								outRad = 1.66f;
-								midRad = 1.82f;
-								inRad  = 2.00f;
-								Handles.color = Color.blue;
-							}
-						}
-//						Handles.DrawWireDisk
-						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*1f, Vector3.forward, inRad*2);
-						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*2f, Vector3.forward, midRad*2);
-						if (lpart.GetPhysicalConnectionType(iDir) != GrabbablePart.PhysicalConnectionType.None)
-						{
-							Handles.color = Color.green;
-						}
-						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*3f, Vector3.forward, outRad*2);
-//						Handles.DrawLine(lpart.transform.position, lpart.transform.position + (relativeLocation)/3f);
-//						relativeLocation.Normalize();
-//						relativeLocation *= 3;
-//						Handles.DrawLine(lpart.transform.position+relativeLocation,   connectedPart.transform.position+relativeLocation);
-//						Handles.DrawLine(lpart.transform.position+relativeLocation*2, connectedPart.transform.position+relativeLocation);
-////						Handles.DrawLine(lpart.transform.position, lpart.transform.position+(relativeLocation*10));
-//						
-					}
-				}
-			}
-//			Debug.Log ("----");
+			return;
+		}
+//		Debug.DrawLine(part.transform.position, );
+		for(int i = 0 ; i < 6 ; i++)
+		{
 			
+			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+			Handles.DrawSolidDisc(part.transform.position + (Vector3)GameSettings.instance.hexCellPrefab.GetDirection(iDir), Vector3.forward, 1);
 		}
 	}
+//		bool debugVal = true;
+//		if (part != null && debugVal)
+//		{
+////			Debug.Log ("----");
+//			foreach(var locatedPart in part.GetAllPartsWithLocation())
+//			{
+//				GrabbablePart lpart = locatedPart.part;
+//				Handles.Label(lpart.transform.position-(Vector3.forward*4), ""+locatedPart.location.x+":"+locatedPart.location.y);
+//				Handles.color = (lpart == part ? Color.blue : Color.red);
+//				Handles.DrawWireDisc(lpart.transform.position, Vector3.forward, 20);
+//				Handles.color = Color.red;
+//				for(int i = 0 ; i < 6 ; i++)
+//				{
+//					
+//					HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+//					GrabbablePart connectedPart = lpart.GetConnectedPart(iDir);
+////					Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(iDir);
+//					
+////					if (connectedPart != null)
+////					{
+////						Handles.DrawWireDisc(lpart.transform.position + (relativeLocation)/5, Vector3.forward, 1);
+////					}
+//					if (connectedPart != null)
+//					{
+//						
+//						
+//						HexMetrics.Direction direction = lpart.AbsoluteDirectionFromRelative(iDir);
+//						Vector3 relativeLocation = GameSettings.instance.hexCellPrefab.GetDirection(direction);
+//					
+//						float inRad  = 0.5f;
+//						float midRad = 0.5f;
+//						float outRad = 0.5f;
+//						Handles.color = Color.red;
+//						if (connectedPart != null)
+//						{
+//							if (connectedPart.transform == lpart.transform.parent)
+//							{
+//								outRad = 1.50f;
+//								midRad = 1.33f;
+//								inRad  = 1.16f;
+//								Handles.color = Color.black;
+//							}
+//							if (connectedPart.transform.parent == lpart.transform)
+//							{
+//								outRad = 1.66f;
+//								midRad = 1.82f;
+//								inRad  = 2.00f;
+//								Handles.color = Color.blue;
+//							}
+//						}
+////						Handles.DrawWireDisk
+//						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*1f, Vector3.forward, inRad*2);
+//						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*2f, Vector3.forward, midRad*2);
+//						if (lpart.GetPhysicalConnectionType(iDir) != GrabbablePart.PhysicalConnectionType.None)
+//						{
+//							Handles.color = Color.green;
+//						}
+//						Handles.DrawSolidDisc(lpart.transform.position + (relativeLocation)/7f*3f, Vector3.forward, outRad*2);
+////						Handles.DrawLine(lpart.transform.position, lpart.transform.position + (relativeLocation)/3f);
+////						relativeLocation.Normalize();
+////						relativeLocation *= 3;
+////						Handles.DrawLine(lpart.transform.position+relativeLocation,   connectedPart.transform.position+relativeLocation);
+////						Handles.DrawLine(lpart.transform.position+relativeLocation*2, connectedPart.transform.position+relativeLocation);
+//////						Handles.DrawLine(lpart.transform.position, lpart.transform.position+(relativeLocation*10));
+////						
+//					}
+//				}
+//			}
+////			Debug.Log ("----");
+//			
+//		}
+//	}
 }
 
 

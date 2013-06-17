@@ -120,10 +120,6 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	public void HandleRay(Ray inputRay, PressState pressState)
 	{
-		if (pressState != PressState.Released)
-		{
-			GrabberProgramUI.instance.CloseAllSlots();
-		}
 			
 		debugDrawColor = Input.GetMouseButton(0) ? Color.green : Color.red;
 		

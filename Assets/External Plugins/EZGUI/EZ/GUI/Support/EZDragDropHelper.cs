@@ -3,7 +3,7 @@
 //	All rights reserved
 //-----------------------------------------------------------------
 
-#define DONT_CENTER_OBJECT
+//#define DONT_CENTER_OBJECT
 
 using UnityEngine;
 using System.Collections;

@@ -20,6 +20,7 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 	
 	public PartGenerator generatorPrefab;
 	
+	
 	public GrabbablePart GetPartPrefab(PartType partType)
 	{
 		foreach(GrabbablePart partPrefab in partPrefabs)
@@ -32,5 +33,9 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 		
 		return null;
 	}
+	
+	
+	public bool debugOutput = false; 
+	
 	
 }

@@ -10,6 +10,34 @@ public class DraggableInstruction : MonoBehaviour
 	
 	public EmptyInstructionSlot occupiedSlot { get; set; }
 	
+	
+	void Start()
+	{
+		GameManager.instance.GameStateChangedEvent += UpdateDraggable;
+		InputManager.instance.OnSelectionChange += GameSelectionChangedEvent;
+	}
+	void OnDestroy()
+	{
+		if (GameManager.hasInstance)
+		{
+			GameManager.instance.GameStateChangedEvent -= UpdateDraggable;
+		}
+		if (InputManager.hasInstance)
+		{
+			InputManager.instance.OnSelectionChange -= GameSelectionChangedEvent;
+		}
+	}
+	
+	void GameSelectionChangedEvent(System.Collections.Generic.List<HexCellPlaceable> selectedPlacables)
+	{
+		UpdateDraggable();
+	}
+	
+	void UpdateDraggable()
+	{
+		button.IsDraggable = GameManager.instance.gameState == GameManager.State.Construction;
+	}
+	
 //	bool _isClone = false;
 //	
 //	public bool isClone { get { return _isClone; } }

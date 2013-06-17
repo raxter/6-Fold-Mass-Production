@@ -55,14 +55,14 @@ public class GridManager : SingletonBehaviour<GridManager>
 		return null;
 	}
 	
-	public ConstructionDefinition target { get; private set; }
+	public Construction target { get; private set; }
 	
 	public void SetTarget(string encodedTarget)
 	{
-		target = ConstructionDefinition.Decode(encodedTarget);
-		GrabbablePart targetPart = target.GenerateConnectedParts();
-		targetPart.transform.parent = _targetHolder.transform;
-		targetPart.transform.localPosition = Vector3.zero;
+		target = Construction.Decode(encodedTarget, (prefab) => Instantiate(prefab) as GameObject);
+//		GrabbablePart targetPart = target.GenerateConnectedParts();
+		target.transform.parent = _targetHolder.transform;
+		target.transform.localPosition = Vector3.zero;
 	}
 	
 	

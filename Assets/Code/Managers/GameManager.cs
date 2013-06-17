@@ -109,7 +109,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
 		{
 			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
-			generator.toGeneratePrefab = generatorDetails.toGeneratePrefab;
+			generator.toGeneratePrefab = GameSettings.instance.GetPartPrefab(generatorDetails.toGenerate);
 			generator.PlaceAtLocation(generatorDetails.location);
 		}
 		completedConstructions = 0;
@@ -244,12 +244,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 			 * 			If there is a collision, the offending Parts are highlighted and the simulation is set to a failure state
 			 * 
 			 **/
-			
+//			Debug.Log("Start Instruction");
 			
 			parts.RemoveWhere((obj) => obj == null);
 			foreach(GrabbablePart part in parts)
 			{
-				part.RegisterLocationFromPosition();
+				if (part != null)
+				{
+					part.RegisterLocationFromPosition();
+				}
 			}
 			
 //			Debug.Log("-------------------");
@@ -263,6 +266,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 			}
 			
+//			Debug.Log ("Welder post start");
 			foreach (WeldingRig welder in welders)
 			{
 				welder.PerformPostStart();
@@ -308,51 +312,52 @@ public class GameManager : SingletonBehaviour<GameManager>
 			{
 //				Debug.Log ("Checking " +partsOverFinishCell.Count+ " parts");
 				// get a part from the ones over the finish cells
+				
 				GrabbablePart partOverFinish = null;
-				foreach (var firstItem in partsOverFinishCell) 
+				foreach(GrabbablePart firstPart in partsOverFinishCell) 
 				{
-					partOverFinish = firstItem;
+					partOverFinish = firstPart;
 					break;
 				}
 				
-				// get all the connected parts (the whole constructions) to this one
-				HashSet<GrabbablePart> constructionParts = new HashSet<GrabbablePart>(partOverFinish.GetAllConnectedPartsFromRoot());
-				
-//				Debug.Log ("checking part " +partOverFinish.idNumber+ " ("+constructionParts.Count+" connected parts)");
-				
-				// check that all parts in the construction are in fact over finish cells
-				bool finishedConstruction = true;
-				foreach(GrabbablePart potentialFinishPart in constructionParts)
+				Construction constructionOverFinish = partOverFinish.ParentConstruction;
+				bool allPartsOverFinish = true;
+				foreach(GrabbablePart constructionPart in constructionOverFinish.Parts)
 				{
-					if (!partsOverFinishCell.Contains(potentialFinishPart))
+					if (!partsOverFinishCell.Contains(constructionPart))
 					{
-						finishedConstruction = false;
+						partsOverFinishCell.ExceptWith(constructionOverFinish.Parts);
+						allPartsOverFinish = false;
 						break;
 					}
 				}
-				// if they are..., destroy them
-				if (finishedConstruction)
+				if (!allPartsOverFinish)
 				{
-					// and if they are the corrects construction
-					bool correctConstruction = false;
-					// todo correct construction check goes here
-					correctConstruction = true;
-					
-//					correctConstruction = currentLevel.targetConstruction.CompareTo(partOverFinish) == 0;
-					
-					if (correctConstruction)
-					{
-						completedConstructions += 1;
-						Debug.Log ("removing " +partOverFinish.idNumber+ "\'s connected parts");
-					
-						foreach (GrabbablePart toRemove in constructionParts)
-						{
-							GameObject.Destroy(toRemove.gameObject);
-						}
-					}
+					continue;
 				}
+				
+				// and if they are the corrects construction
+				bool correctConstruction = false;
+				// todo correct construction check goes here
+				correctConstruction = true;
+				
+				correctConstruction = GridManager.instance.target.CompareTo(constructionOverFinish) == 0;
+				
+				if (correctConstruction)
+				{
+					completedConstructions += 1;
+					Debug.Log ("removing " +partOverFinish.idNumber+ "\'s connected parts");
+				
+//					foreach (GrabbablePart toRemove in construction.Parts)
+//					{
+//						GameObject.Destroy(toRemove.gameObject);
+//					}
+					Destroy(constructionOverFinish.gameObject);
+				}
+				
 				// in either case, these construction parts have been checked, remove them from the list
-				partsOverFinishCell.ExceptWith(constructionParts);
+				// won't be destroyed until end of frame, phew
+				partsOverFinishCell.ExceptWith(constructionOverFinish.Parts);
 			}
 			
 			
@@ -360,11 +365,12 @@ public class GameManager : SingletonBehaviour<GameManager>
 			{
 				hc.DeregisterPart();
 			}
-			
+//			Debug.Log ("Instruction");
 			int noGrabberSteps = 60;
 			// perform steps
 			while (true)
 			{
+//				Debug.Log ("Step "+noGrabberSteps);
 				
 				bool debugForceExit = false;
 				
@@ -451,20 +457,9 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 				
 				
-//				foreach (Grabber grabber in grabbers)
-//				{
-//					if (!grabber.StepFinished())
-//					{
-//						allFinished = false;
-//					}
-//				}
 				// check for collisions
 			
 				// if collision, pause and exit
-				
-//				parts.RemoveWhere((obj) => obj == null);
-				
-				
 				
 				foreach (GrabbablePart part in parts)
 				{
@@ -606,7 +601,10 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		foreach (GrabbablePart part in parts)
 		{
-			GameObject.Destroy(part.gameObject);
+			if (part != null)
+			{
+				GameObject.Destroy(part.ParentConstruction.gameObject);
+			}
 		}
 		parts.Clear();
 		

@@ -15,33 +15,20 @@ public class ConstructionDefinitionCreatorInspector : Editor
 		
 		if (GUILayout.Button("Generate Construction"))
 		{
-			ConstructionDefinition constructionDef = ConstructionDefinition.Decode(constructionText);
-			Debug.Log (constructionDef.constructionElements.Count);
+			Construction construction = Construction.Decode(constructionText, 
+				(prefab) => PrefabUtility.InstantiatePrefab(prefab) as GameObject);
+			Debug.Log (construction.PartsList.Count);
 			
-			GrabbablePart constructed = constructionDef.GenerateConnectedParts();
-			constructed.transform.position = (target as ConstructionDefinitionCreator).transform.position;
+			EditorUtility.SetDirty(construction);
+			foreach (GrabbablePart part in construction.Parts)
+			{
+				EditorUtility.SetDirty(part);
+			}
+			
+//			GrabbablePart constructed = constructionDef.GenerateConnectedParts();
+			construction.transform.parent = (target as ConstructionDefinitionCreator).transform;
+			construction.transform.localPosition = Vector3.zero;
 		}
-		
-//		ConstructionDefinitionCreator creator = (target as ConstructionDefinitionCreator);
-//		if (GUILayout.Button("Create new Construction Definition"))
-//		{
-//			ConstructionDefinitionAsset newDefinition = ScriptableObject.CreateInstance<ConstructionDefinitionAsset>();
-//			
-//			AssetDatabase.CreateAsset(newDefinition, "Assets/Data/NewConstruction.asset");
-//			AssetDatabase.SaveAssets();
-//		}
-//		
-//		ConstructionDefinitionAsset selectedConstruction = EditorGUILayout.ObjectField("Load Construction", null, typeof(ConstructionDefinitionAsset), false) as ConstructionDefinitionAsset;
-//		
-//		if (selectedConstruction != null)
-//		{
-//			while(creator.gameObject.transform.GetChildCount() > 0)
-//			{
-//				DestroyImmediate(creator.gameObject.transform.GetChild(0));
-//			}
-//		}
-//		
-//		GameObject constructionObject = creator.transform.GetChild
 		
 	}
 	
