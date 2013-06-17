@@ -38,7 +38,35 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 		yield return null;
 		DisplayedGrabber = null;
+		
+		InputManager.instance.OnSelectionChange += OnSelectionChange;
 	
+	}
+	
+	
+	void OnDestroy()
+	{
+		InputManager.instance.OnSelectionChange -= OnSelectionChange;
+	}
+	
+	void OnSelectionChange(System.Collections.Generic.List<HexCellPlaceable> selectedPlacables) 
+	{
+		Grabber selectedGrabber = null;
+		foreach (HexCellPlaceable placable in selectedPlacables)
+		{
+			if (placable is Grabber)
+			{
+				if (selectedGrabber != null)
+				{
+					selectedGrabber = null;
+					break;
+				}
+				selectedGrabber = placable as Grabber;
+			}
+		}
+		
+		DisplayedGrabber = selectedGrabber;
+		
 	}
 	
 	public Grabber DisplayedGrabber 

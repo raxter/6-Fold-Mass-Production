@@ -40,6 +40,14 @@ public class GrabbablePart : MonoBehaviour
 		}
 	}
 	
+	public SphereCollider PartSphereCollider
+	{
+		get 
+		{
+			return _sphereCollider;
+		}
+	}
+	
 	SphereCollider _sphereCollider;
 	
 	public PartType partType;
@@ -234,7 +242,11 @@ public class GrabbablePart : MonoBehaviour
 		if (connectedPart == null)
 			return (HexMetrics.Direction)(-1);
 		
-		return ReverseDirection( connectedPart.RelativeDirectionFromAbsolute(AbsoluteDirectionFromRelative(relativeDirection)));
+		return OtherPartsOppositeDirection(relativeDirection, connectedPart);
+	}
+	public HexMetrics.Direction OtherPartsOppositeDirection(HexMetrics.Direction relativeDirection, GrabbablePart otherPart)
+	{
+		return ReverseDirection( otherPart.RelativeDirectionFromAbsolute(AbsoluteDirectionFromRelative(relativeDirection)));
 	}
 	
 	#endregion
@@ -274,9 +286,9 @@ public class GrabbablePart : MonoBehaviour
 //		return _connectedParts[Absolute(relativeDirection)].connectedPart;
 //	}
 	
-	public GrabbablePart GetConnectedPart(HexMetrics.Direction absoluteDirection)
+	public GrabbablePart GetConnectedPart(HexMetrics.Direction relativeDirection)
 	{
-		return _connectedParts[(int)absoluteDirection].connectedPart;
+		return _connectedParts[(int)relativeDirection].connectedPart;
 	}
 	
 	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction relativeDirection)
@@ -348,6 +360,7 @@ public class GrabbablePart : MonoBehaviour
 			}
 			return;
 		}
+		
 		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
 		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[(int)oppositeDirection];
 		
@@ -393,12 +406,13 @@ public class GrabbablePart : MonoBehaviour
 			connDesc.auxConnectionTypes = 0;
 			return;
 		}
+		
 		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
 		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[(int)oppositeDirection];
 		
 		bool weldableHere = Weldable(relativeDirection);
 		bool weldabelThere = connDesc.connectedPart.Weldable(oppositeDirection);
-//		Debug.Log("Checking weldability: "+direction+"("+weldableHere+") <-> "+oppositeDirection+"("+weldabelThere+")");
+		
 		if (weldableHere && weldabelThere)
 		{
 			connDesc.auxConnectionTypes = newConnectionTypes;
@@ -409,6 +423,39 @@ public class GrabbablePart : MonoBehaviour
 			connDesc.auxConnectionTypes = 0;
 			otherConnDesc.auxConnectionTypes = 0;
 		}
+	}
+	
+	
+	public IEnumerable<HexMetrics.Direction> IsWeldableWithRotationFactor (HexMetrics.Direction relativeDirection, GrabbablePart otherPart)
+	{
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+			if (IsWeldable(relativeDirection, otherPart, iDir))
+			{
+				yield return iDir;
+			}
+		}
+	}
+	public bool IsWeldable (HexMetrics.Direction relativeDirection, GrabbablePart otherPart)
+	{
+		return IsWeldable(relativeDirection, otherPart, (HexMetrics.Direction)0);
+	}
+	public bool IsWeldable (HexMetrics.Direction relativeDirection, GrabbablePart otherPart, HexMetrics.Direction rotationFactor)
+	{
+//		relativeDirection = (HexMetrics.Direction)(((int)relativeDirection+(int)rotationFactor+6)%6);
+		
+		if (otherPart == null) return false;
+		
+		HexMetrics.Direction oppositeDirection = OtherPartsOppositeDirection(relativeDirection, otherPart);
+		oppositeDirection = (HexMetrics.Direction)(((int)oppositeDirection+(int)rotationFactor+6)%6); // what if we were to rotate the other part?
+//		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[(int)oppositeDirection];
+		
+		bool weldableHere = Weldable(relativeDirection);
+		bool weldabelThere = otherPart.Weldable(oppositeDirection);
+//		Debug.Log("Checking weldability: "+direction+"("+weldableHere+") <-> "+oppositeDirection+"("+weldabelThere+")");
+		
+		return weldableHere && weldabelThere;
 	}
 	
 	
@@ -766,8 +813,8 @@ public class GrabbablePart : MonoBehaviour
 		if (otherPart != null)
 		{
 			
-			if ((          ParentConstruction != null &&           ParentConstruction.ignoreCollisions) ||
-				(otherPart.ParentConstruction != null && otherPart.ParentConstruction.ignoreCollisions))
+			if ((          ParentConstruction == null ||           ParentConstruction.ignoreCollisions) ||
+				(otherPart.ParentConstruction == null || otherPart.ParentConstruction.ignoreCollisions))
 			{
 				return;
 			}

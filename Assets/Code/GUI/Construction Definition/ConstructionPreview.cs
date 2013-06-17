@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections;
 
 public class ConstructionPreview : MonoBehaviour {
-
+	
+	
 	// Use this for initialization
 	void Start () 
 	{
@@ -14,24 +15,46 @@ public class ConstructionPreview : MonoBehaviour {
 		InputManager.instance.OnSelectionChange -= OnSelectionChange;
 	}
 	
-	Construction previewedConstruction = null;
+	#region EZGUI Button calls
+	void ToggleMaker()
+	{
+		if (PreviewedConstruction != null)
+		{
+			if (ConstructionMaker.instance.Open)
+			{
+				ConstructionMaker.instance.CloseMaker();
+			}
+			else
+			{
+				ConstructionMaker.instance.OpenMaker(PreviewedConstruction.Encode());
+			}
+		}
+		
+	}
+		
+	#endregion
+	
+	Construction _previewedConstruction = null;
 	
 	Construction PreviewedConstruction
 	{
 		get
 		{
+			return _previewedConstruction;
 		}
 		set
 		{
-			if (previewedConstruction != null)
+			if (_previewedConstruction != null)
 			{
-				previewedConstruction.transform.position = Vector3.zero;
+				_previewedConstruction.transform.position = Vector3.zero;
+				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
 			}
-			previewedConstruction = value;
+			_previewedConstruction = value;
 			
-			if (previewedConstruction != null)
+			if (_previewedConstruction != null)
 			{
-				previewedConstruction.transform.position = transform.position;
+				_previewedConstruction.transform.position = transform.position;
+				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("GUI"));
 			}
 			
 			
@@ -54,7 +77,11 @@ public class ConstructionPreview : MonoBehaviour {
 			}
 		}
 		
-		PreviewedConstruction = selectedGenerator.toGenerateConstruction;
+		PreviewedConstruction = selectedGenerator == null ? null : selectedGenerator.toGenerateConstruction;
 		
+		if (PreviewedConstruction == null)
+		{
+			ConstructionMaker.instance.CloseMaker();
+		}
 	}
 }

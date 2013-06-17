@@ -74,7 +74,6 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	
 	public Grabber heldAndMovingGrabber { get; set; }
 	
-	
 	public void AddToConstruction(GrabbablePart newPart)
 	{
 		Construction otherConstruction = newPart.ParentConstruction;
@@ -185,6 +184,64 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			}
 			splitConstruction.transform.parent = this.transform.parent;
 		}
+	}
+	
+	public struct PartSide
+	{
+		public GrabbablePart part;
+		public HexMetrics.Direction relativeDirection;
+	}
+	
+	public List<PartSide> IsConnectable(GrabbablePart otherPart)
+	{
+		Debug.Log ("is connectable");
+		List<PartSide> partSides = new List<PartSide>();
+		foreach (GrabbablePart part in Parts)
+		{
+			for (int i = 0 ; i < 6 ; i ++)
+			{
+				HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+				HexMetrics.Direction iDirRelative = part.Relative(iDir);
+				if (part.GetConnectedPart(iDirRelative) == null)
+				{
+					
+					Vector3 otherPartLocation = otherPart.PartSphereCollider.transform.position;
+					Vector3 potentialPartLocation = part.transform.position+(Vector3)GameSettings.instance.hexCellPrefab.GetDirection(iDir);
+					float radSq = otherPart.PartSphereCollider.radius * otherPart.PartSphereCollider.radius;
+					
+					if (Vector3.SqrMagnitude(otherPartLocation - potentialPartLocation) <  radSq)
+					{
+						HashSet<HexMetrics.Direction> weldableRotations = new HashSet<HexMetrics.Direction>(part.IsWeldableWithRotationFactor(iDirRelative, otherPart));
+						Debug.Log(string.Join(", ", new List<HexMetrics.Direction>(weldableRotations).ConvertAll<string>((input) => ""+input).ToArray()));
+						Color debugColor = Color.red;
+						if (weldableRotations.Contains(HexMetrics.Direction.LeftDown) || weldableRotations.Contains(HexMetrics.Direction.RightDown))
+						{
+							debugColor = Color.yellow;
+						}
+						if (weldableRotations.Contains(HexMetrics.Direction.LeftUp) || weldableRotations.Contains(HexMetrics.Direction.RightUp))
+						{
+							debugColor = Color.blue;
+						}
+						if (weldableRotations.Contains(HexMetrics.Direction.Up))
+						{
+							PartSide partSide = new PartSide();
+							partSide.part = part;
+							partSide.relativeDirection = iDirRelative;
+							partSides.Add(partSide);
+							debugColor = Color.green;
+						}
+						
+						
+//						Debug.Log("Found at "+part.name+" in "+iDir);
+						Debug.DrawLine(part.transform.position, potentialPartLocation, debugColor);
+						
+						
+					}
+				}
+			}
+		}
+		
+		return partSides;
 	}
 	
 	
@@ -337,7 +394,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 	}
 			
-	public class ConstructionElement
+	class ConstructionElement
 	{
 		public ConstructionElement()
 		{

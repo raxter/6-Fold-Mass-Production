@@ -6,6 +6,7 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 	
 	public UIButton _catcher;
 	
+	public bool blockInput = false;
 	
 	
 	public void InputDelegate(ref POINTER_INFO ptr)
@@ -31,33 +32,10 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 			pressState = InputManager.PressState.Up;
 		}
 		
-		InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
-//		if (pressState != InputManager.PressState.Released)
-//		{
-//			InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
-//		}
-			
-//#if UNITY_IPHONE || UNITY_ANDROID
-//#else
-//		
-//		if (Input.GetMouseButtonDown(0))
-//		{
-//			pressState = PressState.Down;
-//		}
-//		else if (Input.GetMouseButtonUp(0))
-//		{
-//			pressState = PressState.Up;
-//		}
-//		else if (Input.GetMouseButton(0))
-//		{
-//			pressState = PressState.Pressed;
-//		}
-//		
-//		HandleScreenPoint(Input.mousePosition, pressState);
-//		
-//		
-//#endif
-		
+		if (!blockInput)
+		{
+			InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
+		}		
 	}
 	
 	// Use this for initialization

@@ -44,24 +44,6 @@ public class InputManager : SingletonBehaviour<InputManager>
 		selectedPlacables.Add(mechanism);
 		mechanism.selected = true;
 		
-		
-		if (selectedPlacables.Count == 1)
-		{
-			if (selectedPlacables[0] is Grabber)
-			{
-				GrabberProgramUI.instance.DisplayedGrabber = selectedPlacables[0] as Grabber;
-				
-			}
-			else
-			{
-				GrabberProgramUI.instance.DisplayedGrabber = null;
-			}
-		}
-		else
-		{
-			GrabberProgramUI.instance.DisplayedGrabber = null;
-		}
-		
 		OnSelectionChange(selectedPlacables);
 	}
 	
@@ -149,6 +131,8 @@ public class InputManager : SingletonBehaviour<InputManager>
 		_debug_OverHexCellMechanism = OverHexCell == null?null:OverHexCell.placedPlaceable;
 		
 		
+		
+		
 		if (Input.GetMouseButtonDown(0))
 		{
 			if (OverHexCell != null && OverHexCell.placedPlaceable != null)
@@ -171,6 +155,7 @@ public class InputManager : SingletonBehaviour<InputManager>
 		{
 			StopDragging();
 		}
+		
 		
 		Debug.DrawLine(inputRay.origin, ClosestHexCell.transform.position, debugDrawColor, 1f);
 //		Debug.Log(closestHexCell.location.x+":"+closestHexCell.location.y);
