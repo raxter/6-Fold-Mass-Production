@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class ConstructionMaker : SingletonBehaviour<ConstructionMaker> 
 {
-	Construction construction = null;
+	Construction targetConstruction = null;
 	
 	[SerializeField]
 	UIButton _draggableButtonPrefab = null;
@@ -16,6 +16,8 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	[SerializeField]
 	GameObject _partHolder = null;
+	[SerializeField]
+	GameObject _constructionHolder = null;
 
 	public bool Open
 	{
@@ -63,6 +65,8 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	void SetUpDragDropBehaviour(UIButton button, GrabbablePart part)
 	{
+		Debug.Log ("Setting up Drag Drop behaviour");
+//		Debug.DebugBreak();
 		button.SetDragDropDelegate((parms) => 
 		{
 			if (parms.evt == EZDragDropEvent.Begin)
@@ -72,14 +76,14 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			}
 			if (parms.evt == EZDragDropEvent.Update)
 			{
-				construction.IsConnectable(part);
+				targetConstruction.IsConnectable(part);
 			}
 			if (parms.evt == EZDragDropEvent.Cancelled)
 			{
 				Debug.Log ("Cancelled "+parms.dragObj);
 				Debug.Log ("DropTarget: "+parms.dragObj.DropTarget);
 				
-				List<Construction.PartSide> partSides = construction.IsConnectable(part);
+				List<Construction.PartSide> partSides = targetConstruction.IsConnectable(part);
 				if (partSides.Count > 0)
 				{
 					GameObject partObject = Instantiate(GameSettings.instance.GetPartPrefab(part.partType).gameObject) as GameObject;
@@ -94,6 +98,8 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			}
 		});
 	}
+	
+	
 
 	public void OpenMaker (string code)
 	{
@@ -102,24 +108,76 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 //		_dragButtons.ForEach((obj) => obj.SetCamera(_makerCamera));
 		
-		InputCatcher.instance.blockInput = true;
+		InputCatcher.instance.RequestInputOverride(HandleScreenPoint);
 		
-		construction = Construction.Decode(code, (prefab) => Instantiate(prefab) as GameObject);
-		construction.transform.parent = transform;
-		construction.transform.localPosition = Vector3.zero;
-		construction.gameObject.SetLayerRecursively(gameObject.layer);
+		
+		targetConstruction = Construction.Decode(code, (prefab) => Instantiate(prefab) as GameObject);
+		targetConstruction.transform.parent = _constructionHolder.transform;
+		targetConstruction.transform.localPosition = Vector3.zero;
+//		construction.gameObject.SetLayerRecursively(gameObject.layer);
 	}
 	
 	public void CloseMaker ()
 	{
 //		this.transform.localScale = Vector3.zero;
 		this.gameObject.SetActive(false);
-		InputCatcher.instance.blockInput = false;
 		
-		if (construction != null)
+		InputCatcher.instance.ReleaseInputOverride(HandleScreenPoint);
+		
+		if (targetConstruction != null)
 		{
-			Destroy(construction.gameObject);
-			construction = null;
+			Destroy(targetConstruction.gameObject);
+			targetConstruction = null;
 		}
 	}
+	
+	public void HandleScreenPoint(Vector3 screenPos, PressState pressState)
+	{
+		
+		Ray	inputRay = UIManager.instance.rayCamera.ScreenPointToRay(screenPos);
+		
+		HandleRay(inputRay, pressState);
+	}
+	
+	public void HandleRay(Ray inputRay, PressState pressState)
+	{
+//		Debug.Log(inputRay+":"+pressState);
+		
+		Debug.DrawRay(inputRay.origin, inputRay.direction*100, Color.red);
+		
+		if (pressState == PressState.Up)
+		{
+			foreach (RaycastHit hitInfo in Physics.RaycastAll(inputRay, 1000, 1 << LayerMask.NameToLayer("GrabbablePart")))
+			{
+	//			Debug.Log ("hit somthing "+hitInfo.collider.gameObject.name);
+				Transform hitParent = hitInfo.collider.transform.parent;
+				
+				if (hitParent == null) continue;
+				
+				GrabbablePart hitPart = hitParent.gameObject.GetComponent<GrabbablePart>();
+				
+				if (hitPart == null) continue;
+	//			Debug.Log ("hit a part");
+				
+				if (hitPart.ParentConstruction == targetConstruction)
+				{
+					Debug.Log ("hit a part in our preview construction");
+					
+					targetConstruction.RemoveFromConstruction(hitPart);
+					Destroy (hitPart.gameObject);
+				}
+			}
+		}
+		
+	}
 }
+
+
+
+
+
+
+
+
+
+

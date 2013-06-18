@@ -46,7 +46,10 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	void OnDestroy()
 	{
-		InputManager.instance.OnSelectionChange -= OnSelectionChange;
+		if (InputManager.hasInstance)
+		{
+			InputManager.instance.OnSelectionChange -= OnSelectionChange;
+		}
 	}
 	
 	void OnSelectionChange(System.Collections.Generic.List<HexCellPlaceable> selectedPlacables) 

@@ -12,7 +12,10 @@ public class ConstructionPreview : MonoBehaviour {
 	
 	void OnDestroy()
 	{
-		InputManager.instance.OnSelectionChange -= OnSelectionChange;
+		if (InputManager.hasInstance)
+		{
+			InputManager.instance.OnSelectionChange -= OnSelectionChange;
+		}
 	}
 	
 	#region EZGUI Button calls
@@ -47,14 +50,14 @@ public class ConstructionPreview : MonoBehaviour {
 			if (_previewedConstruction != null)
 			{
 				_previewedConstruction.transform.position = Vector3.zero;
-				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
+//				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
 			}
 			_previewedConstruction = value;
 			
 			if (_previewedConstruction != null)
 			{
 				_previewedConstruction.transform.position = transform.position;
-				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("GUI"));
+//				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("GUI"));
 			}
 			
 			

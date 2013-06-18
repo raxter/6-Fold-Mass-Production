@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+// this is really selection and gridinput manager
 public class InputManager : SingletonBehaviour<InputManager>
 {
 	[SerializeField]
@@ -78,14 +79,24 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	Mechanism draggingMechanism = null;
 	
+	void Start()
+	{
+		InputCatcher.instance.OnInputEvent += HandleScreenPoint;
+	}
+	
+	void OnDestroy()
+	{
+		if (InputCatcher.hasInstance)
+		{
+			InputCatcher.instance.OnInputEvent -= HandleScreenPoint;
+		}
+	}
 	
 	// Update is called once per frame
 	void Update () 
 	{
 	}
 	
-	// Up and Down are for mouse released and pressed ( single frame), Released and Pressed are for constant states (multiple frames)
-	public enum PressState {Down, Up, Pressed, Released};
 	
 	public void HandleScreenPoint(Vector3 screenPos, PressState pressState)
 	{
