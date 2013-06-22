@@ -13,4 +13,14 @@ public static class DataStructureExtentions
 		}
 		return null;
 	}
+	
+	public static bool TrueForOneShortCircuited<T>(this List<T> list, System.Predicate<T> predicate)
+	{
+		foreach (T t in list)
+		{
+			if (predicate(t))
+				return true;
+		}
+		return false;
+	}
 }

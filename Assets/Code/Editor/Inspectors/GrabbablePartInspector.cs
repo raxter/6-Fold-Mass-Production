@@ -28,6 +28,7 @@ public class GrabbablePartInspector : Editor
 		
 		
 		InstantiatePrefabDelegate instantiateFunction = (prefab) => PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+		System.Action<Construction> deleteFunction = (construct) => DestroyImmediate(construct);
 		
 		EditorGUILayout.BeginHorizontal();
 		HexMetrics.Direction oldOrietation = part.SimulationOrientation;
@@ -91,8 +92,8 @@ public class GrabbablePartInspector : Editor
 				{
 					if (GUILayout.Button("Connect ("+(GrabbablePart.PhysicalConnectionType)1+")"))
 					{
-						part.ParentConstruction.AddToConstruction(contact);
-						part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
+						part.ParentConstruction.AddToConstruction(contact, deleteFunction);
+						part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative, deleteFunction);
 						part.SetPhysicalConnection(iDirRelative, GrabbablePart.PhysicalConnectionType.Weld);
 					}
 				}
@@ -103,7 +104,7 @@ public class GrabbablePartInspector : Editor
 			{
 				if (GUILayout.Button((GrabbablePart.PhysicalConnectionType)1+" connect "+contact.partType))
 				{
-					part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
+					part.ConnectPartAndPlaceAtRelativeDirection(contact, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative, deleteFunction);
 				}
 			}
 			else
@@ -126,7 +127,7 @@ public class GrabbablePartInspector : Editor
 					
 					GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
 					GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
-					part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
+					part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative, deleteFunction);
 					part.SimulationOrientation = part.SimulationOrientation;
 //					part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld, instantiateFunction);
 					

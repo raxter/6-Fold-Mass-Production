@@ -74,7 +74,8 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	
 	public Grabber heldAndMovingGrabber { get; set; }
 	
-	public void AddToConstruction(GrabbablePart newPart)
+
+	public void AddToConstruction(GrabbablePart newPart, System.Action<Construction> deleteFunction)
 	{
 		Construction otherConstruction = newPart.ParentConstruction;
 		
@@ -90,18 +91,21 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 //			Debug.Log (otherConstruction.HasChild);
 			
 			// delete old construction
-			if (Application.isPlaying)
+//			if (Application.isPlaying)
+//			{
+			if (deleteFunction != null)
 			{
-				Destroy(otherConstruction.gameObject);
+				deleteFunction(otherConstruction);
+			}
 //				Debug.Log("Destroying construction "+otherConstruction.idNumber);
-			}
-#if UNITY_EDITOR
-			else
-			{
-				Debug.Log("Deleting other construction "+otherConstruction.name);
-				DestroyImmediate(otherConstruction.gameObject);
-			}
-#endif
+//			}
+//#if UNITY_EDITOR
+//			else
+//			{
+//				Debug.Log("Deleting other construction "+otherConstruction.name);
+//				DestroyImmediate(otherConstruction.gameObject);
+//			}
+//#endif
 		}
 		else
 		{
@@ -111,12 +115,17 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	}
 	
 	
-	public void RemoveFromConstruction(GrabbablePart partToRemove)
+	public IEnumerable<Construction> RemoveFromConstruction(GrabbablePart partToRemove)
 	{
-		// remove part from construction
+		// disconnect part from construction
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			partToRemove.SetPhysicalConnection((HexMetrics.Direction)i, GrabbablePart.PhysicalConnectionType.None);
+		}
 		
-		// TODO split if necessary
-		CheckForSplit();
+		
+		// split if necessary
+		return CheckForSplit();
 	}
 	
 	private void CenterConstruction (GrabbablePart childPart)
@@ -135,7 +144,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 	}
 	
-	public void CheckForSplit()
+	public IEnumerable<Construction> CheckForSplit()
 	{
 		// TODO split if necessary
 		HashSet<GrabbablePart> remainingParts = new HashSet<GrabbablePart>(PartsList);
@@ -183,6 +192,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				part.transform.parent = splitConstruction.transform;
 			}
 			splitConstruction.transform.parent = this.transform.parent;
+			yield return splitConstruction;
 		}
 	}
 	
@@ -190,12 +200,22 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	{
 		public GrabbablePart part;
 		public HexMetrics.Direction relativeDirection;
+		public int offsetFromSide;
 	}
 	
-	public List<PartSide> IsConnectable(GrabbablePart otherPart)
+	public IEnumerable<PartSide> IsConnectable(GrabbablePart otherPart)
 	{
-		Debug.Log ("is connectable");
-		List<PartSide> partSides = new List<PartSide>();
+		Vector3 otherPartLocation = otherPart.PartSphereCollider.transform.position;
+		float radSq = otherPart.PartSphereCollider.radius * otherPart.PartSphereCollider.radius;
+		foreach (GrabbablePart part in Parts)
+		{
+			Vector3 partLocation = part.transform.position;
+			if (Vector3.SqrMagnitude(otherPartLocation - partLocation) <  radSq)
+			{
+				yield break;
+			}
+		}
+//		List<PartSide> partSides = new List<PartSide>();
 		foreach (GrabbablePart part in Parts)
 		{
 			for (int i = 0 ; i < 6 ; i ++)
@@ -205,35 +225,43 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				if (part.GetConnectedPart(iDirRelative) == null)
 				{
 					
-					Vector3 otherPartLocation = otherPart.PartSphereCollider.transform.position;
-					Vector3 potentialPartLocation = part.transform.position+(Vector3)GameSettings.instance.hexCellPrefab.GetDirection(iDir);
-					float radSq = otherPart.PartSphereCollider.radius * otherPart.PartSphereCollider.radius;
+					Vector3 partLocation = part.transform.position;
+					Vector3 potentialPartLocation = partLocation+(Vector3)GameSettings.instance.hexCellPrefab.GetDirection(iDir);
 					
 					if (Vector3.SqrMagnitude(otherPartLocation - potentialPartLocation) <  radSq)
 					{
 						HashSet<HexMetrics.Direction> weldableRotations = new HashSet<HexMetrics.Direction>(part.IsWeldableWithRotationFactor(iDirRelative, otherPart));
-						Debug.Log(string.Join(", ", new List<HexMetrics.Direction>(weldableRotations).ConvertAll<string>((input) => ""+input).ToArray()));
-						Color debugColor = Color.red;
-						if (weldableRotations.Contains(HexMetrics.Direction.LeftDown) || weldableRotations.Contains(HexMetrics.Direction.RightDown))
-						{
-							debugColor = Color.yellow;
-						}
-						if (weldableRotations.Contains(HexMetrics.Direction.LeftUp) || weldableRotations.Contains(HexMetrics.Direction.RightUp))
-						{
-							debugColor = Color.blue;
-						}
-						if (weldableRotations.Contains(HexMetrics.Direction.Up))
+//						Debug.Log(string.Join(", ", new List<HexMetrics.Direction>(weldableRotations).ConvertAll<string>((input) => ""+input).ToArray()));
+//						Color debugColor = Color.red;
+						
+						if (weldableRotations.Count > 0)
 						{
 							PartSide partSide = new PartSide();
+							foreach (HexMetrics.Direction weldableDir in new HexMetrics.Direction[]{
+								HexMetrics.Direction.Down, 
+								HexMetrics.Direction.LeftDown,
+								HexMetrics.Direction.RightDown,
+								HexMetrics.Direction.LeftUp,
+								HexMetrics.Direction.RightUp,
+								HexMetrics.Direction.Up
+							})
+							{
+								if (weldableRotations.Contains(weldableDir))
+								{
+									partSide.offsetFromSide = (((int)weldableDir+3)%6)-3;
+								}
+							}
 							partSide.part = part;
 							partSide.relativeDirection = iDirRelative;
-							partSides.Add(partSide);
-							debugColor = Color.green;
+							
+							yield return partSide;
 						}
+//							debugColor = Color.green;
+//						}
 						
 						
 //						Debug.Log("Found at "+part.name+" in "+iDir);
-						Debug.DrawLine(part.transform.position, potentialPartLocation, debugColor);
+//						Debug.DrawLine(part.transform.position, potentialPartLocation, debugColor);
 						
 						
 					}
@@ -241,7 +269,6 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			}
 		}
 		
-		return partSides;
 	}
 	
 	
@@ -252,7 +279,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		GameObject singleConstructionObject = new GameObject("Decoded Construction");
 		Construction singleConstruction = singleConstructionObject.AddComponent<Construction>();
 		GameObject singlePartObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
-		singleConstruction.AddToConstruction(singlePartObject.GetComponent<GrabbablePart>());
+		singleConstruction.AddToConstruction(singlePartObject.GetComponent<GrabbablePart>(), null);
 		singlePartObject.transform.localPosition = Vector3.zero;
 		return singleConstruction;
 	}
@@ -308,7 +335,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		addToConstructionRecursively = (newPart) => 
 		{
 			exploredParts.Add(newPart);
-			construction.AddToConstruction(newPart);
+			construction.AddToConstruction(newPart, null);
 			
 			string code = partEncodings[newPart];
 			int id = CharSerializer.ToNumber(code[0]);
@@ -328,7 +355,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				if (otherPart != null)
 				{
 					Debug.Log ("Connecting part "+id+" to "+otherId+" in direction "+iDir +"("+physicalConnType+", "+auxilaryConnectionType+")");
-					newPart.ConnectPartAndPlaceAtRelativeDirection(otherPart, physicalConnType, iDir);
+					newPart.ConnectPartAndPlaceAtRelativeDirection(otherPart, physicalConnType, iDir, null);
 					newPart.SetPhysicalConnection(iDir, physicalConnType);
 					newPart.SetAuxilaryConnections(iDir, auxilaryConnectionType);
 					

@@ -22,7 +22,7 @@ public class ConstructionInspector : Editor
 				GrabbablePart newPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
 				newPart.transform.position = construction.transform.position;
 				
-				construction.AddToConstruction(newPart);
+				construction.AddToConstruction(newPart, (obj) => DestroyImmediate(obj.gameObject));
 			}
 		}
 		else if (GUILayout.Button("Select first part"))

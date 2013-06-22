@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class ConstructionMaker : SingletonBehaviour<ConstructionMaker> 
 {
-	Construction targetConstruction = null;
+	List<Construction> targetConstructions = null;
 	
 	[SerializeField]
 	UIButton _draggableButtonPrefab = null;
@@ -32,6 +32,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		yield return null;
 		
 		int counter = 0;
+		
+		List<Construction> draggableParts = new List<Construction>();
+		
 		foreach (PartType partType in GameSettings.instance.partPrefabs.ConvertAll<PartType>((input) => input.partType))
 //		foreach (GrabbablePart prefab in GameSettings.instance.partPrefabs)
 		{
@@ -39,16 +42,18 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			partConstruction.ignoreCollisions = true;
 			
 			GameObject dragButton = Instantiate(_draggableButtonPrefab.gameObject) as GameObject;
-			
-			SetUpDragDropBehaviour(dragButton.GetComponent<UIButton>(), partConstruction.CenterPart);
+			UIButton dragUIButton = dragButton.GetComponent<UIButton>();
+			SetUpDragDropBehaviour(dragUIButton, partConstruction.CenterPart);
 			dragButton.SetActive(true);
 //			_dragButtons.Add(dragButton.GetComponent<UIButton>());
 			
 			dragButton.transform.parent = _partHolder.transform;
-			dragButton.transform.localPosition = new Vector3 (0, -60f * counter, 0);
+			dragButton.transform.localPosition = new Vector3 (0, -60f * counter, dragUIButton.dragOffset);
 			
 			partConstruction.transform.parent = dragButton.transform;
 			partConstruction.transform.localPosition = Vector3.zero;
+			
+			draggableParts.Add(partConstruction);
 			
 //			GameObject partObject = Instantiate(prefab.gameObject) as GameObject;
 //			partObject.transform.parent = _partHolder.transform;
@@ -58,6 +63,12 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			counter += 1;
 		}
 		
+		
+		yield return null;
+		foreach (Construction construction in draggableParts)
+		{
+			construction.CenterPart.PartSphereCollider.gameObject.SetActive(false);
+		}
 		
 		CloseMaker ();
 		
@@ -76,20 +87,55 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			}
 			if (parms.evt == EZDragDropEvent.Update)
 			{
-				targetConstruction.IsConnectable(part);
+				List<Construction.PartSide> partSides = new List<Construction.PartSide>();
+				targetConstructions.ForEach((con) => partSides.AddRange(con.IsConnectable(part)));
+				foreach(Construction.PartSide partSide in partSides)
+				{
+					Color drawColor = new Color [] {Color.green, Color.yellow, Color.blue, Color.red}[Mathf.Abs(partSide.offsetFromSide)];
+					Vector3 offset = GameSettings.instance.hexCellPrefab.GetDirection(partSide.part.Absolute(partSide.relativeDirection));
+					Debug.DrawLine(partSide.part.transform.position, partSide.part.transform.position + offset, drawColor);
+					
+//					Debug.Log ("is connectable "+partSide.part.name +" in "+partSide.relativeDirection+" ("+partSide.offsetFromSide+")");
+					
+				}
+				
+				partSides.Sort((x, y) => Mathf.Abs(x.offsetFromSide) - Mathf.Abs(y.offsetFromSide));
+				if (partSides.Count > 0)
+				{
+					Debug.Log ("rotating towards "+partSides[0].part.name+" ("+partSides[0].offsetFromSide+")");
+					part.SimulationOrientation = (HexMetrics.Direction)(((int)part.SimulationOrientation-partSides[0].offsetFromSide+6)%6);
+				}
+//				Debug.Log (string.Join(",", partSides.ConvertAll((input) => ""+input.offsetFromSide).ToArray()));
 			}
 			if (parms.evt == EZDragDropEvent.Cancelled)
 			{
 				Debug.Log ("Cancelled "+parms.dragObj);
 				Debug.Log ("DropTarget: "+parms.dragObj.DropTarget);
 				
-				List<Construction.PartSide> partSides = targetConstruction.IsConnectable(part);
+				
+				
+				List<Construction.PartSide> partSides = new List<Construction.PartSide>();
+				targetConstructions.ForEach((con) => partSides.AddRange(con.IsConnectable(part)));
+				partSides.Sort((x, y) => Mathf.Abs(x.offsetFromSide) - Mathf.Abs(y.offsetFromSide));
 				if (partSides.Count > 0)
 				{
 					GameObject partObject = Instantiate(GameSettings.instance.GetPartPrefab(part.partType).gameObject) as GameObject;
 					GrabbablePart newPart = partObject.GetComponent<GrabbablePart>();
-					partSides[0].part.ConnectPartAndPlaceAtRelativeDirection(newPart, GrabbablePart.PhysicalConnectionType.Weld, partSides[0].relativeDirection);
+					newPart.SimulationOrientation = part.SimulationOrientation;
+					partSides[0].part.ConnectPartAndPlaceAtRelativeDirection(
+						newPart, 
+						GrabbablePart.PhysicalConnectionType.Weld, 
+						partSides[0].relativeDirection,
+						(con) => 
+						{
+							targetConstructions.Remove(con);
+							Destroy(con.gameObject);
+						});
 				}
+				
+				part.SimulationOrientation = HexMetrics.Direction.Up;
+				
+//				targetConstructions.
 				
 			}
 			if (parms.evt == EZDragDropEvent.CancelDone)
@@ -110,10 +156,10 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		InputCatcher.instance.RequestInputOverride(HandleScreenPoint);
 		
-		
-		targetConstruction = Construction.Decode(code, (prefab) => Instantiate(prefab) as GameObject);
-		targetConstruction.transform.parent = _constructionHolder.transform;
-		targetConstruction.transform.localPosition = Vector3.zero;
+		targetConstructions = new List<Construction>();
+		targetConstructions.Add(Construction.Decode(code, (prefab) => Instantiate(prefab) as GameObject));
+		targetConstructions[0].transform.parent = _constructionHolder.transform;
+		targetConstructions[0].transform.localPosition = Vector3.zero;
 //		construction.gameObject.SetLayerRecursively(gameObject.layer);
 	}
 	
@@ -124,10 +170,10 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		InputCatcher.instance.ReleaseInputOverride(HandleScreenPoint);
 		
-		if (targetConstruction != null)
+		if (targetConstructions != null)
 		{
-			Destroy(targetConstruction.gameObject);
-			targetConstruction = null;
+			targetConstructions.ForEach((con) => Destroy(con.gameObject));
+			targetConstructions = null;
 		}
 	}
 	
@@ -159,12 +205,19 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				if (hitPart == null) continue;
 	//			Debug.Log ("hit a part");
 				
-				if (hitPart.ParentConstruction == targetConstruction)
+				if (targetConstructions.Contains(hitPart.ParentConstruction))
 				{
 					Debug.Log ("hit a part in our preview construction");
 					
-					targetConstruction.RemoveFromConstruction(hitPart);
-					Destroy (hitPart.gameObject);
+					foreach(Construction construction in hitPart.ParentConstruction.RemoveFromConstruction(hitPart))
+					{
+						if (!targetConstructions.Contains(construction))
+						{
+							targetConstructions.Add(construction);
+						}
+					}
+					targetConstructions.Remove(hitPart.ParentConstruction);
+					Destroy (hitPart.ParentConstruction.gameObject);
 				}
 			}
 		}

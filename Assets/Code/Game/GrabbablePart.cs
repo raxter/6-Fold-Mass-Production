@@ -311,7 +311,7 @@ public class GrabbablePart : MonoBehaviour
 //		ConnectPartAndPlaceAtRelativeDirection(otherPart, connectionType, Relative(absoluteDirection));
 //	}
 	
-	public void ConnectPartAndPlaceAtRelativeDirection(GrabbablePart otherPart, PhysicalConnectionType connectionType, HexMetrics.Direction relativeDirection)
+	public void ConnectPartAndPlaceAtRelativeDirection(GrabbablePart otherPart, PhysicalConnectionType connectionType, HexMetrics.Direction relativeDirection, System.Action<Construction> deleteFunction)
 	{
 		HexMetrics.Direction absoluteDirection = Absolute(relativeDirection);
 		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
@@ -329,7 +329,7 @@ public class GrabbablePart : MonoBehaviour
 		if (ParentConstruction != null)
 		{
 			Debug.Log("Adding to construction "+ParentConstruction.name);
-			ParentConstruction.AddToConstruction(otherPart);
+			ParentConstruction.AddToConstruction(otherPart, deleteFunction);
 		}
 		
 	}
@@ -459,7 +459,7 @@ public class GrabbablePart : MonoBehaviour
 	}
 	
 	
-	public bool ConnectPartOnGrid(GrabbablePart otherPart, PhysicalConnectionType connectionType)
+	public bool ConnectPartOnGrid(GrabbablePart otherPart, PhysicalConnectionType connectionType, System.Action<Construction> deleteFunction)
 	{
 		if (connectionType == PhysicalConnectionType.None)
 		{
@@ -492,7 +492,7 @@ public class GrabbablePart : MonoBehaviour
 				
 				if (ParentConstruction != null)
 				{
-					ParentConstruction.AddToConstruction(otherPart);
+					ParentConstruction.AddToConstruction(otherPart, deleteFunction);
 				}
 				
 				_connectedParts[r] = new ConnectionDescription();
