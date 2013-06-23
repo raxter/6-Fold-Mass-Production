@@ -46,7 +46,8 @@ public class Grabber : Mechanism
 			return Instruction.None;
 	}
 	
-	public int _instructionCounter = -1;
+	int _instructionCounter = -1;
+	public int InstructionCounter { get { return _instructionCounter; } }
 	
 	public int _stepsPerInstruction = -1;
 	
@@ -455,7 +456,7 @@ public class Grabber : Mechanism
 		MoveToState(extentionValue, angleValue, rotationValue);
 		
 		
-		if (_stepCounter == /*1)/*/_stepsPerInstruction/2)
+		if (_stepCounter == /**/1)/*/_stepsPerInstruction/2)/**/
 		{
 //			Debug.Log(_stepCounter+" == "+_stepsPerInstruction/2+":"+instructions[_instructionCounter]);
 			switch (_currentInstruction)

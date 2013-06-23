@@ -84,12 +84,13 @@ public class InputManager : SingletonBehaviour<InputManager>
 		InputCatcher.instance.OnInputEvent += HandleScreenPoint;
 	}
 	
-	void OnDestroy()
+	public override void OnDestroy()
 	{
 		if (InputCatcher.hasInstance)
 		{
 			InputCatcher.instance.OnInputEvent -= HandleScreenPoint;
 		}
+		base.OnDestroy();
 	}
 	
 	// Update is called once per frame
@@ -98,14 +99,14 @@ public class InputManager : SingletonBehaviour<InputManager>
 	}
 	
 	
-	public void HandleScreenPoint(Vector3 screenPos, PressState pressState)
+	public void HandleScreenPoint(POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState)
 	{
-		Ray	inputRay = gameCamera.ScreenPointToRay(screenPos);
+		Ray	inputRay = gameCamera.ScreenPointToRay(pointerInfo.devicePos);
 		
-		HandleRay(inputRay, pressState);
+		HandleRay(inputRay, pressState, dragState);
 	}
 	
-	public void HandleRay(Ray inputRay, PressState pressState)
+	public void HandleRay(Ray inputRay, ControlState pressState, ControlState dragState)
 	{
 			
 		debugDrawColor = Input.GetMouseButton(0) ? Color.green : Color.red;

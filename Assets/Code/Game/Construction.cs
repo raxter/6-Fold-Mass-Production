@@ -63,6 +63,19 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			}
 		}
 	}
+	public int Count
+	{
+		get 
+		{
+			int count = 0;
+			
+			foreach (GrabbablePart part in Parts)
+			{
+				count+=1;
+			}
+			return count;
+		}
+	}
 	
 	public List<GrabbablePart> PartsList
 	{
@@ -125,7 +138,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 		
 		// split if necessary
-		return CheckForSplit();
+		return CheckForSplitsOrJoins();
 	}
 	
 	private void CenterConstruction (GrabbablePart childPart)
@@ -144,7 +157,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 	}
 	
-	public IEnumerable<Construction> CheckForSplit()
+	public IEnumerable<Construction> CheckForSplitsOrJoins()
 	{
 		// TODO split if necessary
 		HashSet<GrabbablePart> remainingParts = new HashSet<GrabbablePart>(PartsList);
@@ -192,6 +205,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				part.transform.parent = splitConstruction.transform;
 			}
 			splitConstruction.transform.parent = this.transform.parent;
+			
 			yield return splitConstruction;
 		}
 	}
@@ -248,7 +262,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 							{
 								if (weldableRotations.Contains(weldableDir))
 								{
-									partSide.offsetFromSide = (((int)weldableDir+3)%6)-3;
+									partSide.offsetFromSide = GrabbablePart.RotationDifference(weldableDir);
 								}
 							}
 							partSide.part = part;

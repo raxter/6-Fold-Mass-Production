@@ -18,6 +18,8 @@ public class ConstructionPreview : MonoBehaviour {
 		}
 	}
 	
+	ConstructionMaker.ConstructionSavedDelegate saveFunction = null;
+	
 	#region EZGUI Button calls
 	void ToggleMaker()
 	{
@@ -29,7 +31,7 @@ public class ConstructionPreview : MonoBehaviour {
 			}
 			else
 			{
-				ConstructionMaker.instance.OpenMaker(PreviewedConstruction.Encode());
+				ConstructionMaker.instance.OpenMaker(PreviewedConstruction.Encode(), saveFunction);
 			}
 		}
 		
@@ -45,22 +47,28 @@ public class ConstructionPreview : MonoBehaviour {
 		{
 			return _previewedConstruction;
 		}
-		set
+		
+	}
+	
+	public void SetPreviewedConstruction(Construction construction, ConstructionMaker.ConstructionSavedDelegate saveDelegate)
+	{
+		if (_previewedConstruction != null)
 		{
-			if (_previewedConstruction != null)
-			{
-				_previewedConstruction.transform.position = Vector3.zero;
+			_previewedConstruction.transform.position = Vector3.zero;
 //				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
-			}
-			_previewedConstruction = value;
-			
-			if (_previewedConstruction != null)
-			{
-				_previewedConstruction.transform.position = transform.position;
+		}
+		_previewedConstruction = construction;
+		
+		saveFunction = saveDelegate;
+		if (_previewedConstruction != null)
+		{
+			_previewedConstruction.transform.position = transform.position;
+			_previewedConstruction.transform.parent = transform;
 //				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("GUI"));
-			}
-			
-			
+		}
+		else
+		{
+			saveFunction = null;
 		}
 	}
 	
@@ -80,7 +88,13 @@ public class ConstructionPreview : MonoBehaviour {
 			}
 		}
 		
-		PreviewedConstruction = selectedGenerator == null ? null : selectedGenerator.toGenerateConstruction;
+		SetPreviewedConstruction(
+			selectedGenerator == null ? null : selectedGenerator.toGenerateConstruction, 
+			(encoded) => 
+			{
+				Destroy(selectedGenerator.toGenerateConstruction.gameObject);
+				selectedGenerator.toGenerateConstruction = Construction.Decode(encoded, (prefab) => Instantiate(prefab) as GameObject);
+			});
 		
 		if (PreviewedConstruction == null)
 		{

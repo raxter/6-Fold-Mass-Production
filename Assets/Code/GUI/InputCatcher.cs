@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-// Up and Down are for mouse released and pressed ( single frame), Released and Pressed are for constant states (multiple frames)
-public enum PressState {Down, Up, Pressed, Released};
+// Up and Down are for mouse released and pressed ( single frame), Released, Pressed, and Dragged are for constant states (multiple frames)
+public enum ControlState {Starting, Ending, Active, Inactive};
 
 
 public class InputCatcher : SingletonBehaviour<InputCatcher>
@@ -11,7 +11,7 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 	
 	public UIButton _catcher;
 	
-	public delegate void HandleInputDelegate (Vector3 pointerPos, PressState pressState);
+	public delegate void HandleInputDelegate (POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState);
 	public event HandleInputDelegate OnInputEvent;
 	
 	event HandleInputDelegate OnInputEventOverride;
@@ -28,37 +28,140 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 		OnInputEventOverride -= handleInput;
 	}
 	
+	
+	public void Retarget(IUIObject newTarget)
+	{
+		UIManager.instance.Retarget(_catcher, newTarget);
+	}
+	
+//	public class InputInfo
+//	{
+//		public Vector3 position;
+//		public PressState pressState;
+//		
+//	}
+	
+	
+	public class ControlStateMachine
+	{
+		ControlState _state = ControlState.Inactive;
+		
+		public ControlState state
+		{
+			get 
+			{
+				return _state;
+			}
+		}
+		
+		bool stateChanged = false;
+		
+		public void Update ()
+		{
+			if (stateChanged)
+			{
+				stateChanged = false;
+				return;
+			}
+			if (_state == ControlState.Starting)
+			{
+				_state = ControlState.Active;
+			}
+			if (_state == ControlState.Ending)
+			{
+				_state = ControlState.Inactive;
+			}
+		}
+		
+		public void SetActive(bool active)
+		{
+			if (active)
+			{
+				StartActive();
+			}
+			else
+			{
+				EndActive();
+			}
+		}
+			
+			
+		public void StartActive()
+		{
+//			Debug.Log("Activating");
+			if (_state == ControlState.Inactive)
+			{
+				_state = ControlState.Starting;
+				stateChanged = true;
+			}
+		}
+		
+		public void EndActive()
+		{
+//			Debug.Log("Deactivating");
+			if (_state == ControlState.Active)
+			{
+				_state = ControlState.Ending;
+				stateChanged = true;
+			}
+		}
+	}
+	
+	ControlStateMachine pressState = new ControlStateMachine();
+	ControlStateMachine dragState = new ControlStateMachine();
+	
 	public void InputDelegate(ref POINTER_INFO ptr)
 	{
 //		Debug.Log (ptr.devicePos);
 		
 //		Debug.Log (ptr.evt);
 		
-		PressState pressState = PressState.Released;
 		
 		
+		if (ptr.evt != POINTER_INFO.INPUT_EVENT.NO_CHANGE)
+		{
+			switch (ptr.evt)
+			{
+				
+				case POINTER_INFO.INPUT_EVENT.MOVE:
+				case POINTER_INFO.INPUT_EVENT.MOVE_OFF:
+				{
+					break;
+				}
+				
+				case POINTER_INFO.INPUT_EVENT.PRESS:
+				{
+					pressState.StartActive();
+					break;
+				}
+				
+				case POINTER_INFO.INPUT_EVENT.RELEASE:
+				case POINTER_INFO.INPUT_EVENT.RELEASE_OFF:
+				case POINTER_INFO.INPUT_EVENT.TAP:
+				{
+					pressState.EndActive();
+					break;
+				}
+					
+				
+			}
 		
-		if (ptr.evt == POINTER_INFO.INPUT_EVENT.PRESS)
-		{
-			pressState = PressState.Down;
+			dragState.SetActive(ptr.evt == POINTER_INFO.INPUT_EVENT.DRAG);
 		}
-		if (ptr.evt == POINTER_INFO.INPUT_EVENT.RELEASE)
-		{
-			pressState = PressState.Up;
-		}
-		if (ptr.evt == POINTER_INFO.INPUT_EVENT.TAP)
-		{
-			pressState = PressState.Up;
-		}
+		
+		pressState.Update();
+		dragState.Update();
+//		Debug.Log(pressState.state+":"+dragState.state+" <- "+ptr.evt);
+		
 		
 		if (OnInputEventOverride == null)
 		{
-			OnInputEvent(ptr.devicePos, pressState);
+			OnInputEvent(ptr, pressState.state, dragState.state);
 //			InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
 		}
 		else
 		{
-			OnInputEventOverride(ptr.devicePos, pressState);
+			OnInputEventOverride(ptr, pressState.state, dragState.state);
 		}
 	}
 	

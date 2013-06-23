@@ -37,6 +37,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	public event EventFunction ConstructionCompletedEvent;
 	
+	public event EventFunction InstructionStartedEvent;
+	
 	[SerializeField]
 	float instructionsPerSecondNormal = 1;
 	[SerializeField]
@@ -253,6 +255,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 			 * 
 			 **/
 //			Debug.Log("Start Instruction");
+			
+			if (InstructionStartedEvent != null)
+			{
+				InstructionStartedEvent();
+			}
 			
 			parts.RemoveWhere((obj) => obj == null);
 			foreach(GrabbablePart part in parts)

@@ -20,19 +20,16 @@ public class DraggableInstructions : MonoBehaviour
 	[SerializeField]
 	GameObject instructionsRoot = null;
 	
+	[SerializeField]
+	SpriteBase selectionIcon = null;
 	
 	EmptyInstructionSlot [] emptyInstructions = null;
 	
 	Grabber selectedGrabber = null;
 	
 	
-	
 	void Start()
 	{
-		
-//		GameManager.instance.GameStateChangedEvent += () =>
-//		{
-////			instructionsRoot.transform.localScale = Vector3.one*(GameManager.instance.gameState == GameManager.State.Construction ? 1f : 0f);
 //			
 //			foreach (DraggableInstruction draggableInstruction in draggableInstructions)
 //			{
@@ -81,6 +78,22 @@ public class DraggableInstructions : MonoBehaviour
 			else
 			{
 				HideUI();
+			}
+		};
+		
+		selectionIcon.transform.localScale = Vector3.zero;
+		
+		GameManager.instance.GameStateChangedEvent += () =>
+		{
+			selectionIcon.transform.localScale = Vector3.one*(GameManager.instance.gameState == GameManager.State.Construction ? 0f : 1f);
+		};
+		
+		GameManager.instance.InstructionStartedEvent += () =>
+		{
+//			Debug.LogWarning("Instruction Step!");
+			if (selectedGrabber != null)
+			{
+				selectionIcon.transform.localPosition = new Vector3(0, -60*selectedGrabber.InstructionCounter, 0);
 			}
 		};
 		

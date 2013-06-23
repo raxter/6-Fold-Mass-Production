@@ -104,6 +104,7 @@ public class GrabbablePart : MonoBehaviour
 		}
 	}
 	
+	
 	IntVector2 GetGridLocationFromPosition()
 	{
 		HexCell zeroCell = GridManager.instance.GetHexCell(IntVector2.zero);
@@ -146,6 +147,41 @@ public class GrabbablePart : MonoBehaviour
 	 * 
 	 * */
 	
+	public void RotatateSimulationOrientation(HexMetrics.Direction offset)
+	{
+		RotatateSimulationOrientation((int)offset);
+	}
+	
+	public void RotatateSimulationOrientation(int offset)
+	{
+		SimulationOrientation = (HexMetrics.Direction)(((int)SimulationOrientation-offset+6)%6);
+	}
+	
+	
+	public bool WillSimulationOrientationRotatateSplitConstruction(int offset)
+	{
+		bool hasNoConnections = true;
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction relativeI = (HexMetrics.Direction)i;
+			HexMetrics.Direction newRelativeI = (HexMetrics.Direction)((i+offset+6)%6);
+			
+			// if the new direction will connect to a part, then the construction will not split
+			if (GetConnectedPart(relativeI) != null)
+			{
+				Debug.Log (GetConnectedPart(relativeI).name+":"+Weldable(newRelativeI));
+				// it is connected in this direction
+				if (Weldable(newRelativeI))
+				{
+					return false;
+				}
+				hasNoConnections = false;
+			}
+		}
+		
+		return !hasNoConnections;
+	}
+		
 	public HexMetrics.Direction SimulationOrientation
 	{
 		get 
@@ -277,6 +313,8 @@ public class GrabbablePart : MonoBehaviour
 	[SerializeField]
 	ConnectionDescription [] _connectedParts = new ConnectionDescription [6];
 	
+	GameObject [] _weldSpriteObjects = new GameObject [6];
+	
 	#endregion
 	
 	#region Connection Access
@@ -291,6 +329,37 @@ public class GrabbablePart : MonoBehaviour
 		return _connectedParts[(int)relativeDirection].connectedPart;
 	}
 	
+	public struct PartSide
+	{
+		public GrabbablePart part;
+		public HexMetrics.Direction relativeDirection;
+	}
+	public IEnumerable<PartSide> GetConnectedPartsWithDirection()
+	{
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+			GrabbablePart connPart = GetConnectedPart(iDir);
+			if (connPart != null)
+			{
+				yield return new PartSide() { part = connPart, relativeDirection = iDir, };
+			}
+		}
+	}
+	
+	public IEnumerable<GrabbablePart> GetConnectedParts()
+	{
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
+			GrabbablePart connPart = GetConnectedPart(iDir);
+			
+			if (connPart != null)
+			{
+				yield return connPart;
+			}
+		}
+	}
 	public GrabbablePart RemoveConnectedPart(HexMetrics.Direction relativeDirection)
 	{
 		GrabbablePart ret = _connectedParts[(int)relativeDirection].connectedPart;
@@ -348,15 +417,26 @@ public class GrabbablePart : MonoBehaviour
 		return _connectedParts[(int)relativeDirection].connectionType;
 	}
 	
+	private void SetWeldSprite(HexMetrics.Direction relativeDirection, bool show)
+	{
+		GameObject weldSprite = _weldSpriteObjects[(int)relativeDirection];
+		if (weldSprite != null)
+		{
+			weldSprite.transform.localScale = Vector3.one * (show ? 1 : 0);
+		}
+	}
+	
 	public void SetPhysicalConnection(HexMetrics.Direction relativeDirection, PhysicalConnectionType newConnectionType)
 	{
 		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
 		if (connDesc.connectedPart == null)
 		{
 			connDesc.connectionType = PhysicalConnectionType.None;
+			SetWeldSprite(relativeDirection, false);
+			
 			if (ParentConstruction != null)
 			{
-				ParentConstruction.CheckForSplit();
+				ParentConstruction.CheckForSplitsOrJoins();
 			}
 			return;
 		}
@@ -378,6 +458,11 @@ public class GrabbablePart : MonoBehaviour
 			otherConnDesc.connectionType = PhysicalConnectionType.None;
 		}
 		
+		// update the weld sprites
+		SetWeldSprite(relativeDirection, connDesc.connectionType != PhysicalConnectionType.None);
+		connDesc.connectedPart.SetWeldSprite(oppositeDirection, connDesc.connectionType != PhysicalConnectionType.None);
+		
+		
 		//if we are disconnecting the side (None) or if it's not weldable, make sure that the parts are not connected
 		if (connDesc.connectionType == PhysicalConnectionType.None)
 		{
@@ -385,8 +470,10 @@ public class GrabbablePart : MonoBehaviour
 			connDesc.connectedPart = null;
 			
 			// check that by disconnecting a side, we have not split the construction up
-			ParentConstruction.CheckForSplit();
+			ParentConstruction.CheckForSplitsOrJoins();
 		}
+		
+			
 	}
 	
 	public int GetAuxilaryConnectionTypes(HexMetrics.Direction relativeDirection)
@@ -508,6 +595,21 @@ public class GrabbablePart : MonoBehaviour
 		
 		return false;
 		
+	}
+	
+	public int SimulationRotationDifference(HexMetrics.Direction other)
+	{
+		return RotationDifference(SimulationOrientation, other);
+	}
+	
+	public static int RotationDifference(HexMetrics.Direction a)
+	{
+		return RotationDifference(a, HexMetrics.Direction.Up);
+	}
+	public static int RotationDifference(HexMetrics.Direction a, HexMetrics.Direction b)
+	{
+		HexMetrics.Direction diff = (HexMetrics.Direction)((int)a-(int)b);
+		return (((int)diff+3)%6)-3;
 	}
 	
 	// NOTE we are not using this because if side are not connected then it's connectedPart MUST be null!
@@ -708,12 +810,32 @@ public class GrabbablePart : MonoBehaviour
 
 
 #endregion
-
+	
+	void Awake()
+	{
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction absoluteIDir = (HexMetrics.Direction)i;
+			
+			if (Weldable(i))
+			{
+				_weldSpriteObjects[i] = Instantiate(GameSettings.instance.weldPrefab) as GameObject;
+				_weldSpriteObjects[i].transform.parent = transform;
+				_weldSpriteObjects[i].transform.localPosition = Vector3.zero;
+				_weldSpriteObjects[i].transform.localRotation = Quaternion.Euler(0,0,-60*i);
+				_weldSpriteObjects[i].transform.localScale = Vector3.zero;
+			}
+		}
+	}
+	
 	void Start ()
 	{
 		
+		
 		highlighted = false;
 		_sphereCollider = gameObject.GetComponentsInChildren<Collider>()[0] as SphereCollider;
+		
+		
 	}
 
 	void Update ()

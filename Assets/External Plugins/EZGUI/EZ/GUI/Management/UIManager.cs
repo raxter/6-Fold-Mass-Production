@@ -333,7 +333,7 @@ public class EZCameraSettings
 /// each scene that contains EZ GUI controls.
 /// </remarks>
 [AddComponentMenu("EZ GUI/Management/UI Manager")]
-public class UIManager : MonoBehaviour
+public partial class UIManager : MonoBehaviour
 {
 	//----------------------------------------------------------------
 	// Singleton code
@@ -1817,12 +1817,16 @@ public class UIManager : MonoBehaviour
 		}
 #endif
 	}
-
+	
 	// Polls the mouse pointing device
 	protected void PollMouse(ref POINTER_INFO curPtr)
 	{
+#if UNITY_STANDALONE || UNITY_WEBPLAYER
+		down = Input.GetMouseButton(0) || Input.GetMouseButton(1);// || Input.GetMouseButton(2) || Input.GetAxisRaw("Mouse ScrollWheel") != 0;
+#else
 		down = Input.GetMouseButton(0);
-
+#endif
+		
 		// Check for scroll wheel:
 		float scrollDelta = Input.GetAxis("Mouse ScrollWheel");
 #if SCROLL_IS_TIME_COHERENT

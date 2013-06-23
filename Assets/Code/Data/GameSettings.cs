@@ -6,6 +6,7 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 {
 	
 	public HexCell hexCellPrefab;
+	public GameObject weldPrefab;
 	
 	public int gridFinalCellsFromWidth;
 	public int gridFinalCellsFromHeight;
