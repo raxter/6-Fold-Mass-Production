@@ -8,6 +8,7 @@ public class ConstructionPreview : MonoBehaviour {
 	void Start () 
 	{
 		InputManager.instance.OnSelectionChange += OnSelectionChange;
+		ConstructionMaker.instance.saveEvent += OnSaveEvent;
 	}
 	
 	void OnDestroy()
@@ -16,9 +17,23 @@ public class ConstructionPreview : MonoBehaviour {
 		{
 			InputManager.instance.OnSelectionChange -= OnSelectionChange;
 		}
+		if (ConstructionMaker.hasInstance)
+		{
+			ConstructionMaker.instance.saveEvent -= OnSaveEvent;
+		}
 	}
 	
-	ConstructionMaker.ConstructionSavedDelegate saveFunction = null;
+//	public delegate void CreateConstructionDelegate(string encoded);
+	ConstructionSavedDelegate saveFunction = null;
+	
+	public void OnSaveEvent(string encoded)
+	{
+		if (saveFunction != null)
+		{
+			saveFunction(encoded);
+			SetPreviewedConstructionInternal(encoded);
+		}
+	}
 	
 	#region EZGUI Button calls
 	void ToggleMaker()
@@ -31,7 +46,7 @@ public class ConstructionPreview : MonoBehaviour {
 			}
 			else
 			{
-				ConstructionMaker.instance.OpenMaker(PreviewedConstruction.Encode(), saveFunction);
+				ConstructionMaker.instance.OpenMaker(PreviewedConstruction.Encode());
 			}
 		}
 		
@@ -47,29 +62,42 @@ public class ConstructionPreview : MonoBehaviour {
 		{
 			return _previewedConstruction;
 		}
+		set
+		{
+			if (_previewedConstruction != null)
+			{
+				Destroy(_previewedConstruction.gameObject);
+//				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
+			}
+			_previewedConstruction = value;
+			if (_previewedConstruction != null)
+			{
+				_previewedConstruction.transform.position = transform.position;
+				_previewedConstruction.transform.parent = transform;
+//				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("GUI"));
+			}
+			
+		}
 		
 	}
 	
-	public void SetPreviewedConstruction(Construction construction, ConstructionMaker.ConstructionSavedDelegate saveDelegate)
+	void SetPreviewedConstructionInternal(string encoded)
 	{
-		if (_previewedConstruction != null)
+		if (encoded == "")
 		{
-			_previewedConstruction.transform.position = Vector3.zero;
-//				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
+			PreviewedConstruction = null;
 		}
-		_previewedConstruction = construction;
+		else 
+		{
+			PreviewedConstruction = Construction.Decode(encoded, (prefab) => Instantiate(prefab) as GameObject);
+		}
+	}
+	
+	public void SetPreviewedConstruction(string encoded, ConstructionSavedDelegate saveDelegate)
+	{
+		SetPreviewedConstructionInternal(encoded);
 		
-		saveFunction = saveDelegate;
-		if (_previewedConstruction != null)
-		{
-			_previewedConstruction.transform.position = transform.position;
-			_previewedConstruction.transform.parent = transform;
-//				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("GUI"));
-		}
-		else
-		{
-			saveFunction = null;
-		}
+		saveFunction = PreviewedConstruction == null ? null : saveDelegate;
 	}
 	
 	void OnSelectionChange(System.Collections.Generic.List<HexCellPlaceable> selectedPlacables) 
@@ -89,11 +117,13 @@ public class ConstructionPreview : MonoBehaviour {
 		}
 		
 		SetPreviewedConstruction(
-			selectedGenerator == null ? null : selectedGenerator.toGenerateConstruction, 
+			selectedGenerator == null ? "" : selectedGenerator.toGenerateConstruction.Encode(), 
 			(encoded) => 
 			{
+				Debug.LogWarning("encoding "+encoded,this);
 				Destroy(selectedGenerator.toGenerateConstruction.gameObject);
 				selectedGenerator.toGenerateConstruction = Construction.Decode(encoded, (prefab) => Instantiate(prefab) as GameObject);
+				selectedGenerator.toGenerateConstruction.ignoreCollisions = true;
 			});
 		
 		if (PreviewedConstruction == null)

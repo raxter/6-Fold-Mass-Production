@@ -9,6 +9,9 @@ public enum ControlState {Starting, Ending, Active, Inactive};
 public class InputCatcher : SingletonBehaviour<InputCatcher>
 {
 	
+	[SerializeField]
+	float moveZto = 10;
+	
 	public UIButton _catcher;
 	
 	public delegate void HandleInputDelegate (POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState);
@@ -32,6 +35,19 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 	public void Retarget(IUIObject newTarget)
 	{
 		UIManager.instance.Retarget(_catcher, newTarget);
+	}
+		
+	// Use this for initialization
+	void Start () 
+	{
+		transform.localPosition = new Vector3(0,0,moveZto);
+		_catcher.AddInputDelegate(InputDelegate);
+	}
+	
+	// Update is called once per frame
+	void Update () 
+	{
+	
 	}
 	
 //	public class InputInfo
@@ -165,15 +181,5 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 		}
 	}
 	
-	// Use this for initialization
-	void Start () 
-	{
-		_catcher.AddInputDelegate(InputDelegate);
-	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
-	
-	}
+
 }

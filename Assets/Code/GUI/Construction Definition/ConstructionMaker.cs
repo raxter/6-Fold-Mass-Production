@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
+public delegate void ConstructionSavedDelegate(string encoded);
+
 public class ConstructionMaker : SingletonBehaviour<ConstructionMaker> 
 {
 	List<Construction> targetConstructions = null;
@@ -49,7 +52,6 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			_innerArrows[i].transform.localScale = Vector3.zero;
 		}
 		
-		
 	}
 		
 	
@@ -74,7 +76,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 //			_dragButtons.Add(dragButton.GetComponent<UIButton>());
 			
 			dragButton.transform.parent = _partHolder.transform;
-			dragButton.transform.localPosition = new Vector3 (0, -60f * counter, dragUIButton.dragOffset);
+			dragButton.transform.localPosition = new Vector3 (0, -60f * counter, 0);
 			
 			partConstruction.transform.parent = dragButton.transform;
 			partConstruction.transform.localPosition = Vector3.zero;
@@ -295,13 +297,13 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		}
 	}
 	
-	public delegate void ConstructionSavedDelegate(string encoded);
+	
+	public event ConstructionSavedDelegate saveEvent;
 	
 	ConstructionSavedDelegate saveFunction = null;
 	
-	public void OpenMaker (string code, ConstructionSavedDelegate saveDelegate)
+	public void OpenMaker (string code)
 	{
-		saveFunction = saveDelegate;
 //		this.transform.localScale = Vector3.one;
 		this.gameObject.SetActive(true);
 		
@@ -335,9 +337,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	public void SaveConstruction ()
 	{
 		Debug.Log ("Saving");
-		if (targetConstructions.Count > 0 && saveFunction != null)
+		if (targetConstructions.Count > 0 && saveEvent != null)
 		{
-			saveFunction(targetConstructions[0].Encode());
+			saveEvent(targetConstructions[0].Encode());
 		}
 	}
 #endregion
