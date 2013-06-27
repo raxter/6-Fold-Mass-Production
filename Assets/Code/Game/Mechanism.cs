@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public enum MechanismType {None, Grabber, WeldingRig};
+public enum MechanismType {None, Grabber, WeldingRig, Generator};
 
 public abstract class Mechanism : HexCellPlaceable 
 {
@@ -26,6 +26,7 @@ public abstract class Mechanism : HexCellPlaceable
 		
 		_dragging = true;
 	}
+	
 	public void StopDrag()
 	{	
 		if (!_dragging)

@@ -114,14 +114,14 @@ public class GameManager : SingletonBehaviour<GameManager>
 		
 		GridManager.instance.SetTarget(_currentLevel.targetConstruction);
 		
-		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
-		{
-			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
-			
-			generator.toGenerateConstruction = Construction.Decode(generatorDetails.toGenerate, (prefab) => Instantiate(prefab) as GameObject);
-			generator.toGenerateConstruction.ignoreCollisions = true;
-			generator.PlaceAtLocation(generatorDetails.location);
-		}
+//		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
+//		{
+////			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
+//			
+//			generator.toGenerateConstruction = Construction.Decode(generatorDetails.toGenerate, (prefab) => Instantiate(prefab) as GameObject);
+//			generator.toGenerateConstruction.ignoreCollisions = true;
+//			generator.PlaceAtLocation(generatorDetails.location);
+//		}
 		completedConstructions = 0;
 	}
 

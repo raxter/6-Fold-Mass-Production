@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-public class ConstructionPreview : MonoBehaviour {
+public class ConstructionPreview : MonoBehaviour 
+{
 	
 	
 	// Use this for initialization
@@ -51,6 +52,19 @@ public class ConstructionPreview : MonoBehaviour {
 		}
 		
 	}
+	
+	
+	void SelectTarget()
+	{
+		SetPreviewedConstruction(GridManager.instance.target.Encode(), 
+		(encoded) => 
+		{
+			Destroy(GridManager.instance.target.gameObject);
+			GridManager.instance.SetTarget(encoded);
+		});
+		
+	}
+	
 		
 	#endregion
 	

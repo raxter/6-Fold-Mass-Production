@@ -1,8 +1,13 @@
 using UnityEngine;
 using System.Collections;
 
-public class PartGenerator : HexCellPlaceable
+public class PartGenerator : Mechanism
 {
+	
+	public override MechanismType MechanismType
+	{
+		get { return MechanismType.Generator; }
+	}
 	
 	public Construction toGenerateConstruction;
 	
@@ -11,15 +16,44 @@ public class PartGenerator : HexCellPlaceable
 	static int generatorCount = 0;
 	static int constructionCount = 0;
 	
-	#region implemented abstract members of HexCellPlaceable
-	protected override void PlaceableStart ()
+	#region implemented abstract members of Mechanism
+	
+	protected override void MechanismStart ()
 	{
 	}
 
-	protected override void PlaceableUpdate ()
+	protected override void MechanismUpdate ()
 	{
 	}
 	#endregion
+	
+	bool movable = false;
+	
+	// Grabber code is (movable)(construction)
+	public override string Encode()
+	{
+		string code = movable ? "1" : "0";
+		
+		code += toGenerateConstruction.Encode();
+		
+		
+		return code;
+	}
+	
+	public override bool Decode(string encoded)
+	{
+		movable = encoded[0] == '1';
+		
+		if (toGenerateConstruction != null)
+		{
+			Destroy(toGenerateConstruction.gameObject);
+		}
+		
+		toGenerateConstruction = Construction.Decode(encoded.Substring(1), (prefab) => Instantiate(prefab) as GameObject);
+		toGenerateConstruction.ignoreCollisions = true;
+		
+		return true;
+	}
 	
 	public void StartSimulation()
 	{

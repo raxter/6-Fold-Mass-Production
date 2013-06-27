@@ -198,7 +198,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 		{
 			{MechanismType.None, 	   '!'},
 			{MechanismType.Grabber,    'G'},
-			{MechanismType.WeldingRig, 'W'}
+			{MechanismType.WeldingRig, 'W'},
+			{MechanismType.Generator,  'N'}
 		}[mechanismType];
 	
 	}
@@ -219,21 +220,19 @@ public class GridManager : SingletonBehaviour<GridManager>
 	public void SaveLayout()
 	{
 		HashSet<Mechanism> savedMechanisms = new HashSet<Mechanism>();
-		string saveString = "";
+		List<string> encodings = new List<string>();
 		foreach(HexCell hc in GetAllCells())
 		{
 			Mechanism mech = hc.placedMechanism;
 			if (mech != null && !savedMechanisms.Contains(mech))
 			{
-				if (saveString != "")
-				{
-					saveString += ':';
-				}
-				saveString += GetMechanismCode(mech.MechanismType)+","+mech.Location.x+","+mech.Location.y+","+mech.Encode();
+				encodings.Add(GetMechanismCode(mech.MechanismType)+","+mech.Location.x+","+mech.Location.y+","+mech.Encode());
 				
 				savedMechanisms.Add(mech);
 			}
 		}
+		
+		string saveString = string.Join(":", encodings.ToArray());
 		Debug.Log("Saveing: "+saveString);
 		
 		PlayerPrefs.SetString("save string", saveString);

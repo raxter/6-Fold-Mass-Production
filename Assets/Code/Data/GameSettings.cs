@@ -19,7 +19,7 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 	
 	public List<Mechanism> mechanismPrefabs;
 	
-	public PartGenerator generatorPrefab;
+//	public PartGenerator generatorPrefab;
 	
 	
 	public GrabbablePart GetPartPrefab(PartType partType)
