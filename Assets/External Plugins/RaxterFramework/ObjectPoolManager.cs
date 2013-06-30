@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;
+
 #endif
 
 public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager> 
@@ -14,7 +15,29 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 	
 	static int id = 0;
 	
-	Dictionary<GameObject,int> objectIds = new Dictionary<GameObject, int>();
+	public Dictionary<GameObject,int> objectIds = new Dictionary<GameObject, int>();
+	
+#if UNITY_EDITOR
+//	public Dictionary<int, GameObject> objectFromId = new Dictionary<int, GameObject>();
+	
+	public enum PoolEvent {None, Created, Activated, Deactivated};
+	public class ObjectHistoryEvent
+	{
+		public string stacktrace = "";
+		public PoolEvent poolEvent = PoolEvent.None;
+		public int frameCount = -1;
+		
+		public ObjectHistoryEvent(PoolEvent poolEvt)
+		{
+			stacktrace = System.Environment.StackTrace;
+			poolEvent = poolEvt;
+			frameCount = Time.frameCount;
+		}
+	}
+	
+	public Dictionary<GameObject, List<ObjectHistoryEvent>> objectHistory = new Dictionary<GameObject, List<ObjectHistoryEvent>>();
+	
+#endif
 	
 	public class ObjectPool
 	{
@@ -40,6 +63,14 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 			{
 				toActivate = GameObject.Instantiate(prefab) as GameObject;
 				instance.objectIds.Add(toActivate, id);
+				instance.objectHistory[toActivate] = new List<ObjectHistoryEvent>();
+				
+//#if UNITY_EDITOR
+//				objectFromId[id] = toActivate;
+//#endif
+				
+				instance.objectHistory[toActivate].Add(new ObjectHistoryEvent(PoolEvent.Created));
+				
 				id += 1;
 			}
 			else
@@ -47,6 +78,9 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 				toActivate = inactive.First();
 				inactive.Remove(toActivate);
 			}
+			
+			
+			instance.objectHistory[toActivate].Add(new ObjectHistoryEvent(PoolEvent.Activated));
 			
 			instance.objectToPrefab[toActivate] = prefab;
 			active.Add (toActivate);
@@ -76,7 +110,9 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 				Debug.LogError("Deactivated object is not in the object pool reverse/prefab lookup dictionary");
 				
 			}
-			ObjectPoolManager.instance.objectToPrefab.Remove(toDeactivate);
+			instance.objectToPrefab.Remove(toDeactivate);
+			
+			instance.objectHistory[toDeactivate].Add(new ObjectHistoryEvent(PoolEvent.Deactivated));
 			return true;
 		}
 	}
@@ -123,7 +159,13 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 		
 		if (!objectToPrefab.ContainsKey(toDestroy))
 		{
-			Debug.LogError("Trying to remove an object that was not pooled! Doing nothing", toDestroy);
+#if UNITY_EDITOR
+			if (instance.objectToPrefab.ContainsKey(toDestroy))
+			{
+				instance.objectHistory[toDestroy].Add(new ObjectHistoryEvent(PoolEvent.Deactivated));
+			}
+#endif
+			Debug.LogError("Trying to remove an object that was not pooled!"+toDestroy.name+" Doing nothing in frame "+Time.frameCount, toDestroy);
 			return false;
 		}
 		
@@ -186,6 +228,8 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 		toReturn.name = prefab.name + "(Pool Clone "+instance.objectIds[toReturn]+")";
 		toReturn.transform.parent = null;
 		toReturn.transform.position = Vector3.zero;
+		toReturn.transform.rotation = Quaternion.identity;
+		toReturn.transform.localScale = Vector3.one;
 		return toReturn;
 	}
 	

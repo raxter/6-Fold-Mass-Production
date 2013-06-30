@@ -1,6 +1,20 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs">
+    <Files>
+      <File FileName="Assets\Code\Game\Construction.cs" Line="225" Column="41" />
+      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionMaker.cs" Line="226" Column="95" />
+      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="320" Column="25" />
+      <File FileName="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs" Line="75" Column="69" />
+      <File FileName="Assets\Code\Game\ConstructionDefinition.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="232" Column="22" />
+      <File FileName="Assets\Code\Game\Mechanism.cs" Line="42" Column="56" />
+      <File FileName="Assets\Code\Managers\InputManager.cs" Line="29" Column="20" />
+      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionPreview.cs" Line="59" Column="33" />
+      <File FileName="Assets\Code\Game\Grabber.cs" Line="311" Column="42" />
+      <File FileName="Assets\Code\Managers\GameManager.cs" Line="389" Column="71" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="/Users/richard/Projects/Personal Development/6-Fold-Mass-Production/Assets/Code/HexCellPlaceable.cs" line="90" />

@@ -78,6 +78,18 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		}
 	}
 	
+	public bool Contains(GrabbablePart isPart)
+	{
+		foreach (GrabbablePart part in Parts)
+		{
+			if (isPart == part)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public List<GrabbablePart> PartsList
 	{
 		get 
@@ -140,7 +152,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		// disconnect part from construction
 		for (int i = 0 ; i < 6 ; i++)
 		{
-			partToRemove.SetPhysicalConnection((HexMetrics.Direction)i, GrabbablePart.PhysicalConnectionType.None);
+			partToRemove.SetPhysicalConnection((HexMetrics.Direction)i, GrabbablePart.PhysicalConnectionType.None, GrabbablePart.SplitOptions.DoNotSplit);
 		}
 		
 		
@@ -148,7 +160,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		return CheckForSplitsOrJoins();
 	}
 	
-	private void CenterConstruction (GrabbablePart childPart)
+	public void CenterConstruction (GrabbablePart childPart)
 	{
 		if (childPart.ParentConstruction != this)
 		{
@@ -481,6 +493,8 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 	}
 	
+	public enum CompareCode {Equal = 0, NumElementDiffer = -1, ConnectionsDiffer = -2, PartConnectionsDiffer = -3, PartMakeupDiffer = -4};
+	
 	#region IComparable[Construction] implementation
 	public int CompareTo (Construction other)
 	{
@@ -488,7 +502,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		List<GrabbablePart> compList = other.PartsList;
 		if (partList.Count != compList.Count) // different number of elements, can't be the same
 		{
-			return -1;
+			return (int)CompareCode.NumElementDiffer;
 		}
 		
 		System.Action<IEnumerable<GrabbablePart>, Dictionary<PartType, int>, Dictionary<int, HashSet<GrabbablePart>>> determineMakeup = (parts, makeup, connLists) => 
@@ -530,7 +544,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 			// if the comparison construction does not contain any parts with this number of connections or it contains a different of parts with equal connections
 			if (!compListConnections.ContainsKey(num) || compListConnections[num].Count != partListConnections[num].Count)
 			{
-				return -2;
+				return (int)CompareCode.ConnectionsDiffer;
 			}
 		}
 		Dictionary<GrabbablePart, GrabbablePart> equalConnParts = new Dictionary<GrabbablePart, GrabbablePart>();
@@ -549,13 +563,13 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 				}
 				if (!equalConnParts.ContainsKey(part))
 				{
-					return -3;
+					return (int)CompareCode.PartConnectionsDiffer;
 				}
 				compListConnections[num].Remove(equalConnParts[part]);
 			}
 		}
 		
-		return 0;
+		return (int)CompareCode.Equal;
 		
 		int numberOfRarestTypes = partList.Count + 1;
 		PartType rarestType = PartType.None;
@@ -565,7 +579,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 			// if the comparison construction does not contain this type or it contains a different number of that type
 			if (!compListMakeup.ContainsKey(type) || compListMakeup[type] != partListMakeup[type])
 			{
-				return -4;
+				return (int)CompareCode.PartMakeupDiffer;
 			}
 			
 			if (partListMakeup[type] < numberOfRarestTypes)
@@ -581,7 +595,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		// (there might be more than one in the comparison construction, but each will have one and only one associated part)
 		
 		
-		return 0;
+		return (int)CompareCode.Equal;
 	}
 	
 	public bool HasSimilarConnectionsTo (GrabbablePart part1, GrabbablePart part2)

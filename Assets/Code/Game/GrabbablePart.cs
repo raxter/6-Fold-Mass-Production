@@ -441,7 +441,11 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 		}
 	}
 	
-	public void SetPhysicalConnection(HexMetrics.Direction relativeDirection, PhysicalConnectionType newConnectionType)
+	public enum SplitOptions {SplitIfNecessary, DoNotSplit};
+	
+	public List<Construction> SetPhysicalConnection(HexMetrics.Direction relativeDirection, 
+													PhysicalConnectionType newConnectionType, 
+													SplitOptions splitOption = SplitOptions.SplitIfNecessary)
 	{
 		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
 		if (connDesc.connectedPart == null)
@@ -451,9 +455,12 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 			
 			if (ParentConstruction != null)
 			{
-				ParentConstruction.CheckForSplitsOrJoins();
+				if (splitOption == SplitOptions.SplitIfNecessary)
+				{
+					return ParentConstruction.CheckForSplitsOrJoins();
+				}
 			}
-			return;
+			return null;
 		}
 		
 		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
@@ -491,11 +498,14 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 			else
 			{
 				// check that by disconnecting a side, we have not split the construction up
-				ParentConstruction.CheckForSplitsOrJoins();
+				if (splitOption == SplitOptions.SplitIfNecessary)
+				{
+					return ParentConstruction.CheckForSplitsOrJoins();
+				}
 			}
 		}
 		
-			
+		return null;
 	}
 	
 	public int GetAuxilaryConnectionTypes(HexMetrics.Direction relativeDirection)

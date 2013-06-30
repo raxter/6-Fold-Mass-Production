@@ -382,13 +382,16 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 				if (GrabberManager.instance.GetGrabbersHoldingCount(constructionOverFinish) == 0)
 				{
-//					Debug.Log("Checking Construction "+constructionOverFinish.name, constructionOverFinish);
+					Debug.Log("Checking Construction "+constructionOverFinish.name, constructionOverFinish);
 					
-					correctConstruction = GridManager.instance.target.CompareTo(constructionOverFinish) == 0;
+					Construction.CompareCode errorCode = (Construction.CompareCode)GridManager.instance.target.CompareTo(constructionOverFinish);
+					Debug.Log("Error Code: "+errorCode);
+					correctConstruction = errorCode == Construction.CompareCode.Equal;
+					
 				}
 				else
 				{
-//					Debug.LogError("Ignoreing held constructions");
+					Debug.LogError("Ignoreing held constructions");
 				}
 				// in either case, these construction parts have been checked, remove them from the list
 				// won't be destroyed until end of frame, phew <- omg pooling objects means that they were :/

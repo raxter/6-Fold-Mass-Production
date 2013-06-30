@@ -223,28 +223,36 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			{
 				Debug.Log ("hit a part in our preview construction");
 				
-				foreach(Construction construction in partMarkedToDestroy.ParentConstruction.RemoveFromConstruction(partMarkedToDestroy))
-				{
-					Debug.Log(construction.name+" created "+(targetConstructions.Contains(construction)?"already in":"not in"));
-					if (!targetConstructions.Contains(construction))
-					{
-						targetConstructions.Add(construction);
-					}
-				}
+				// remove the construction we are splitting
+				targetConstructions.Remove (partMarkedToDestroy.ParentConstruction);
+				
+				// adding the split constructions
+				targetConstructions.AddRange(partMarkedToDestroy.ParentConstruction.RemoveFromConstruction(partMarkedToDestroy));
+//				foreach(Construction construction in )
+//				{
+////					Debug.Log(construction.name+" created "+(targetConstructions.Contains(construction)?"already in":"not in"));
+////					if (!targetConstructions.Contains(construction))
+////					{
+////					}
+//					targetConstructions.Add(construction);
+//				}
+				
+				// removing the construction we are about to destroy
 				targetConstructions.Remove(partMarkedToDestroy.ParentConstruction);
 				
-				
-				Destroy (partMarkedToDestroy.ParentConstruction.gameObject);
+				// and destroying it
+				ObjectPoolManager.DestroyObject (partMarkedToDestroy.ParentConstruction);
 				partMarkedToDestroy = null;
 			}
 		}
+		// we remove all but the largest construction
 		if (targetConstructions.Count > 1)
 		{
 			targetConstructions.Sort( (x, y) => y.Count - x.Count );
 			Construction firstConstruction = targetConstructions[0];
 			for (int i = 1 ; i < targetConstructions.Count ; i++)
 			{
-				Destroy (targetConstructions[i].gameObject);
+				ObjectPoolManager.DestroyObject (targetConstructions[i]);
 			}
 			targetConstructions.Clear();
 			targetConstructions.Add (firstConstruction);
@@ -409,16 +417,19 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		{
 			partLists.Add(new List<GrabbablePart>(partList));
 		}
-		partLists.Sort((x, y) => x.Count - y.Count);
+		partLists.Sort((x, y) => y.Count - x.Count);
 		
 //		Debug.Log(string.Join(", ", partLists.ConvertAll((input) => ""+input.Count).ToArray()));
 		
 		hitPart.highlighted = true;
 		if (partLists.Count > 1)
 		{
-			foreach(GrabbablePart part in partLists[0])
+			for (int i = 1 ; i < partLists.Count ; i++)
 			{
-				part.highlighted = true;
+				foreach(GrabbablePart part in partLists[i])
+				{
+					part.highlighted = true;
+				}
 			}
 		}
 		
@@ -469,7 +480,10 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	// avoid use of this
 	void HandleAltTap(GrabbablePart part) // double tap on devices (?), right click on standalone
 	{
-		HandleTap(part);
+//		HandleTap(part);
+		
+		part.ParentConstruction.CenterConstruction(part);
+		part.ParentConstruction.transform.localPosition = Vector3.zero;
 	}
 	
 	

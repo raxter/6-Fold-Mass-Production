@@ -306,8 +306,14 @@ public class Grabber : Mechanism
 //		Debug.Log ("instructionCounter "+_instructionCounter);
 //		Debug.Log ("instruction = "+instructions[_instructionCounter]);
 		
-		_currentInstruction = instructions[_instructionCounter];
-		
+		if (instructions.Count == 0)
+		{
+			_currentInstruction = Instruction.None;
+		}
+		else
+		{
+			_currentInstruction = instructions[_instructionCounter];
+		}
 		_isMoveingInstruction = false;
 //		_doAtEndOfInstruction = null;
 		
