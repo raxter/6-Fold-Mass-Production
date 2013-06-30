@@ -15,8 +15,7 @@ public class ConstructionDefinitionCreatorInspector : Editor
 		
 		if (GUILayout.Button("Generate Construction"))
 		{
-			Construction construction = Construction.Decode(constructionText, 
-				(prefab) => PrefabUtility.InstantiatePrefab(prefab) as GameObject);
+			Construction construction = Construction.Decode(constructionText);
 			Debug.Log (construction.PartsList.Count);
 			
 			EditorUtility.SetDirty(construction);

@@ -90,7 +90,7 @@ public class WeldingRig : Mechanism
 //			
 //		}
 		
-		System.Action<Construction> deleteFunction = (obj) => Destroy(obj.gameObject);
+//		System.Action<Construction> deleteFunction = (obj) => Destroy(obj.gameObject);
 		//InstantiatePrefabDelegate instantiateFunction = (prefab) => Instantiate(prefab) as GameObject;
 		
 		GrabbablePart topPart = hexCell.partOverCell;
@@ -100,14 +100,14 @@ public class WeldingRig : Mechanism
 		
 		if (topPart != null)
 		{
-			if (leftPart   != null) topPart.ConnectPartOnGrid(leftPart, GrabbablePart.PhysicalConnectionType.Weld, deleteFunction);
-			if (bottomPart != null) topPart.ConnectPartOnGrid(bottomPart, GrabbablePart.PhysicalConnectionType.Weld, deleteFunction);
-			if (rightPart  != null) topPart.ConnectPartOnGrid(rightPart, GrabbablePart.PhysicalConnectionType.Weld, deleteFunction);
+			if (leftPart   != null) topPart.ConnectPartOnGrid(leftPart, GrabbablePart.PhysicalConnectionType.Weld);
+			if (bottomPart != null) topPart.ConnectPartOnGrid(bottomPart, GrabbablePart.PhysicalConnectionType.Weld);
+			if (rightPart  != null) topPart.ConnectPartOnGrid(rightPart, GrabbablePart.PhysicalConnectionType.Weld);
 		}
 		if (bottomPart != null)
 		{
-			if (leftPart  != null) bottomPart.ConnectPartOnGrid(leftPart, GrabbablePart.PhysicalConnectionType.Weld, deleteFunction);
-			if (rightPart != null) bottomPart.ConnectPartOnGrid(rightPart, GrabbablePart.PhysicalConnectionType.Weld, deleteFunction);
+			if (leftPart  != null) bottomPart.ConnectPartOnGrid(leftPart, GrabbablePart.PhysicalConnectionType.Weld);
+			if (rightPart != null) bottomPart.ConnectPartOnGrid(rightPart, GrabbablePart.PhysicalConnectionType.Weld);
 		}
 		
 //		if (hexCell.partOverCell)

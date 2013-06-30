@@ -9,6 +9,8 @@ public class HUDFunctions : MonoBehaviour
 	UIButton grabberButton = null;
 	[SerializeField]
 	UIButton welderButton = null;
+	[SerializeField]
+	UIButton generatorButton = null;
 	
 	
 	void Start()
@@ -21,6 +23,7 @@ public class HUDFunctions : MonoBehaviour
 		
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
 		welderButton.AddInputDelegate(WelderInputDelegate);
+		generatorButton.AddInputDelegate(GeneratorInputDelegate);
 	}
 	
 	void GrabberInputDelegate(ref POINTER_INFO ptr)
@@ -31,6 +34,10 @@ public class HUDFunctions : MonoBehaviour
 	void WelderInputDelegate(ref POINTER_INFO ptr)
 	{
 		InputDelegate(ref ptr, MechanismType.WeldingRig);
+	}
+	void GeneratorInputDelegate(ref POINTER_INFO ptr)
+	{
+		InputDelegate(ref ptr, MechanismType.Generator);
 	}
 	
 	

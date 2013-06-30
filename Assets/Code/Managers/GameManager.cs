@@ -7,7 +7,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 {
 	
 	
-	Dictionary<MechanismType, Mechanism> cellMechanisms;
+	Dictionary<MechanismType, Mechanism> cellMechanismPrefabs;
 	
 	
 	
@@ -92,13 +92,13 @@ public class GameManager : SingletonBehaviour<GameManager>
 		LoadLevel(loadLevelOnStart);
 		
 		gameState = State.Construction;
-		cellMechanisms = new Dictionary<MechanismType, Mechanism>();
+		cellMechanismPrefabs = new Dictionary<MechanismType, Mechanism>();
 		
-		cellMechanisms.Add(MechanismType.None, null);
+		cellMechanismPrefabs.Add(MechanismType.None, null);
 		
-		foreach (Mechanism mechanism in GameSettings.instance.mechanismPrefabs)
+		foreach (Mechanism mechanismPrefab in GameSettings.instance.mechanismPrefabs)
 		{
-			cellMechanisms.Add(mechanism.MechanismType, mechanism);
+			cellMechanismPrefabs.Add(mechanismPrefab.MechanismType, mechanismPrefab);
 		}
 		StopSimulation();
 		
@@ -141,7 +141,13 @@ public class GameManager : SingletonBehaviour<GameManager>
 	
 	public Mechanism InstantiateMechanism(MechanismType cellMechanismType)
 	{
-		return (GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<Mechanism>();
+		Mechanism toReturn = ObjectPoolManager.GetObject(cellMechanismPrefabs[cellMechanismType]);
+		if (toReturn is PartGenerator)
+		{
+			(toReturn as PartGenerator).toGenerateConstruction = Construction.CreateSimpleConstruction(PartType.Standard6Sided); // if it is a generator, we give it a default thing to generate
+		}
+		
+		return toReturn;
 	}
 	
 	public void CreateMechanismForDragging(MechanismType cellMechanismType)
@@ -149,7 +155,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		if (cellMechanismType == MechanismType.None)
 			return;
 		
-		Mechanism unplacedMechanism = InstantiateMechanism(cellMechanismType);//(GameObject.Instantiate(cellMechanisms[cellMechanismType].gameObject) as GameObject).GetComponent<Mechanism>();
+		Mechanism unplacedMechanism = InstantiateMechanism(cellMechanismType);
 		
 		InputManager.instance.StartDraggingUnplaced(unplacedMechanism);
 		
@@ -261,7 +267,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				InstructionStartedEvent();
 			}
 			
-			parts.RemoveWhere((obj) => obj == null);
+//			parts.RemoveWhere((obj) => obj == null);
 			foreach(GrabbablePart part in parts)
 			{
 				if (part != null)
@@ -299,6 +305,15 @@ public class GameManager : SingletonBehaviour<GameManager>
 //				Debug.Log("PerformInstruction "+grabber._instructionCounter);
 			}
 			
+//			// TODO check for multi grabs here ??
+//			if (GameManager.instance.gameState == GameManager.State.Simulation)
+//			{
+//				if (heldAndMovingGrabber != null && otherConstruction.heldAndMovingGrabber != null)
+//				{
+//					Debug.LogWarning("Multiple grab, two parts welded together while held", this);
+//					GameManager.instance.MultipleGrabOccured(heldAndMovingGrabber, otherConstruction.heldAndMovingGrabber);
+//				}
+//			}
 			
 			foreach (Grabber grabber in grabbers)
 			{
@@ -332,14 +347,18 @@ public class GameManager : SingletonBehaviour<GameManager>
 //				Debug.Log ("Checking " +partsOverFinishCell.Count+ " parts");
 				// get a part from the ones over the finish cells
 				
-				GrabbablePart partOverFinish = null;
-				foreach(GrabbablePart firstPart in partsOverFinishCell) 
-				{
-					partOverFinish = firstPart;
-					break;
-				}
+//				GrabbablePart partOverFinish = null;
+//				foreach(GrabbablePart firstPart in partsOverFinishCell) 
+//				{
+//					partOverFinish = firstPart;
+//					break;
+//				}
+				
+				GrabbablePart partOverFinish = partsOverFinishCell.First();
 				
 				Construction constructionOverFinish = partOverFinish.ParentConstruction;
+//				Debug.Log ("Checking Part "+partOverFinish.name);
+//				Debug.Log ("Checking Construction "+constructionOverFinish);
 				bool allPartsOverFinish = true;
 				foreach(GrabbablePart constructionPart in constructionOverFinish.Parts)
 				{
@@ -358,26 +377,43 @@ public class GameManager : SingletonBehaviour<GameManager>
 				// and if they are the corrects construction
 				bool correctConstruction = false;
 				
-				correctConstruction = true;
+				// only check this if it is not held by a grabber
 				
-				correctConstruction = GridManager.instance.target.CompareTo(constructionOverFinish) == 0;
+				
+				if (GrabberManager.instance.GetGrabbersHoldingCount(constructionOverFinish) == 0)
+				{
+//					Debug.Log("Checking Construction "+constructionOverFinish.name, constructionOverFinish);
+					
+					correctConstruction = GridManager.instance.target.CompareTo(constructionOverFinish) == 0;
+				}
+				else
+				{
+//					Debug.LogError("Ignoreing held constructions");
+				}
+				// in either case, these construction parts have been checked, remove them from the list
+				// won't be destroyed until end of frame, phew <- omg pooling objects means that they were :/
+//				Debug.Log("Before Count "+partsOverFinishCell.Count);
+				partsOverFinishCell.ExceptWith(constructionOverFinish.Parts);
+//				Debug.Log("After Count "+partsOverFinishCell.Count);
 				
 				if (correctConstruction)
 				{
 					completedConstructions += 1;
-					Debug.Log ("removing " +partOverFinish.idNumber+ "\'s connected parts");
+//					Debug.Log ("removing " +partOverFinish.name+ "\'s connected parts ("+constructionOverFinish.name+")");
 				
 //					foreach (GrabbablePart toRemove in construction.Parts)
 //					{
 //						GameObject.Destroy(toRemove.gameObject);
 //					}
-					Destroy(constructionOverFinish.gameObject);
+					foreach (GrabbablePart toRemove in constructionOverFinish.Parts)
+					{
+						parts.Remove(toRemove);
+					}
+					ObjectPoolManager.DestroyObject(constructionOverFinish);
 				}
 				
-				// in either case, these construction parts have been checked, remove them from the list
-				// won't be destroyed until end of frame, phew
-				partsOverFinishCell.ExceptWith(constructionOverFinish.Parts);
 			}
+//			Debug.Log("Done checking finished constructions");
 			
 			
 			foreach(HexCell hc in GridManager.instance.GetAllCells())
@@ -451,6 +487,11 @@ public class GameManager : SingletonBehaviour<GameManager>
 //					Debug.Log (timeThisFrame+"("+spareTime+")");
 				}
 				
+				if (gameState != State.Simulation)
+				{
+					yield return null;
+					continue;
+				}
 				
 				stepsToDoThisFrame -= 1;
 				
@@ -459,6 +500,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				
 				foreach (Grabber grabber in grabbers)
 				{
+//					Debug.Log("Grabber Construction ", grabber.heldPart);
 					if (!grabber.PerformStep())
 					{
 						allFinished = false;
@@ -522,8 +564,8 @@ public class GameManager : SingletonBehaviour<GameManager>
 	{
 		grabber.selected = true;
 		otherGrabber.selected = true;
-		grabber.heldPart.highlighted = true;
-		otherGrabber.heldPart.highlighted = true;
+		GrabberManager.instance.GetPartHeldBy(grabber).highlighted = true;
+		GrabberManager.instance.GetPartHeldBy(otherGrabber).highlighted = true;
 		gameState = State.SimulationFailed;
 	}
 	
@@ -626,7 +668,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 		{
 			if (part != null)
 			{
-				GameObject.Destroy(part.ParentConstruction.gameObject);
+				ObjectPoolManager.DestroyObject(part.ParentConstruction);
 			}
 		}
 		parts.Clear();

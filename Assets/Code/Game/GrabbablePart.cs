@@ -21,8 +21,10 @@ public enum PartType {None, Standard6Sided, Standard3Sided, Wheel3Sided}
 
 public enum Symmetry {None, TwoWay, ThreeWay, SixWay}
 
-public class GrabbablePart : MonoBehaviour
+public class GrabbablePart : MonoBehaviour, IPooledObject
 {
+	
+
 	
 	public Construction ParentConstruction
 	{
@@ -193,6 +195,12 @@ public class GrabbablePart : MonoBehaviour
 		}
 		set
 		{
+//			if (ParentConstruction == null)
+//			{
+//				transform.rotation = Quaternion.Euler(0, 0, (int)value * -60);
+//				return;
+//			}
+			
 			HexMetrics.Direction orientation = value;
 			for (int i = 0 ; i < 6 ; i++)
 			{
@@ -306,6 +314,13 @@ public class GrabbablePart : MonoBehaviour
 		
 		public PhysicalConnectionType connectionType = GrabbablePart.PhysicalConnectionType.None;
 		public int auxConnectionTypes = 0;
+
+		public void Reset ()
+		{
+			connectedPart = null;
+			connectionType = GrabbablePart.PhysicalConnectionType.None;
+			auxConnectionTypes = 0;
+		}
 	}
 	
 	
@@ -380,7 +395,7 @@ public class GrabbablePart : MonoBehaviour
 //		ConnectPartAndPlaceAtRelativeDirection(otherPart, connectionType, Relative(absoluteDirection));
 //	}
 	
-	public void ConnectPartAndPlaceAtRelativeDirection(GrabbablePart otherPart, PhysicalConnectionType connectionType, HexMetrics.Direction relativeDirection, System.Action<Construction> deleteFunction)
+	public void ConnectPartAndPlaceAtRelativeDirection(GrabbablePart otherPart, PhysicalConnectionType connectionType, HexMetrics.Direction relativeDirection)
 	{
 		HexMetrics.Direction absoluteDirection = Absolute(relativeDirection);
 		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
@@ -397,8 +412,8 @@ public class GrabbablePart : MonoBehaviour
 		
 		if (ParentConstruction != null)
 		{
-			Debug.Log("Adding to construction "+ParentConstruction.name);
-			ParentConstruction.AddToConstruction(otherPart, deleteFunction);
+//			Debug.Log("Adding to construction "+ParentConstruction.name);
+			ParentConstruction.AddToConstruction(otherPart);
 		}
 		
 	}
@@ -469,8 +484,15 @@ public class GrabbablePart : MonoBehaviour
 			otherConnDesc.connectedPart = null;
 			connDesc.connectedPart = null;
 			
-			// check that by disconnecting a side, we have not split the construction up
-			ParentConstruction.CheckForSplitsOrJoins();
+			if (ParentConstruction == null)
+			{
+				Debug.LogWarning ("Parent is null!");
+			}
+			else
+			{
+				// check that by disconnecting a side, we have not split the construction up
+				ParentConstruction.CheckForSplitsOrJoins();
+			}
 		}
 		
 			
@@ -546,7 +568,7 @@ public class GrabbablePart : MonoBehaviour
 	}
 	
 	
-	public bool ConnectPartOnGrid(GrabbablePart otherPart, PhysicalConnectionType connectionType, System.Action<Construction> deleteFunction)
+	public bool ConnectPartOnGrid(GrabbablePart otherPart, PhysicalConnectionType connectionType)
 	{
 		if (connectionType == PhysicalConnectionType.None)
 		{
@@ -579,7 +601,7 @@ public class GrabbablePart : MonoBehaviour
 				
 				if (ParentConstruction != null)
 				{
-					ParentConstruction.AddToConstruction(otherPart, deleteFunction);
+					ParentConstruction.AddToConstruction(otherPart);
 				}
 				
 				_connectedParts[r] = new ConnectionDescription();
@@ -819,7 +841,7 @@ public class GrabbablePart : MonoBehaviour
 			
 			if (Weldable(i))
 			{
-				_weldSpriteObjects[i] = Instantiate(GameSettings.instance.weldPrefab) as GameObject;
+				_weldSpriteObjects[i] = Instantiate(GameSettings.instance.weldPrefab) as GameObject;//ObjectPoolManager.GetObject(GameSettings.instance.weldPrefab);
 				_weldSpriteObjects[i].transform.parent = transform;
 				_weldSpriteObjects[i].transform.localPosition = Vector3.zero;
 				_weldSpriteObjects[i].transform.localRotation = Quaternion.Euler(0,0,-60*i);
@@ -828,14 +850,26 @@ public class GrabbablePart : MonoBehaviour
 		}
 	}
 	
+	
+	#region IPooledObject implementation
+	public void OnPoolActivate ()
+	{
+	}
+
+	public void OnPoolDeactivate ()
+	{
+		highlighted = false;
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			_connectedParts[i].Reset();
+		}
+		
+	}
+	#endregion
+	
 	void Start ()
 	{
-		
-		
-		highlighted = false;
 		_sphereCollider = gameObject.GetComponentsInChildren<Collider>()[0] as SphereCollider;
-		
-		
 	}
 
 	void Update ()

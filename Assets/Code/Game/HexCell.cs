@@ -45,7 +45,7 @@ public class HexCell : MonoBehaviour
 	{
 		if (_partOverCell != null)
 		{
-//			Debug.Log ("DeregisterPart "+location.x+":"+location.y);
+//			Debug.Log ("DeregisterPart "+location.x+":"+location.y+" "+_partOverCell.name);
 		}
 		_partOverCell = null;
 	}

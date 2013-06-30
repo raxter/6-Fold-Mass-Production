@@ -59,7 +59,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void SetTarget(string encodedTarget)
 	{
-		target = Construction.Decode(encodedTarget, (prefab) => Instantiate(prefab) as GameObject);
+		target = Construction.Decode(encodedTarget);
 		target.ignoreCollisions = true;
 //		GrabbablePart targetPart = target.GenerateConnectedParts();
 		target.transform.parent = _targetHolder.transform;
@@ -81,11 +81,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 			{
 				if (hexCell && hexCell.gameObject)
 				{
-#if UNITY_EDITOR
-					GameObject.DestroyImmediate(hexCell.gameObject);
-#else
-					GameObject.Destroy(hexCell);
-#endif
+					ObjectPoolManager.DestroyObject(hexCell);
 				}
 			}
 		}
@@ -165,25 +161,25 @@ public class GridManager : SingletonBehaviour<GridManager>
 		for (int w = 0 ; w < gameSettings.gridWidth ; w++)
 		{
 			_hexCellRows[w] = new HexCellRow(gameSettings.gridHeight);
-			for (int h = 0 ; h < _hexCellRows[w].row.Length ; h++)
+			for (int h = 0 ; h < gameSettings.gridHeight/*_hexCellRows[w].row.Length*/ ; h++)
 			{
-				GameObject go = GameObject.Instantiate(gameSettings.hexCellPrefab.gameObject) as GameObject;
 				
-				HexCell hexCell = go.GetComponent<HexCell>();
+				HexCell hexCell = ObjectPoolManager.GetObject(gameSettings.hexCellPrefab);
 				
 				hexCell.location = new IntVector2(w, h-w/2);
 				
-				go.name += ""+hexCell.location.x+":"+hexCell.location.y;
-				go.transform.parent = _hexCellHolder.transform;
+				hexCell.name += ""+hexCell.location.x+":"+hexCell.location.y;
+				hexCell.transform.parent = _hexCellHolder.transform;
 				
-				go.transform.localPosition 	= hexCell.GetDirection(HexMetrics.UpDirection)*hexCell.location.y 
-											+ hexCell.GetDirection(HexMetrics.RightDirection)*hexCell.location.x;
+				hexCell.transform.localPosition = hexCell.GetDirection(HexMetrics.UpDirection)*hexCell.location.y 
+												+ hexCell.GetDirection(HexMetrics.RightDirection)*hexCell.location.x;
 				
-				go.layer = _hexCellHolder.layer;
+				hexCell.gameObject.layer = _hexCellHolder.layer;
 				_hexCellRows[w][h] = hexCell;
 				
-				if (w >= gameSettings.gridFinalCellsFromWidth && h >= gameSettings.gridFinalCellsFromHeight)
+				if (w >= gameSettings.gridFinalCellsFromWidth && h > gameSettings.gridFinalCellsFromHeight)
 				{
+					Debug.Log ("Finish cell "+w+"/"+gameSettings.gridFinalCellsFromWidth+":"+h+"/"+gameSettings.gridFinalCellsFromHeight);
 					_hexCellRows[w][h].finishCell = true;
 				}
 			}
@@ -233,7 +229,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		}
 		
 		string saveString = string.Join(":", encodings.ToArray());
-		Debug.Log("Saveing: "+saveString);
+//		Debug.Log("Saveing: "+saveString);
 		
 		PlayerPrefs.SetString("save string", saveString);
 		PlayerPrefs.Save();

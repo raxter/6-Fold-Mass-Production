@@ -46,7 +46,7 @@ public class DraggableInstructions : MonoBehaviour
 		
 		for (int i = 0 ; i < Grabber.maximumInstuctions ; i++)
 		{
-			emptyInstructions[i] = Instantiate(emptyInstructionPrefab) as EmptyInstructionSlot;
+			emptyInstructions[i] = ObjectPoolManager.GetObject(emptyInstructionPrefab);
 			
 			emptyInstructions[i].gameObject.name = "Instruction "+i;
 			emptyInstructions[i].transform.parent = emptyInstructionsRoot.transform;

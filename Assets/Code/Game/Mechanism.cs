@@ -20,7 +20,7 @@ public abstract class Mechanism : HexCellPlaceable
 		{
 			return;
 		}
-		Debug.Log ("StartDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
+//		Debug.Log ("StartDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
 		
 		PlaceAtLocation(null);
 		
@@ -33,32 +33,32 @@ public abstract class Mechanism : HexCellPlaceable
 		{
 			return;
 		}
-		Debug.Log ("StopDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
+//		Debug.Log ("StopDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
 		
 		
 		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedPlaceable == null)
 		{
 			PlaceAtLocation(InputManager.instance.OverHexCell.location);
-			InputManager.instance.SelectUniqueMechanism(this);
+//			InputManager.instance.SelectUniqueMechanism(this);
 		}
 		else
 		{
 			PlaceAtLocation(null);
-			GameObject.Destroy(gameObject);
+			ObjectPoolManager.DestroyObject(gameObject);
 		}
 		
 		_dragging = false;
 		
-		StartCoroutine(WaitOneFrameAndSaveLayout());
+		CoroutineUtils.instance.WaitOneFrameAndDo(() => GridManager.instance.SaveLayout());
 	}
 	
-	IEnumerator WaitOneFrameAndSaveLayout()
-	{
-		yield return null;
-		
-		Debug.Log("Saving Layout");
-		GridManager.instance.SaveLayout();
-	}
+//	IEnumerator WaitOneFrameAndSaveLayout()
+//	{
+//		yield return null;
+//		
+//		Debug.Log("Saving Layout");
+//		GridManager.instance.SaveLayout();
+//	}
 	
 	
 	protected override void PlaceableStart()

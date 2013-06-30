@@ -34,7 +34,10 @@ public class PartGenerator : Mechanism
 	{
 		string code = movable ? "1" : "0";
 		
-		code += toGenerateConstruction.Encode();
+		if (toGenerateConstruction != null)
+		{
+			code += toGenerateConstruction.Encode();
+		}
 		
 		
 		return code;
@@ -46,11 +49,14 @@ public class PartGenerator : Mechanism
 		
 		if (toGenerateConstruction != null)
 		{
-			Destroy(toGenerateConstruction.gameObject);
+			ObjectPoolManager.DestroyObject(toGenerateConstruction);
+			toGenerateConstruction = null;
 		}
-		
-		toGenerateConstruction = Construction.Decode(encoded.Substring(1), (prefab) => Instantiate(prefab) as GameObject);
-		toGenerateConstruction.ignoreCollisions = true;
+		if (encoded.Length > 1)
+		{
+			toGenerateConstruction = Construction.Decode(encoded.Substring(1));
+			toGenerateConstruction.ignoreCollisions = true;
+		}
 		
 		return true;
 	}
@@ -69,9 +75,10 @@ public class PartGenerator : Mechanism
 			if (placeOnNextTurn)
 			{
 				Construction construction;
-				construction = (GameObject.Instantiate(toGenerateConstruction.gameObject) as GameObject).GetComponent<Construction>();
+				construction = Construction.Decode(toGenerateConstruction.Encode());
+				
 				construction.idNumber = generatorCount;
-				construction.gameObject.name = toGenerateConstruction.gameObject.name+" "+generatorCount;
+//				construction.gameObject.name = toGenerateConstruction.gameObject.name+" "+generatorCount;
 //				part.PlaceAtLocation(Location);
 				
 				construction.transform.position = GridManager.instance.GetHexCell(Location).transform.position;

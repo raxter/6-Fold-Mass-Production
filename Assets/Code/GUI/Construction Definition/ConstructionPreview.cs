@@ -56,10 +56,11 @@ public class ConstructionPreview : MonoBehaviour
 	
 	void SelectTarget()
 	{
+		InputManager.instance.ClearSelection();
 		SetPreviewedConstruction(GridManager.instance.target.Encode(), 
 		(encoded) => 
 		{
-			Destroy(GridManager.instance.target.gameObject);
+			ObjectPoolManager.DestroyObject(GridManager.instance.target);
 			GridManager.instance.SetTarget(encoded);
 		});
 		
@@ -80,7 +81,7 @@ public class ConstructionPreview : MonoBehaviour
 		{
 			if (_previewedConstruction != null)
 			{
-				Destroy(_previewedConstruction.gameObject);
+				ObjectPoolManager.DestroyObject(_previewedConstruction);
 //				_previewedConstruction.gameObject.SetLayerRecursively(LayerMask.NameToLayer("Default"));
 			}
 			_previewedConstruction = value;
@@ -103,7 +104,7 @@ public class ConstructionPreview : MonoBehaviour
 		}
 		else 
 		{
-			PreviewedConstruction = Construction.Decode(encoded, (prefab) => Instantiate(prefab) as GameObject);
+			PreviewedConstruction = Construction.Decode(encoded);
 		}
 	}
 	
@@ -131,12 +132,12 @@ public class ConstructionPreview : MonoBehaviour
 		}
 		
 		SetPreviewedConstruction(
-			selectedGenerator == null ? "" : selectedGenerator.toGenerateConstruction.Encode(), 
+			selectedGenerator == null ? "" : selectedGenerator.toGenerateConstruction == null ? "" : selectedGenerator.toGenerateConstruction.Encode(), 
 			(encoded) => 
 			{
 				Debug.LogWarning("encoding "+encoded,this);
-				Destroy(selectedGenerator.toGenerateConstruction.gameObject);
-				selectedGenerator.toGenerateConstruction = Construction.Decode(encoded, (prefab) => Instantiate(prefab) as GameObject);
+				ObjectPoolManager.DestroyObject(selectedGenerator.toGenerateConstruction);
+				selectedGenerator.toGenerateConstruction = Construction.Decode(encoded);
 				selectedGenerator.toGenerateConstruction.ignoreCollisions = true;
 			});
 		

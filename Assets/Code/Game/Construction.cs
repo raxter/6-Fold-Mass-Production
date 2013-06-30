@@ -2,9 +2,10 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public delegate GameObject InstantiatePrefabDelegate (GameObject prefab);
+//public delegate GameObject InstantiatePrefabDelegate (GameObject prefab);
+//public delegate T InstantiatePrefabDelegate<T> (T prefab) where T : MonoBehaviour;
 
-public class Construction : MonoBehaviour, System.IComparable<Construction>
+public class Construction : MonoBehaviour, System.IComparable<Construction>, IPooledObject
 {
 
 		//=========================================================================================
@@ -85,12 +86,30 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		}
 	}
 	
-	public Grabber heldAndMovingGrabber { get; set; }
-	
+//	public Grabber heldAndMovingGrabber { get; set; }
 
-	public void AddToConstruction(GrabbablePart newPart, System.Action<Construction> deleteFunction)
+	#region IPooledObject implementation
+	public void OnPoolActivate ()
+	{
+		ignoreCollisions = false;
+	}
+
+	public void OnPoolDeactivate ()
+	{
+		ignoreCollisions = true;
+		// need to disconnect parts from construction and delete(pool) them
+		foreach (GrabbablePart part in PartsList)
+		{
+			part.transform.parent = null;
+			ObjectPoolManager.DestroyObject(part);
+		}
+	}
+	#endregion	
+
+	public void AddToConstruction(GrabbablePart newPart)
 	{
 		Construction otherConstruction = newPart.ParentConstruction;
+		
 		
 		if (otherConstruction != null && otherConstruction != this)
 		{
@@ -98,27 +117,15 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			
 			foreach(GrabbablePart otherPart in otherConstruction.PartsList)
 			{
-				otherPart.transform.parent = this.transform;
+				
+				GrabberManager.instance.TransferConstruction(otherPart, this);
+//				otherPart.transform.parent = this.transform;
 //				Debug.Log("Transferring "+otherPart.idNumber+" from "+otherConstruction.idNumber+" to "+this.idNumber);
 			}
-//			Debug.Log (otherConstruction.HasChild);
+
 			
-			// delete old construction
-//			if (Application.isPlaying)
-//			{
-			if (deleteFunction != null)
-			{
-				deleteFunction(otherConstruction);
-			}
-//				Debug.Log("Destroying construction "+otherConstruction.idNumber);
-//			}
-//#if UNITY_EDITOR
-//			else
-//			{
-//				Debug.Log("Deleting other construction "+otherConstruction.name);
-//				DestroyImmediate(otherConstruction.gameObject);
-//			}
-//#endif
+			ObjectPoolManager.DestroyObject(otherConstruction);
+			
 		}
 		else
 		{
@@ -157,23 +164,28 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 	}
 	
-	public IEnumerable<Construction> CheckForSplitsOrJoins()
+	public List<Construction> CheckForSplitsOrJoins()
 	{
-		// TODO split if necessary
+//		GrabberManager.instance.RegisterConstructionAboutToReform(this);
 		HashSet<GrabbablePart> remainingParts = new HashSet<GrabbablePart>(PartsList);
-		foreach (GrabbablePart part in remainingParts)
-		{
-			part.transform.parent = null;
-		}
+//		foreach (GrabbablePart part in remainingParts)
+//		{
+//			part.transform.parent = null;
+//		}
 		
 		// remove all the parts connected to here
 //		HashSet<GrabbablePart> theseConnectedParts = new HashSet<GrabbablePart>(remainingParts.First().GetAllConnectedParts());
 //		remainingParts.ExceptWith(connectedParts);
 		
 		
-		Debug.Log("Starting with "+remainingParts.Count+ " parts");
 		
-		bool usedThisConstruction = false;
+		
+		List<Construction> newConstructions = new List<Construction>();
+		
+		if (remainingParts.Count == 1) return newConstructions;
+		
+//		Debug.Log("Splitting with "+remainingParts.Count+ " parts");
+		
 		int splitId = -1;
 		// create new constructionf for each split
 		while(remainingParts.Count != 0)
@@ -183,31 +195,37 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			HashSet<GrabbablePart> connectedParts = new HashSet<GrabbablePart>(basePart.GetAllConnectedParts());
 			remainingParts.ExceptWith(connectedParts);
 			
-			Debug.Log("Found "+connectedParts.Count+ " connected parts ("+remainingParts.Count+" remain)");
+			if (newConstructions.Count == 0 && remainingParts.Count == 0)
+			{
+				return newConstructions;
+			}
+			
+//			Debug.Log("Found "+connectedParts.Count+ " connected parts ("+remainingParts.Count+" remain)");
 			
 			Construction splitConstruction = null;
-			if (usedThisConstruction)
-			{
-				Debug.Log ("Creating Construction "+splitId);
-				GameObject constructionObject = new GameObject(this.name+"."+splitId);
-				splitConstruction = constructionObject.AddComponent<Construction>();
-				splitConstruction.ignoreCollisions = ignoreCollisions;
-			}
-			else
-			{
-				splitConstruction = this;
-				usedThisConstruction = true;
-			}
+			
+//			Debug.Log ("Creating Construction "+splitId);
+			splitConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+//			
+//			splitConstruction.name = this.name+"."+splitId;
+			splitConstruction.ignoreCollisions = ignoreCollisions;
+			
 //			Debug.Log ("Moving "+splitConstruction.name+" from "+splitConstruction.transform.position +" to"+ basePart.transform.position);
 			splitConstruction.transform.position = basePart.transform.position;
 			foreach(GrabbablePart part in connectedParts)
 			{
-				part.transform.parent = splitConstruction.transform;
+				GrabberManager.instance.TransferConstruction(part, splitConstruction);
+				
 			}
 			splitConstruction.transform.parent = this.transform.parent;
 			
-			yield return splitConstruction;
+			newConstructions.Add(splitConstruction);
 		}
+		
+		ObjectPoolManager.DestroyObject(this);
+		
+//		GrabberManager.instance.RegisterConstructionPostReform();
+		return newConstructions;
 	}
 	
 	public struct PartSide
@@ -288,23 +306,23 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 	
 	#region Construction tree encoding and decoding
 	
-	public static Construction CreateSimpleConstruction(PartType partType, InstantiatePrefabDelegate instantiateFunction)	
+	public static Construction CreateSimpleConstruction(PartType partType)	
 	{
-		GameObject singleConstructionObject = new GameObject("Decoded Construction");
-		Construction singleConstruction = singleConstructionObject.AddComponent<Construction>();
-		GameObject singlePartObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
-		singleConstruction.AddToConstruction(singlePartObject.GetComponent<GrabbablePart>(), null);
-		singlePartObject.transform.localPosition = Vector3.zero;
+		Construction singleConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+		GrabbablePart singlePart = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(partType));
+		singleConstruction.AddToConstruction(singlePart);
+		singlePart.transform.localPosition = Vector3.zero;
+		singleConstruction.transform.position = Vector3.zero;
 		return singleConstruction;
 	}
 		
-	public static Construction Decode(string encoded, InstantiatePrefabDelegate instantiateFunction)
+	public static Construction Decode(string encoded)
 //	public static Construction Decode(string encoded)
 	{
 		if (encoded.Length == 1)
 		{
 			PartType partType = (PartType)CharSerializer.CodeToNumber(encoded[0]);
-			return CreateSimpleConstruction(partType, instantiateFunction);
+			return CreateSimpleConstruction(partType);
 		}
 		
 		
@@ -325,12 +343,11 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 			}
 			PartType partType = (PartType)CharSerializer.ToNumber(encodedElements[i][1]);
 			
-			GameObject partObject = instantiateFunction(GameSettings.instance.GetPartPrefab(partType).gameObject);
 
-			idParts[id] = partObject.GetComponent<GrabbablePart>();
+			idParts[id] = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(partType));
 			partEncodings[idParts[id]] = encodedElements[i];
 			
-			Debug.Log ("Creating part "+id);
+//			Debug.Log ("Creating part "+id);
 		}
 		
 		foreach(int id in idParts.Keys)
@@ -339,8 +356,8 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 
 		}
 		
-		GameObject constructionObject = new GameObject("Decoded Construction");
-		Construction construction = constructionObject.AddComponent<Construction>();
+		Construction construction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+//		construction.name = "Decoded Construction";
 		
 		
 		HashSet<GrabbablePart> exploredParts = new HashSet<GrabbablePart>();
@@ -349,13 +366,13 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		addToConstructionRecursively = (newPart) => 
 		{
 			exploredParts.Add(newPart);
-			construction.AddToConstruction(newPart, null);
+			construction.AddToConstruction(newPart);
 			
 			string code = partEncodings[newPart];
 			int id = CharSerializer.ToNumber(code[0]);
 			PartType type = (PartType)CharSerializer.ToNumber(code[1]);
 			
-			Debug.Log ("Connecting part "+id+"("+type+")");
+//			Debug.Log ("Connecting part "+id+"("+type+")");
 			
 			for (int i = 0 ; i < 6 ; i++)
 			{
@@ -364,12 +381,12 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 				GrabbablePart.PhysicalConnectionType physicalConnType = (GrabbablePart.PhysicalConnectionType)CharSerializer.ToNumber(code[3+(i*3)+1]);
 				int auxilaryConnectionType = CharSerializer.ToNumber(code[3+(i*3)+2]);
 				
-				Debug.Log("Connection Def: "+id+"->"+otherId+":"+iDir+":"+physicalConnType);
+//				Debug.Log("Connection Def: "+id+"->"+otherId+":"+iDir+":"+physicalConnType);
 				GrabbablePart otherPart = otherId == 0 ? null : idParts[otherId];
 				if (otherPart != null)
 				{
-					Debug.Log ("Connecting part "+id+" to "+otherId+" in direction "+iDir +"("+physicalConnType+", "+auxilaryConnectionType+")");
-					newPart.ConnectPartAndPlaceAtRelativeDirection(otherPart, physicalConnType, iDir, null);
+//					Debug.Log ("Connecting part "+id+" to "+otherId+" in direction "+iDir +"("+physicalConnType+", "+auxilaryConnectionType+")");
+					newPart.ConnectPartAndPlaceAtRelativeDirection(otherPart, physicalConnType, iDir);
 					newPart.SetPhysicalConnection(iDir, physicalConnType);
 					newPart.SetAuxilaryConnections(iDir, auxilaryConnectionType);
 					
@@ -424,11 +441,15 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>
 		
 		
 		List<string> encodedElements = new List<string>();
-		// <Type><Orientation>,<PhysicalConn0>,<AuxConnect0>,<Child0??_>,<PhysicalConn1>...
-		foreach (GrabbablePart element in CenterPart.GetAllConnectedParts())
-//		foreach (GrabbablePart element in Parts)
+		
+		if (CenterPart != null)
 		{
-			encodedElements.Add(element.Encode(partID));
+			// <Type><Orientation>,<PhysicalConn0>,<AuxConnect0>,<Child0??_>,<PhysicalConn1>...
+			foreach (GrabbablePart element in CenterPart.GetAllConnectedParts())
+	//		foreach (GrabbablePart element in Parts)
+			{
+				encodedElements.Add(element.Encode(partID));
+			}
 		}
 		
 		return string.Join(",", encodedElements.ToArray());

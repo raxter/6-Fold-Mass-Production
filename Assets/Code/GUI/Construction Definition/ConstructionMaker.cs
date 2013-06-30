@@ -66,7 +66,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		foreach (PartType partType in GameSettings.instance.partPrefabs.ConvertAll<PartType>((input) => input.partType))
 //		foreach (GrabbablePart prefab in GameSettings.instance.partPrefabs)
 		{
-			Construction partConstruction = Construction.CreateSimpleConstruction(partType, (prefab) => Instantiate(prefab) as GameObject);
+			Construction partConstruction = Construction.CreateSimpleConstruction(partType);
 			partConstruction.ignoreCollisions = true;
 			
 			GameObject dragButton = Instantiate(_draggableButtonPrefab.gameObject) as GameObject;
@@ -161,7 +161,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			{
 				Debug.Log ("Begin "+parms.dragObj/*+":"+parms.dragObj.transform.position+":"+parms.ptr.ray*/);
 				
-				
+				// from retarget
 				DestroyMarkedPart();
 				
 					
@@ -169,16 +169,19 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			if (parms.evt == EZDragDropEvent.Update)
 			{
 				
-				bool rotateByOne = Input.GetMouseButtonUp(1);
-					
-				
+				if (Input.GetMouseButtonUp(1))
+				{
+					HandleAltTapWhileDragging(part);
+				}
+//					
+//				
 				int rotationOffset = GetSuggestedRotation(part);
 				part.RotatateSimulationOrientation(rotationOffset);
-				
-				if (rotateByOne)
-				{
-					RotatePart(part);
-				}
+//				
+//				if (rotateByOne)
+//				{
+//					RotateDraggedPart(part);
+//				}
 //				Debug.Log (string.Join(",", partSides.ConvertAll((input) => ""+input.offsetFromSide).ToArray()));
 			}
 			if (parms.evt == EZDragDropEvent.Cancelled)
@@ -195,7 +198,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				}
 				else
 				{
-					targetConstructions.Add(Construction.CreateSimpleConstruction(part.partType, (prefab) => Instantiate(prefab) as GameObject));
+					targetConstructions.Add(Construction.CreateSimpleConstruction(part.partType));
 					targetConstructions[0].FirstPart.SimulationOrientation = part.SimulationOrientation;
 					targetConstructions[0].transform.parent = _constructionHolder.transform;
 					targetConstructions[0].transform.localPosition = Vector3.zero;
@@ -248,23 +251,8 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		}
 	}
 	
-	private void RotatePart(GrabbablePart part)
-	{
-		for (int i = 1 ; i < 6 ; i++)
-		{
-			part.RotatateSimulationOrientation(-i);
-			
-			
-			int rotationTurnOffset = GetSuggestedRotation(part);
-			if (rotationTurnOffset == 0)
-			{
-				break;
-//				part.RotatateSimulationOrientation(rotationOffset);
-			}
-			
-			part.RotatateSimulationOrientation(i);
-		}
-	}
+	
+	
 	
 	private void ConnectPartWithBestRotation(GrabbablePart part)
 	{
@@ -277,8 +265,8 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			return;
 		}
 		
-		GameObject partObject = Instantiate(GameSettings.instance.GetPartPrefab(part.partType).gameObject) as GameObject;
-		GrabbablePart newPart = partObject.GetComponent<GrabbablePart>();
+		GrabbablePart newPart = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(part.partType));
+		newPart.transform.position = part.transform.position;
 		newPart.SimulationOrientation = part.SimulationOrientation;
 		
 		partSides.RemoveAll((x) => x.offsetFromSide != 0);
@@ -288,19 +276,13 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			partSide.part.ConnectPartAndPlaceAtRelativeDirection(
 				newPart, 
 				GrabbablePart.PhysicalConnectionType.Weld, 
-				partSide.relativeDirection,
-				(con) => 
-				{
-					targetConstructions.Remove(con);
-					Destroy(con.gameObject);
-				});
+				partSide.relativeDirection);
 		}
 	}
 	
 	
 	public event ConstructionSavedDelegate saveEvent;
 	
-	ConstructionSavedDelegate saveFunction = null;
 	
 	public void OpenMaker (string code)
 	{
@@ -312,7 +294,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		InputCatcher.instance.RequestInputOverride(HandleScreenPoint);
 		
 		targetConstructions = new List<Construction>();
-		targetConstructions.Add(Construction.Decode(code, (prefab) => Instantiate(prefab) as GameObject));
+		targetConstructions.Add(Construction.Decode(code));
 		targetConstructions[0].transform.parent = _constructionHolder.transform;
 		targetConstructions[0].transform.localPosition = Vector3.zero;
 //		construction.gameObject.SetLayerRecursively(gameObject.layer);
@@ -327,10 +309,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		if (targetConstructions != null)
 		{
-			targetConstructions.ForEach((con) => Destroy(con.gameObject));
+			targetConstructions.ForEach((con) => ObjectPoolManager.DestroyObject(con));
 			targetConstructions = null;
 		}
-		saveFunction = null;
 	}
 	
 #region EZ GUI
@@ -391,13 +372,6 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		Debug.DrawRay(inputRay.origin, inputRay.direction*100, Color.red);
 		
-//		for (int i = 0 ; i < 5 ; i++)
-//		{
-//			if (Input.GetMouseButton(i))
-//			{
-//				Debug.Log("mouse "+i);
-//			}
-//		}
 		
 		GrabbablePart hitPart = null;
 		foreach (RaycastHit hitInfo in Physics.RaycastAll(inputRay, 1000, 1 << LayerMask.NameToLayer("GrabbablePart")))
@@ -448,63 +422,117 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			}
 		}
 		
-		bool destroyPart = false;
-		bool rotatePart = false;
-		
-		bool createAndDragPart = false;
 		if (pressState == ControlState.Ending && dragState == ControlState.Inactive)
 		{
-			Debug.Log("Tap destroy "+Input.GetMouseButtonUp(0)+":"+Input.GetMouseButtonUp(1));
+			Debug.Log("Tap "+Input.GetMouseButtonUp(0)+":"+Input.GetMouseButtonUp(1));
 			
-			if (Input.GetMouseButtonUp(1))
+			if (Input.GetMouseButtonUp(0))
 			{
-				rotatePart = true;
+				HandleTap(hitPart);
 			}
-			else
+			else if (Input.GetMouseButtonUp(1))
 			{
-				destroyPart = true;
+				HandleAltTap(hitPart);
 			}
 		}
-		if (Input.GetMouseButton(0) && dragState == ControlState.Starting)
+		if (dragState == ControlState.Starting)
 		{
 			Debug.Log("Drag");
-			createAndDragPart = true;
-		}
-		
-		
-		if ( createAndDragPart )
-		{
-			UIButton dragButton = dragButtons[hitPart.partType];
 			
-			InputCatcher.instance.Retarget(dragButton);
-			buttonToPart[dragButton].SimulationOrientation = hitPart.SimulationOrientation;
+			HandleDrag(hitPart);
+		}
 
-			partMarkedToDestroy = hitPart;
-		}
-		
-		if (rotatePart)
-		{
-			for (int i = 1 ; i < 6 ; i++)
-			{
-				Debug.Log ("Checking direction "+(-i));
-				if (!hitPart.WillSimulationOrientationRotatateSplitConstruction(-i))
-				{
-					hitPart.RotatateSimulationOrientation(-i);
-					break;
-				}
-			}
-		}
-		
-		if (destroyPart)
-		{
-			partMarkedToDestroy = hitPart;
-			DestroyMarkedPart();
-
-		}
 		
 		
 		
 	}
+	
+	
+	#region Input Commands
+	
+	void HandleTap(GrabbablePart part)
+	{
+		RotatePartInConstruction(part);
+	}
+	
+	void HandleDrag(GrabbablePart part)
+	{
+		DragPart(part);
+	}
+	
+	// avoid use of this
+	void HandleAltTapWhileDragging(GrabbablePart part) // right click on standalone
+	{
+		RotatePartWhileDragged(part);
+	}
+	
+	// avoid use of this
+	void HandleAltTap(GrabbablePart part) // double tap on devices (?), right click on standalone
+	{
+		HandleTap(part);
+	}
+	
+	
+	#endregion
+	
+	
+	#region Construction Maker actions
+	
+	void DragPart(GrabbablePart part)
+	{
+		UIButton dragButton = dragButtons[part.partType];
+		
+		InputCatcher.instance.Retarget(dragButton);
+		buttonToPart[dragButton].SimulationOrientation = part.SimulationOrientation;
+
+		partMarkedToDestroy = part;
+	}
+	
+	void RotatePartInConstruction(GrabbablePart part)
+	{
+		for (int i = 1 ; i < 6 ; i++)
+		{
+			Debug.Log ("Checking direction "+(-i));
+			if (!part.WillSimulationOrientationRotatateSplitConstruction(-i))
+			{
+				part.RotatateSimulationOrientation(-i);
+				break;
+			}
+		}
+	}
+	
+	private void RotatePartWhileDragged(GrabbablePart part)
+	{
+		for (int i = 1 ; i < 6 ; i++)
+		{
+			part.RotatateSimulationOrientation(-i);
+			
+			
+			int rotationTurnOffset = GetSuggestedRotation(part);
+			if (rotationTurnOffset == 0)
+			{
+				break;
+//				part.RotatateSimulationOrientation(rotationOffset);
+			}
+			
+			part.RotatateSimulationOrientation(i);
+		}
+	}
+	
+	
+	void DeletePart(GrabbablePart part)
+	{
+		partMarkedToDestroy = part;
+		DestroyMarkedPart();
+	}
+	
+	void UndoAction()
+	{
+		// TODO
+	}
+	
+	#endregion
+	
 }
 
 

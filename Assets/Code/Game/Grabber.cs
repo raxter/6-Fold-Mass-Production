@@ -134,25 +134,70 @@ public class Grabber : Mechanism
 		public bool clampOpen;
 	}
 	
-	public GrabbablePart heldPart { get {return _heldPart; } }
-	GrabbablePart _heldPart;
+//	public GrabbablePart heldPart 
+//	{ 
+//		get {return _heldPart; } 
+//		private set
+//		{
+//			
+////			if (_heldPart == null && value != null)
+////			{
+////				Debug.Log ("Held Part "+_heldPart+" newheldpart "+value, value);
+////				Debug.Log (value.ParentConstruction, value.ParentConstruction);
+////				if (value.ParentConstruction.heldAndMovingGrabber != null) // we are grabbing a part that is already grabbed!
+////				{
+////					Debug.Log (value.ParentConstruction.heldAndMovingGrabber, value.ParentConstruction.heldAndMovingGrabber);
+////					Debug.LogWarning("Multiple grab");
+////					GameManager.instance.MultipleGrabOccured(value.ParentConstruction.heldAndMovingGrabber, this);
+////					return;
+////				}
+////			}
+//			
+//			if (_heldPart != null)
+//			{
+//				Debug.Log ("Dropping part", this);
+//				Debug.Log ("Dropping part", _heldPart);
+//				_heldPart.ParentConstruction.heldAndMovingGrabber = null;
+//			}
+//			else
+//			{
+//				Debug.Log ("Empty", this);
+//				Debug.Log ("Empty", value);
+//				if (value != null && value.ParentConstruction.heldAndMovingGrabber != null)
+//				{
+//					// part is already grabber
+//					Debug.LogWarning("Multiple grab, part already grabbed", value);
+//					GameManager.instance.MultipleGrabOccured(value.ParentConstruction.heldAndMovingGrabber, this);
+//				}
+//			}
+//			_heldPart = value;
+//			if (_heldPart != null)
+//			{
+//				_heldPart.ParentConstruction.heldAndMovingGrabber = this;
+//				Debug.Log ("Grabbing part "+_currentInstruction, this);
+//				Debug.Log ("Grabbing part", _heldPart);
+//			}
+//		} 
+//	}
+//	GrabbablePart _heldPart;
 //	System.Action _doAtEndOfInstruction;
+	
+	
+	void Grab(GrabbablePart part)
+	{
+		GrabberManager.instance.RegisterGrab(this, part);
+	}
+	void Drop(GrabbablePart part)
+	{
+		GrabberManager.instance.RegisterDrop(this, part);
+	}
 	
 	GrabberState _startState;
 	
 	GrabberState _startStepState;
 	GrabberState _endStepState;
 	Instruction _currentInstruction = Instruction.None;
-
-	public void ClearClamp ()
-	{
-		if (_heldPart != null)
-		{
-			GameObject.Destroy(_heldPart.gameObject);
-			_heldPart = null;
-		}
-	}
-	
+	bool _isMoveingInstruction = false;
 	
 	
 	public void ExtendStartState()
@@ -208,9 +253,18 @@ public class Grabber : Mechanism
 	
 	void MoveToState(float extentionValue, float directionValue, float rotationValue)
 	{
-		if (_heldPart != null) 
+		GrabbablePart heldPart = GrabberManager.instance.GetPartHeldBy(this);
+		
+		
+		
+		
+		if (heldPart != null) 
 		{
-			_heldPart.ParentConstruction.gameObject.transform.parent = clamp.transform;
+			if (heldPart.ParentConstruction == null)
+			{
+				Debug.LogError("Parent is null!", heldPart);
+			}
+			heldPart.ParentConstruction.gameObject.transform.parent = clamp.transform;
 		}
 		
 		clamp.transform.localRotation = Quaternion.Euler(0, 0, rotationValue);
@@ -223,9 +277,9 @@ public class Grabber : Mechanism
 			_arms[i].transform.localPosition = new Vector3(0, extentionValue*GameSettings.instance.hexCellPrefab.Height/(_arms.Length), 1);
 		}
 		
-		if (_heldPart != null) 
+		if (heldPart != null) 
 		{
-			_heldPart.ParentConstruction.gameObject.transform.parent = null;
+			heldPart.ParentConstruction.gameObject.transform.parent = null;
 		}
 		
 //		clamp.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -254,45 +308,45 @@ public class Grabber : Mechanism
 		
 		_currentInstruction = instructions[_instructionCounter];
 		
+		_isMoveingInstruction = false;
 //		_doAtEndOfInstruction = null;
 		
-		bool isMoveing = false;
 		switch (_currentInstruction)
 		{
 			case Instruction.TurnClock:
 			{
 				_endStepState.direction += 5;
-				isMoveing = true;
+				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.TurnAnti:
 			{
 				_endStepState.direction += 1;
-				isMoveing = true;
+				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.Extend:
 			{
 				_endStepState.extention += 1;
-				isMoveing = true;
+				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.Retract:
 			{
 				_endStepState.extention -= 1;
-				isMoveing = true;
+				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.RotateClock:
 			{
 				_endStepState.rotation -= 1;
-				isMoveing = true;
+				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.RotateAnti:
 			{
 				_endStepState.rotation += 1;
-				isMoveing = true;
+				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.RestartMark:
@@ -307,7 +361,8 @@ public class Grabber : Mechanism
 			break;
 			case Instruction.Drop:
 			{
-				if (_heldPart != null)
+				GrabbablePart heldPart = GrabberManager.instance.GetPartHeldBy(this);
+				if (heldPart != null)
 				{
 				
 					IntVector2 locationAtClamp = LocationAtClamp();
@@ -316,39 +371,20 @@ public class Grabber : Mechanism
 						// trying to drop into non grid location
 						
 						GameManager.instance.gameState = GameManager.State.SimulationFailed;
-						_heldPart.highlighted = true;
+						heldPart.highlighted = true;
 						break;
 					}
 					
-				
-					_heldPart = null;
+					GrabberManager.instance.RegisterDrop(this, heldPart);
 				}
+//				else
+//				{
+//					Debug.Log ("No part to drop", this);
+//				}
 			}
 			break;
 		}
 		
-////		Deregister holdover
-////		GridManager.instance.GetHexCell(LocationAtClamp()).partHeldOverCell = null;
-////		
-//		HexCell overClampCell = GridManager.instance.GetHexCell(LocationAtClamp());
-//		if (overClampCell.partHeldOverCell != null)
-//		{
-//			overClampCell.partHeldOverCell.ForEachChild(
-//			(part, loc) => 
-//			{
-//				GridManager.instance.GetHexCell(loc).partHeldOverCell = null;
-//			});
-//		}
-		
-		if (isMoveing && _heldPart != null)
-		{
-			if (_heldPart.ParentConstruction.heldAndMovingGrabber != null)
-			{
-				GameManager.instance.MultipleGrabOccured(this, _heldPart.ParentConstruction.heldAndMovingGrabber);
-				return;
-			}
-			_heldPart.ParentConstruction.heldAndMovingGrabber = this;
-		}
 		
 		_endStepState.direction = (HexMetrics.Direction)((int)_endStepState.direction % 6);
 		_endStepState.extention = Mathf.Clamp(_endStepState.extention, 0, 2);
@@ -374,7 +410,8 @@ public class Grabber : Mechanism
 	{
 		if (_currentInstruction == Instruction.Grab)
 		{
-			if (_heldPart == null)
+			GrabbablePart heldPart = GrabberManager.instance.GetPartHeldBy(this);
+			if (heldPart == null)
 			{
 				HexCell underClamp = GridManager.instance.GetHexCell(LocationAtClamp());
 				if (underClamp == null)// clamp is over a non cell
@@ -383,13 +420,13 @@ public class Grabber : Mechanism
 				}
 				GrabbablePart partUnderClamp = underClamp.partOverCell;
 				
-				if (partUnderClamp == null || partUnderClamp.ParentConstruction.heldAndMovingGrabber != null) // there is nothing to grab *or* there is a part, but it is held and is about to move this turn
+				if (partUnderClamp == null) // there is nothing to grab *or* there is a part, but it is held and is about to move this turn
 				{
 					return;
 				}
 				// else
 				
-				_heldPart = partUnderClamp;
+				GrabberManager.instance.RegisterGrab(this, partUnderClamp);
 				
 				
 			}
@@ -409,10 +446,10 @@ public class Grabber : Mechanism
 	
 	void EndOfInstruction()
 	{
-		if (_heldPart != null)
-		{
-			_heldPart.ParentConstruction.heldAndMovingGrabber = null;
-		}
+//		if (_heldPart != null)
+//		{
+//			_heldPart.ParentConstruction.heldAndMovingGrabber = null;
+//		}
 	}
 	
 	// returns true if finished
@@ -423,6 +460,34 @@ public class Grabber : Mechanism
 		{
 			EndOfInstruction();
 			return true;
+		}
+		
+		
+		// check for multiple holds
+		GrabbablePart heldPart = GrabberManager.instance.GetPartHeldBy(this);
+		if (heldPart != null)
+		{
+			Grabber otherMovingGrabber = null;
+			foreach(Grabber grabber in GrabberManager.instance.GetAllGrabbersHolding(heldPart.ParentConstruction))
+			{
+				if (grabber != this && grabber._isMoveingInstruction)
+				{
+					otherMovingGrabber = grabber;
+				}
+				
+				if (otherMovingGrabber != null)
+				{
+					GrabberManager.instance.GetAllGrabbersHolding(heldPart.ParentConstruction);
+					Debug.LogWarning("Multiple grab, two parts welded together while held", heldPart);
+					Debug.LogWarning("Multiple grab, two parts welded together while held", this);
+					Debug.LogWarning("Multiple grab, two parts welded together while held", otherMovingGrabber);
+					Debug.LogWarning("Multiple grab, two parts welded together while held", GrabberManager.instance.GetPartHeldBy(this));
+					Debug.LogWarning("Multiple grab, two parts welded together while held", GrabberManager.instance.GetPartHeldBy(otherMovingGrabber));
+					GameManager.instance.MultipleGrabOccured(this, otherMovingGrabber);
+					
+					return false;
+				}
+			}
 		}
 		
 		float percStep = (float)_stepCounter/(float)_stepsPerInstruction;
