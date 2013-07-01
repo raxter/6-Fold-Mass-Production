@@ -33,15 +33,15 @@ public class GrabbablePartInspector : Editor
 		HexMetrics.Direction newOrietation = (HexMetrics.Direction)EditorGUILayout.EnumPopup( part.SimulationOrientation );
 		if (newOrietation != oldOrietation)
 		{
-			part.SimulationOrientation = newOrietation;
+			part.SetSimulationOrientation(newOrietation);
 		}
 		if (GUILayout.Button("<-"))
 		{
-			part.SimulationOrientation = (HexMetrics.Direction)(((int)(part.SimulationOrientation) - 1) % 6);
+			part.SetSimulationOrientation(((int)(part.SimulationOrientation) - 1) % 6);
 		}
 		if (GUILayout.Button("->"))
 		{
-			part.SimulationOrientation = (HexMetrics.Direction)(((int)(part.SimulationOrientation) + 1) % 6);
+			part.SetSimulationOrientation(((int)(part.SimulationOrientation) + 1) % 6);
 		}
 		EditorGUILayout.EndHorizontal();
 		
@@ -126,7 +126,7 @@ public class GrabbablePartInspector : Editor
 					GrabbablePart partPrefab = GameSettings.instance.GetPartPrefab(newPartType);
 					GrabbablePart newConnectedPart = PrefabUtility.InstantiatePrefab(partPrefab) as GrabbablePart;
 					part.ConnectPartAndPlaceAtRelativeDirection(newConnectedPart, GrabbablePart.PhysicalConnectionType.Weld, iDirRelative);
-					part.SimulationOrientation = part.SimulationOrientation;
+					part.SetSimulationOrientation(part.SimulationOrientation);
 //					part.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.Weld, instantiateFunction);
 					
 				}
@@ -148,14 +148,14 @@ public class GrabbablePartInspector : Editor
 			{
 				if (contact != null)
 				{
-					contact.SimulationOrientation = (HexMetrics.Direction)(((int)(contact.SimulationOrientation) - 1) % 6);
+					contact.SetSimulationOrientation(((int)(contact.SimulationOrientation) - 1) % 6);
 				}
 			}
 			if (GUILayout.Button("->"))
 			{
 				if (contact != null)
 				{
-					contact.SimulationOrientation = (HexMetrics.Direction)(((int)(contact.SimulationOrientation) + 1) % 6);
+					contact.SetSimulationOrientation(((int)(contact.SimulationOrientation) + 1) % 6);
 				}
 			}
 			

@@ -176,7 +176,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 	}
 	
-	public List<Construction> CheckForSplitsOrJoins()
+	public HashSet<Construction> CheckForSplitsOrJoins()
 	{
 //		GrabberManager.instance.RegisterConstructionAboutToReform(this);
 		HashSet<GrabbablePart> remainingParts = new HashSet<GrabbablePart>(PartsList);
@@ -192,9 +192,9 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 		
 		
-		List<Construction> newConstructions = new List<Construction>();
+		HashSet<Construction> newConstructions = new HashSet<Construction>();
 		
-		if (remainingParts.Count == 1) return newConstructions;
+//		if (remainingParts.Count == 1) return newConstructions;
 		
 //		Debug.Log("Splitting with "+remainingParts.Count+ " parts");
 		
@@ -206,17 +206,18 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 			GrabbablePart basePart = remainingParts.First();
 			HashSet<GrabbablePart> connectedParts = new HashSet<GrabbablePart>(basePart.GetAllConnectedParts());
 			remainingParts.ExceptWith(connectedParts);
+//			Debug.Log("Found "+connectedParts.Count+ " connected parts ("+remainingParts.Count+" remain) (contructions "+newConstructions.Count+")");
 			
 			if (newConstructions.Count == 0 && remainingParts.Count == 0)
 			{
-				return newConstructions;
+				return newConstructions; // if there is only one construction (this one) 
 			}
 			
 //			Debug.Log("Found "+connectedParts.Count+ " connected parts ("+remainingParts.Count+" remain)");
 			
 			Construction splitConstruction = null;
 			
-//			Debug.Log ("Creating Construction "+splitId);
+//			Debug.Log ("Creating Construction "+splitId+" ("+remainingParts.Count+")");
 			splitConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
 //			
 //			splitConstruction.name = this.name+"."+splitId;
@@ -331,6 +332,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 	public static Construction Decode(string encoded)
 //	public static Construction Decode(string encoded)
 	{
+//		Debug.Log ("Decoding Construction: "+encoded);
 		if (encoded.Length == 1)
 		{
 			PartType partType = (PartType)CharSerializer.CodeToNumber(encoded[0]);
@@ -343,6 +345,8 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 //		
 //		List<GrabbablePart> elements = new List<GrabbablePart>();
 		List<string> encodedElements = new List<string>(encoded.Split(','));
+		
+		
 //		
 		int centerId = -1;
 		
@@ -364,7 +368,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 		foreach(int id in idParts.Keys)
 		{
-			idParts[id].SimulationOrientation = (HexMetrics.Direction)CharSerializer.ToNumber(partEncodings[idParts[id]][2]);
+			idParts[id].SetSimulationOrientation(CharSerializer.ToNumber(partEncodings[idParts[id]][2]));
 
 		}
 		
@@ -373,7 +377,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 		
 		HashSet<GrabbablePart> exploredParts = new HashSet<GrabbablePart>();
-		System.Action<GrabbablePart> addToConstructionRecursively = null;
+		System.Func<GrabbablePart, bool> addToConstructionRecursively = null;
 		
 		addToConstructionRecursively = (newPart) => 
 		{
@@ -394,6 +398,13 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 				int auxilaryConnectionType = CharSerializer.ToNumber(code[3+(i*3)+2]);
 				
 //				Debug.Log("Connection Def: "+id+"->"+otherId+":"+iDir+":"+physicalConnType);
+				
+				if (otherId != 0 && !idParts.ContainsKey(otherId))
+				{
+					Debug.LogError ("idParts does not contain part with id "+otherId+"\n"+encoded);
+					return false;
+					
+				}
 				GrabbablePart otherPart = otherId == 0 ? null : idParts[otherId];
 				if (otherPart != null)
 				{
@@ -404,24 +415,38 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 					
 					if (!exploredParts.Contains(otherPart))
 					{
-						addToConstructionRecursively(otherPart);
+						if (!addToConstructionRecursively(otherPart))
+						{
+							return false;
+						}
 					}
 					
 				}
 				else
 				{
-					newPart.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.None);
+					newPart.SetPhysicalConnection(iDir, GrabbablePart.PhysicalConnectionType.None, GrabbablePart.SplitOptions.DoNotSplit);
 					newPart.SetAuxilaryConnections(iDir, 0);
 				}
 				
 			}
+			return true;
 		};
 		
 		
 		if (idParts.ContainsKey(centerId))
 		{
 			idParts[centerId].transform.position = construction.transform.position;
-			addToConstructionRecursively(idParts[centerId]);
+			if (!addToConstructionRecursively(idParts[centerId]))
+			{
+				foreach(GrabbablePart part in idParts.Values) 
+				{
+					ObjectPoolManager.DestroyObject(part);
+				}
+				ObjectPoolManager.DestroyObject(construction);
+				
+				return Construction.CreateSimpleConstruction(PartType.Standard6Sided);
+			}
+				
 		}
 		construction.CenterConstruction(idParts[centerId]);
 		

@@ -45,6 +45,7 @@ public class PartGenerator : Mechanism
 	
 	public override bool Decode(string encoded)
 	{
+		Debug.Log ("Decoding Generator: "+encoded);
 		movable = encoded[0] == '1';
 		
 		if (toGenerateConstruction != null)

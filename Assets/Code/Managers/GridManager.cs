@@ -222,7 +222,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 			Mechanism mech = hc.placedMechanism;
 			if (mech != null && !savedMechanisms.Contains(mech))
 			{
-				encodings.Add(GetMechanismCode(mech.MechanismType)+","+mech.Location.x+","+mech.Location.y+","+mech.Encode());
+				encodings.Add(GetMechanismCode(mech.MechanismType)+";"+mech.Location.x+";"+mech.Location.y+";"+mech.Encode());
 				
 				savedMechanisms.Add(mech);
 			}
@@ -251,7 +251,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		{
 			MechanismType codeType = GetMechanismType(code[0]);
 			
-			string [] codeData = code.Split(',');
+			string [] codeData = code.Split(';');
 			
 			Mechanism newMechanism = GameManager.instance.InstantiateMechanism(codeType);
 			newMechanism.Decode(codeData[3]);

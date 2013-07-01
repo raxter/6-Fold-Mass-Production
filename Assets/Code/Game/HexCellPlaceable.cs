@@ -37,7 +37,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 	
 	
 	
-	public virtual void PlaceAtLocation(IntVector2 location)
+	public virtual bool PlaceAtLocation(IntVector2 location)
 	{
 		Location = location;
 		if (location != null)
@@ -47,6 +47,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 			{
 				transform.position = hexCell.transform.position;
 				hexCell.placedPlaceable = this;
+				return true;
 			}
 		}
 		else
@@ -60,6 +61,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 				hexCell = null;
 			}
 		}
+		return false;
 	}
 	
 	protected void PlaceOverLocation(IntVector2 location)

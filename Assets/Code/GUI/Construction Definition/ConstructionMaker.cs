@@ -20,6 +20,17 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	Dictionary<PartType, UIButton> dragButtons = new Dictionary<PartType, UIButton>();
 	Dictionary<UIButton, GrabbablePart> buttonToPart = new Dictionary<UIButton, GrabbablePart>();
 	
+	[SerializeField]
+	GameObject _centerIcon = null;
+	
+	[SerializeField]
+	SpriteText _tapActionText = null;
+	[SerializeField]
+	SpriteText _dragActionText = null;
+	
+	[SerializeField]
+	UIRadioBtn _defaultControlModeButton = null;
+	
 //	List<UIButton> _dragButtons = new List<UIButton>();
 	
 //	[SerializeField]
@@ -31,7 +42,6 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	GameObject _constructionHolder = null;
 	
 	
-	GrabbablePart partMarkedToDestroy = null;
 
 	public bool Open
 	{
@@ -57,6 +67,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	IEnumerator Start()
 	{
+		SetUpControlModes();
 		yield return null;
 		
 		int counter = 0;
@@ -161,8 +172,14 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			{
 				Debug.Log ("Begin "+parms.dragObj/*+":"+parms.dragObj.transform.position+":"+parms.ptr.ray*/);
 				
+				if (onDragStart != null)
+				{
+					onDragStart();
+					onDragStart = null;
+				}
+				
 				// from retarget
-				DestroyMarkedPart();
+//				DestroyMarkedPart();
 				
 					
 			}
@@ -199,11 +216,11 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				else
 				{
 					targetConstructions.Add(Construction.CreateSimpleConstruction(part.partType));
-					targetConstructions[0].FirstPart.SimulationOrientation = part.SimulationOrientation;
+					targetConstructions[0].FirstPart.SetSimulationOrientation(part.SimulationOrientation);
 					targetConstructions[0].transform.parent = _constructionHolder.transform;
 					targetConstructions[0].transform.localPosition = Vector3.zero;
 				}
-				part.SimulationOrientation = HexMetrics.Direction.Up;
+				part.SetSimulationOrientation(HexMetrics.Direction.Up);
 				
 //				targetConstructions.
 				
@@ -215,19 +232,20 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		});
 	}
 	
-	private void DestroyMarkedPart()
+	private void DestroyPart(GrabbablePart toDestroy)
 	{
-		if (partMarkedToDestroy != null)
+		if (toDestroy != null)
 		{
-			if (targetConstructions.Contains(partMarkedToDestroy.ParentConstruction))
+			if (targetConstructions.Contains(toDestroy.ParentConstruction))
 			{
 				Debug.Log ("hit a part in our preview construction");
 				
 				// remove the construction we are splitting
-				targetConstructions.Remove (partMarkedToDestroy.ParentConstruction);
+				Construction toRemoveConstruction = toDestroy.ParentConstruction;
+				targetConstructions.Remove (toRemoveConstruction);
 				
 				// adding the split constructions
-				targetConstructions.AddRange(partMarkedToDestroy.ParentConstruction.RemoveFromConstruction(partMarkedToDestroy));
+				targetConstructions.AddRange(toRemoveConstruction.RemoveFromConstruction(toDestroy));
 //				foreach(Construction construction in )
 //				{
 ////					Debug.Log(construction.name+" created "+(targetConstructions.Contains(construction)?"already in":"not in"));
@@ -238,11 +256,12 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 //				}
 				
 				// removing the construction we are about to destroy
-				targetConstructions.Remove(partMarkedToDestroy.ParentConstruction);
+				targetConstructions.Remove(toDestroy.ParentConstruction);
 				
 				// and destroying it
-				ObjectPoolManager.DestroyObject (partMarkedToDestroy.ParentConstruction);
-				partMarkedToDestroy = null;
+				ObjectPoolManager.DestroyObject (toDestroy.ParentConstruction);
+//				ObjectPoolManager.DestroyObject (toRemoveConstruction);
+				toDestroy = null;
 			}
 		}
 		// we remove all but the largest construction
@@ -257,6 +276,8 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			targetConstructions.Clear();
 			targetConstructions.Add (firstConstruction);
 		}
+		
+		MarkConstructionChange();
 	}
 	
 	
@@ -275,7 +296,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		GrabbablePart newPart = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(part.partType));
 		newPart.transform.position = part.transform.position;
-		newPart.SimulationOrientation = part.SimulationOrientation;
+		newPart.SetSimulationOrientation(part.SimulationOrientation);
 		
 		partSides.RemoveAll((x) => x.offsetFromSide != 0);
 //		if (partSides.Count > 0)
@@ -306,6 +327,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		targetConstructions[0].transform.parent = _constructionHolder.transform;
 		targetConstructions[0].transform.localPosition = Vector3.zero;
 //		construction.gameObject.SetLayerRecursively(gameObject.layer);
+		
+		_defaultControlModeButton.SetState(0);
+		ChangeControlMode(ControlMode.DragAndRotate);
 	}
 	
 	public void CloseMaker ()
@@ -458,48 +482,149 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 	}
 	
+	void MarkConstructionChange()
+	{
+		if (targetConstructions.Count > 0)
+		{
+			targetConstructions[0].transform.localPosition = Vector3.zero;
+			
+			_centerIcon.SetActive(true);
+			Vector3 newPosition = targetConstructions[0].CenterPart.transform.position;
+			newPosition.z = _centerIcon.transform.position.z;
+			_centerIcon.transform.position = newPosition;
+		}
+		else
+		{
+			_centerIcon.SetActive(false);
+		}
+	}
 	
 	#region Input Commands
 	
+	System.Action onDragStart = null;
+	
 	void HandleTap(GrabbablePart part)
 	{
-		RotatePartInConstruction(part);
+//		RotatePartInConstruction(part);
+		controlModes[currentControlMode].tapAction(part);
+		MarkConstructionChange();
 	}
 	
 	void HandleDrag(GrabbablePart part)
 	{
-		DragPart(part);
+		controlModes[currentControlMode].dragAction(part);
+		MarkConstructionChange();
+//		DragPart(part);
 	}
 	
 	// avoid use of this
 	void HandleAltTapWhileDragging(GrabbablePart part) // right click on standalone
 	{
-		RotatePartWhileDragged(part);
+//		RotatePartWhileDragged(part);
 	}
 	
 	// avoid use of this
 	void HandleAltTap(GrabbablePart part) // double tap on devices (?), right click on standalone
 	{
 //		HandleTap(part);
-		
-		part.ParentConstruction.CenterConstruction(part);
-		part.ParentConstruction.transform.localPosition = Vector3.zero;
 	}
 	
 	
 	#endregion
 	
 	
+	ControlMode currentControlMode = ControlMode.DragAndRotate;
+	enum ControlMode {DragAndRotate, WeldAndRotate, Rotate, Recenter};
+	
+	Dictionary<ControlMode, ControlModeActions> controlModes = new Dictionary<ControlMode, ControlModeActions>(); 
+	Dictionary<System.Action<GrabbablePart>, string> controlDescriptions = new Dictionary<System.Action<GrabbablePart>, string>();
+	class ControlModeActions
+	{
+		public System.Action<GrabbablePart> tapAction;
+		public System.Action<GrabbablePart> dragAction;
+		
+//		public System.Action<GrabbablePart> altAction;
+	}
+	
+	void ChangeModeToDragAndRotate() { ChangeControlMode(ControlMode.DragAndRotate); }
+	void ChangeModeToWeldAndRotate() { ChangeControlMode(ControlMode.WeldAndRotate); }
+	void ChangeModeToRotate()        { ChangeControlMode(ControlMode.Rotate); }
+	void ChangeModeToRecenter()      { ChangeControlMode(ControlMode.Recenter); }
+	
+	void ChangeControlMode(ControlMode controlMode)
+	{
+		currentControlMode = controlMode;
+		
+		_tapActionText.Text = "Click\n"+controlDescriptions[controlModes[currentControlMode].tapAction];
+		_dragActionText.Text = "Drag\n"+controlDescriptions[controlModes[currentControlMode].dragAction];
+	}
+	
+	void SetUpControlModes()
+	{
+		controlModes[ControlMode.DragAndRotate] = new ControlModeActions()
+		{
+			tapAction = RotatePartInConstruction,
+			dragAction = DragPart,
+		};
+		
+		controlModes[ControlMode.WeldAndRotate] = new ControlModeActions()
+		{
+			tapAction = RotatePartInConstruction,
+			dragAction = DragWeld,
+		};
+		
+		controlModes[ControlMode.Rotate] = new ControlModeActions()
+		{
+			tapAction = RotatePartInConstruction,
+			dragAction = DragRotateConstruction,
+		};
+		
+		
+		controlModes[ControlMode.Recenter] = new ControlModeActions()
+		{
+			tapAction = Recenter,
+			dragAction = DragRecenter,
+		};
+		
+		controlDescriptions[RotatePartInConstruction]	= "Rotates Part";
+		controlDescriptions[DragPart]					= "Remove or replace part";
+		controlDescriptions[DragWeld]					= "Welds Parts";
+		controlDescriptions[DragRotateConstruction]		= "Rotates Construction";
+		controlDescriptions[Recenter]					= "Recenters";
+		controlDescriptions[DragRecenter] 				= "Recenters";
+		
+	}
+	
 	#region Construction Maker actions
+	
 	
 	void DragPart(GrabbablePart part)
 	{
 		UIButton dragButton = dragButtons[part.partType];
 		
 		InputCatcher.instance.Retarget(dragButton);
-		buttonToPart[dragButton].SimulationOrientation = part.SimulationOrientation;
+		
+		
+		onDragStart = () => 
+		{
+			buttonToPart[dragButton].SetSimulationOrientation(part.SimulationOrientation);
 
-		partMarkedToDestroy = part;
+			DestroyPart(part);
+		};
+	}
+	
+	void DragWeld(GrabbablePart part)
+	{
+		// TODO
+	}
+	
+	void DragRecenter(GrabbablePart part)
+	{
+		// TODO
+	}
+	void DragRotateConstruction(GrabbablePart part)
+	{
+		// TODO
 	}
 	
 	void RotatePartInConstruction(GrabbablePart part)
@@ -509,6 +634,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			Debug.Log ("Checking direction "+(-i));
 			if (!part.WillSimulationOrientationRotatateSplitConstruction(-i))
 			{
+				Debug.Log ("Rotating direction "+(-i));
 				part.RotatateSimulationOrientation(-i);
 				break;
 			}
@@ -536,8 +662,13 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	void DeletePart(GrabbablePart part)
 	{
-		partMarkedToDestroy = part;
-		DestroyMarkedPart();
+		DestroyPart(part);
+	}
+	
+	void Recenter(GrabbablePart part)
+	{
+		part.ParentConstruction.CenterConstruction(part);
+		part.ParentConstruction.transform.localPosition = Vector3.zero;
 	}
 	
 	void UndoAction()

@@ -391,7 +391,7 @@ public class GameManager : SingletonBehaviour<GameManager>
 				}
 				else
 				{
-					Debug.LogError("Ignoreing held constructions");
+					Debug.Log("Ignoreing held constructions");
 				}
 				// in either case, these construction parts have been checked, remove them from the list
 				// won't be destroyed until end of frame, phew <- omg pooling objects means that they were :/

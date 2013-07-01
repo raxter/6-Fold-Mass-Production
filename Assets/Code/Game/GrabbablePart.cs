@@ -127,7 +127,11 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 		
 //		Debug.Log ("registering at "+x+":"+oy);
 		//find hex cell, register
-		GridManager.instance.GetHexCell(GetGridLocationFromPosition()).RegisterPart(this);
+		HexCell cellUnderPart = GridManager.instance.GetHexCell(GetGridLocationFromPosition());
+		if (cellUnderPart!= null)
+		{
+			cellUnderPart.RegisterPart(this);
+		}
 	}
 	
 	
@@ -156,7 +160,7 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 	
 	public void RotatateSimulationOrientation(int offset)
 	{
-		SimulationOrientation = (HexMetrics.Direction)(((int)SimulationOrientation-offset+6)%6);
+		SetSimulationOrientation(((int)SimulationOrientation-offset+6)%6);
 	}
 	
 	
@@ -193,59 +197,68 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 			directionInt = (directionInt + 6) % 6;
 			return (HexMetrics.Direction)directionInt;
 		}
-		set
+	}
+	public int SimulationOrientationInt
+	{
+		get 
 		{
-//			if (ParentConstruction == null)
-//			{
-//				transform.rotation = Quaternion.Euler(0, 0, (int)value * -60);
-//				return;
-//			}
-			
-			HexMetrics.Direction orientation = value;
-			for (int i = 0 ; i < 6 ; i++)
+			return (int)SimulationOrientation;
+		}
+	}
+	public HashSet<Construction> SetSimulationOrientation(int orientation)
+	{
+		return SetSimulationOrientation((HexMetrics.Direction)orientation);
+	}
+	public HashSet<Construction> SetSimulationOrientation(HexMetrics.Direction orientation)
+	{
+		
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			if ( _connectedParts[i] == null)
 			{
-				if ( _connectedParts[i] == null)
-				{
-					 _connectedParts[i] = new ConnectionDescription();
-				}
-			}
-			
-	//			adjacent.ForEach((obj) => obj.parent = null);
-			int directionChange = ((int)orientation - (int)SimulationOrientation + 6)%6;
-			transform.rotation = Quaternion.Euler(0, 0, (int)orientation * -60);
-			
-			ConnectionDescription [] newParts = new ConnectionDescription [6];
-			PhysicalConnectionType [] physicalConnections = new PhysicalConnectionType [6];
-			int [] auxilaryConnections = new int [6];
-			
-	//			adjacent.ForEach((obj) => obj.parent = transform);
-			
-			for (int i = 0 ; i < 6 ; i++)
-			{
-				int newDirection = (i+directionChange)%6;
-				newParts[i] = _connectedParts[newDirection];
-				
-				physicalConnections[i] = _connectedParts[newDirection].connectionType;
-				auxilaryConnections[i] = _connectedParts[newDirection].auxConnectionTypes;
-			}
-			for (int i = 0 ; i < 6 ; i++)
-			{
-	//				PhysicalConnectionType oldConnection = _connectedParts[i].connectionType;
-	//				int oldAuxConnection = _connectedParts[i].auxConnectionTypes;
-	//				Debug.Log(((HexMetrics.Direction)i)+":"+oldConnection);
-				_connectedParts[i] = newParts[i];
-				
-				if (_connectedParts[i].connectedPart == null)
-				{
-					physicalConnections[i] = PhysicalConnectionType.None;
-					auxilaryConnections[i] = 0;
-				}
-	//				
-				SetPhysicalConnection((HexMetrics.Direction)i, physicalConnections[i]);
-				SetAuxilaryConnections((HexMetrics.Direction)i, auxilaryConnections[i]);
-				
+				 _connectedParts[i] = new ConnectionDescription();
 			}
 		}
+		
+//			adjacent.ForEach((obj) => obj.parent = null);
+		int directionChange = ((int)orientation - (int)SimulationOrientation + 6)%6;
+		transform.rotation = Quaternion.Euler(0, 0, (int)orientation * -60);
+		
+		ConnectionDescription [] newParts = new ConnectionDescription [6];
+		PhysicalConnectionType [] physicalConnections = new PhysicalConnectionType [6];
+		int [] auxilaryConnections = new int [6];
+		
+//			adjacent.ForEach((obj) => obj.parent = transform);
+		
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			int newDirection = (i+directionChange)%6;
+			newParts[i] = _connectedParts[newDirection];
+			
+			physicalConnections[i] = _connectedParts[newDirection].connectionType;
+			auxilaryConnections[i] = _connectedParts[newDirection].auxConnectionTypes;
+		}
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			int newDirection = (i+directionChange)%6;
+			_connectedParts[i] = newParts[i];
+			
+			if (_connectedParts[i].connectedPart == null)
+			{
+				physicalConnections[i] = PhysicalConnectionType.None;
+				auxilaryConnections[i] = 0;
+			}
+//			Debug.Log ("Replacing Connection ("+(HexMetrics.Direction)newDirection+") "+ _connectedParts[i].connectionType +" -> ("+(HexMetrics.Direction)i+") " + physicalConnections[i]);
+			SetPhysicalConnection((HexMetrics.Direction)i, physicalConnections[i], SplitOptions.DoNotSplit);
+			SetAuxilaryConnections((HexMetrics.Direction)i, auxilaryConnections[i]);
+			
+		}
+		
+		if (ParentConstruction != null)
+		{
+			return ParentConstruction.CheckForSplitsOrJoins();
+		}
+		return new HashSet<Construction>();
 	}
 	
 	
@@ -443,13 +456,21 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 	
 	public enum SplitOptions {SplitIfNecessary, DoNotSplit};
 	
-	public List<Construction> SetPhysicalConnection(HexMetrics.Direction relativeDirection, 
+	public HashSet<Construction> SetPhysicalConnection(HexMetrics.Direction relativeDirection, 
+													PhysicalConnectionType newConnectionType)
+	{
+		return SetPhysicalConnection(relativeDirection, newConnectionType, SplitOptions.SplitIfNecessary);
+	}
+	public HashSet<Construction> SetPhysicalConnection(HexMetrics.Direction relativeDirection, 
 													PhysicalConnectionType newConnectionType, 
-													SplitOptions splitOption = SplitOptions.SplitIfNecessary)
+													SplitOptions splitOption)
 	{
 		ConnectionDescription connDesc = _connectedParts[(int)relativeDirection];
+//		PhysicalConnectionType originalConnection = connDesc.connectionType;
 		if (connDesc.connectedPart == null)
 		{
+			
+			// disconnecting part
 			connDesc.connectionType = PhysicalConnectionType.None;
 			SetWeldSprite(relativeDirection, false);
 			
@@ -459,17 +480,19 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 				{
 					return ParentConstruction.CheckForSplitsOrJoins();
 				}
+				return new HashSet<Construction> { ParentConstruction };
 			}
-			return null;
+			
+			return new HashSet<Construction> ();
 		}
 		
 		HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
 		ConnectionDescription otherConnDesc = connDesc.connectedPart._connectedParts[(int)oppositeDirection];
 		
 		bool weldableHere = Weldable(relativeDirection);
-		bool weldabelThere = connDesc.connectedPart.Weldable(oppositeDirection);
+		bool weldableThere = connDesc.connectedPart.Weldable(oppositeDirection);
 //		Debug.Log("Checking weldability: "+direction+"("+weldableHere+") <-> "+oppositeDirection+"("+weldabelThere+")");
-		if (weldableHere && weldabelThere)
+		if (weldableHere && weldableThere)
 		{
 			connDesc.connectionType = newConnectionType;
 			otherConnDesc.connectionType = newConnectionType;
@@ -502,10 +525,14 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 				{
 					return ParentConstruction.CheckForSplitsOrJoins();
 				}
+				return new HashSet<Construction> { ParentConstruction };
 			}
 		}
-		
-		return null;
+		if (ParentConstruction != null)
+		{
+			return new HashSet<Construction> { ParentConstruction };
+		}
+		return new HashSet<Construction>();
 	}
 	
 	public int GetAuxilaryConnectionTypes(HexMetrics.Direction relativeDirection)
@@ -609,19 +636,24 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 				}
 //				otherPart.gameObject.transform.parent = gameObject.transform;
 				
-				if (ParentConstruction != null)
+				if (IsWeldable (relativeDirection, otherPart))
 				{
-					ParentConstruction.AddToConstruction(otherPart);
+					if (ParentConstruction != null)
+					{
+						ParentConstruction.AddToConstruction(otherPart);
+					}
+				
+					_connectedParts[r].Reset();
+					_connectedParts[r].connectedPart = otherPart;
+					HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
+					otherPart._connectedParts[(int)oppositeDirection].Reset();
+					otherPart._connectedParts[(int)oppositeDirection].connectedPart = this;
+					SetPhysicalConnection(relativeDirection, connectionType);
+					return true;
 				}
 				
-				_connectedParts[r] = new ConnectionDescription();
-				_connectedParts[r].connectedPart = otherPart;
-				HexMetrics.Direction oppositeDirection = ConnectedsOpposite(relativeDirection);
-				otherPart._connectedParts[(int)oppositeDirection] = new ConnectionDescription();
-				otherPart._connectedParts[(int)oppositeDirection].connectedPart = this;
-				SetPhysicalConnection(relativeDirection, connectionType);
 				
-				return true;
+				
 			}
 		}
 		

@@ -33,7 +33,9 @@ public class WeldingRig : Mechanism
 		return true;
 	}
 	
-	public override void PlaceAtLocation(IntVector2 location)
+	
+	
+	public override bool PlaceAtLocation(IntVector2 location)
 	{
 		
 		Location = location;
@@ -46,11 +48,21 @@ public class WeldingRig : Mechanism
 			
 			if (hexCell != null && leftBelow != null && centerBelow != null && rightBelow != null)
 			{
+				foreach (HexCell hc in new HexCell [4] {hexCell, leftBelow, centerBelow, rightBelow})
+				{
+					if (hc.placedPlaceable != null)
+					{
+						return false;
+					}
+				}
+				
 				transform.position = hexCell.transform.position;
 				foreach (HexCell hc in new HexCell [4] {hexCell, leftBelow, centerBelow, rightBelow})
 				{
 					hc.placedPlaceable = this;
 				}
+				
+				return true;
 			}
 		}
 		else
@@ -73,7 +85,10 @@ public class WeldingRig : Mechanism
 				centerBelow = null;
 				rightBelow = null;
 			}
+			
 		}
+		
+		return false;
 	}
 	
 	

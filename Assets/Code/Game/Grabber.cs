@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Grabber : Mechanism
+public class Grabber : Mechanism, IPooledObject
 {
 	
 	public override MechanismType MechanismType { get { return MechanismType.Grabber; } }
@@ -14,7 +14,17 @@ public class Grabber : Mechanism
 	List<Instruction> instructions = new List<Instruction>();
 	
 	bool saveOnUpdate = false;
-	
+
+	#region IPooledObject implementation
+	public void OnPoolActivate ()
+	{
+	}
+
+	public void OnPoolDeactivate ()
+	{
+		instructions.Clear();
+	}
+	#endregion	
 	public void ReplaceInstruction(int i, Instruction instruction)
 	{
 		SetInstruction(i, Instruction.None);
@@ -321,13 +331,13 @@ public class Grabber : Mechanism
 		{
 			case Instruction.TurnClock:
 			{
-				_endStepState.direction += 5;
+				_endStepState.direction += 1;
 				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.TurnAnti:
 			{
-				_endStepState.direction += 1;
+				_endStepState.direction += 5;
 				_isMoveingInstruction = true;
 			}
 			break;
@@ -345,13 +355,13 @@ public class Grabber : Mechanism
 			break;
 			case Instruction.RotateClock:
 			{
-				_endStepState.rotation -= 1;
+				_endStepState.rotation += 1;
 				_isMoveingInstruction = true;
 			}
 			break;
 			case Instruction.RotateAnti:
 			{
-				_endStepState.rotation += 1;
+				_endStepState.rotation -= 1;
 				_isMoveingInstruction = true;
 			}
 			break;
