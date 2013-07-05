@@ -30,7 +30,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 //			EnableGUI(GameManager.instance.gameState == GameManager.State.Construction);
 //		};
 		
-		GameManager.instance.GameStateChangedEvent += () =>
+		LevelManager.instance.GameStateChangedEvent += () =>
 		{
 			RefreshGrabberUIObjects();
 		};
@@ -94,7 +94,7 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	{
 		foreach (GameObject uiObject in _grabberUIObjects)
 		{
-			uiObject.transform.localScale = Vector3.one * (_displayedGrabber != null && /*guiEnabled &&*/ GameManager.instance.gameState == GameManager.State.Construction ? 1f : 0f);
+			uiObject.transform.localScale = Vector3.one * (_displayedGrabber != null && /*guiEnabled &&*/ LevelManager.instance.gameState == LevelManager.State.Construction ? 1f : 0f);
 		}
 	}
 

@@ -13,14 +13,14 @@ public class DraggableInstruction : MonoBehaviour
 	
 	void Start()
 	{
-		GameManager.instance.GameStateChangedEvent += UpdateDraggable;
+		LevelManager.instance.GameStateChangedEvent += UpdateDraggable;
 		InputManager.instance.OnSelectionChange += GameSelectionChangedEvent;
 	}
 	void OnDestroy()
 	{
-		if (GameManager.hasInstance)
+		if (LevelManager.hasInstance)
 		{
-			GameManager.instance.GameStateChangedEvent -= UpdateDraggable;
+			LevelManager.instance.GameStateChangedEvent -= UpdateDraggable;
 		}
 		if (InputManager.hasInstance)
 		{
@@ -35,7 +35,7 @@ public class DraggableInstruction : MonoBehaviour
 	
 	void UpdateDraggable()
 	{
-		button.IsDraggable = GameManager.instance.gameState == GameManager.State.Construction;
+		button.IsDraggable = LevelManager.instance.gameState == LevelManager.State.Construction;
 	}
 	
 //	bool _isClone = false;

@@ -19,16 +19,16 @@ public class GUIManager : MonoBehaviour
 	
 	void Start()
 	{
-		GameManager.instance.ConstructionCompletedEvent += 
-		 	() => _targetText.Text = "Target\n"+GameManager.instance.completedConstructions+"/"+GameManager.instance.currentLevel.targetConstructions;
+		LevelManager.instance.ConstructionCompletedEvent += 
+		 	() => _targetText.Text = "Target\n"+LevelManager.instance.completedConstructions+"/"+LevelManager.instance.currentLevel.targetConstructions;
 	
 	
-		GameManager.instance.SimulationSpeedChangedEvent += 
+		LevelManager.instance.SimulationSpeedChangedEvent += 
 		() =>
 		{
-			GameManager.SimulationSpeed currentSpeed = GameManager.instance.currentSpeed;
+			LevelManager.SimulationSpeed currentSpeed = LevelManager.instance.currentSpeed;
 			
-			if (currentSpeed == GameManager.SimulationSpeed.Stopped)
+			if (currentSpeed == LevelManager.SimulationSpeed.Stopped)
 			{
 				// change stop to play
 //				_playNormalButton.transform.localScale = Vector3.one;

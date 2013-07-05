@@ -16,9 +16,9 @@ public class HUDFunctions : MonoBehaviour
 	void Start()
 	{
 //		GetComponent<GUIEnabler>().onEnableGUI = (enabled) => _inputEnabled = enabled;
-		GameManager.instance.GameStateChangedEvent += () => 
+		LevelManager.instance.GameStateChangedEvent += () => 
 		{
-			_inputEnabled = (GameManager.instance.gameState == GameManager.State.Construction);
+			_inputEnabled = (LevelManager.instance.gameState == LevelManager.State.Construction);
 		};
 		
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
@@ -48,7 +48,7 @@ public class HUDFunctions : MonoBehaviour
 		switch (ptr.evt)
 		{
 			case POINTER_INFO.INPUT_EVENT.PRESS:
-				GameManager.instance.CreateMechanismForDragging(mechanismType);
+				LevelManager.instance.CreateMechanismForDragging(mechanismType);
 				break;
 			case POINTER_INFO.INPUT_EVENT.TAP:
 			case POINTER_INFO.INPUT_EVENT.RELEASE:

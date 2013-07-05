@@ -253,7 +253,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 			
 			string [] codeData = code.Split(';');
 			
-			Mechanism newMechanism = GameManager.instance.InstantiateMechanism(codeType);
+			Mechanism newMechanism = LevelManager.instance.InstantiateMechanism(codeType);
 			newMechanism.Decode(codeData[3]);
 			newMechanism.PlaceAtLocation(new IntVector2(int.Parse(codeData[1]), int.Parse(codeData[2])));
 		}

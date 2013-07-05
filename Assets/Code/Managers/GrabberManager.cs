@@ -10,21 +10,21 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 	
 	void Start()
 	{
-		GameManager.instance.GameStateChangedEvent += OnGameStateChanged;
+		LevelManager.instance.GameStateChangedEvent += OnGameStateChanged;
 	}
 	
 	public override void OnDestroy()
 	{
-		if (GameManager.hasInstance)
+		if (LevelManager.hasInstance)
 		{
-			GameManager.instance.GameStateChangedEvent -= OnGameStateChanged;
+			LevelManager.instance.GameStateChangedEvent -= OnGameStateChanged;
 		}
 		base.OnDestroy();
 	}
 	
 	void OnGameStateChanged()
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 			grabbedPart.Clear();
 			grabbedBy.Clear();
@@ -52,7 +52,7 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 	
 	public Grabber GetGrabberHolding(GrabbablePart part)
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 			if (part.ParentConstruction == null || !grabbedBy.ContainsKey(part.ParentConstruction))
 			{
@@ -72,7 +72,7 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 	
 	public GrabbablePart GetPartHeldBy(Grabber grabber)
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 			return grabbedPart.ContainsKey(grabber) ? grabbedPart[grabber] : null;
 		}
@@ -81,7 +81,7 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 		
 	public int GetGrabbersHoldingCount(Construction construction)
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 			if (grabbedBy.ContainsKey(construction))
 			{
@@ -93,7 +93,7 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 	}
 	public IEnumerable<Grabber> GetAllGrabbersHolding(Construction construction)
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 //			Debug.Log ("Getting All Grabbers");
 			if (grabbedBy.ContainsKey(construction))
@@ -125,7 +125,7 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 	
 	public void RegisterGrab(Grabber grabber, GrabbablePart part)
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 			Debug.LogWarning("Grab "+grabber.name+":"+part.name+" ("+part.ParentConstruction.name+")");
 			grabbedPart[grabber] = part;
@@ -140,7 +140,7 @@ public class GrabberManager : SingletonBehaviour<GrabberManager>
 	}
 	public void RegisterDrop(Grabber grabber, GrabbablePart part)
 	{
-		if (GameManager.instance.gameState == GameManager.State.Simulation)
+		if (LevelManager.instance.gameState == LevelManager.State.Simulation)
 		{
 			Debug.LogWarning("Drop "+grabber.name+":"+part.name+" ("+part.ParentConstruction.name+")\n" +
 				"grabbedPart.Remove("+grabber.name+")\n" +

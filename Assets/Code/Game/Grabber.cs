@@ -386,7 +386,7 @@ public class Grabber : Mechanism, IPooledObject
 					{
 						// trying to drop into non grid location
 						
-						GameManager.instance.gameState = GameManager.State.SimulationFailed;
+						LevelManager.instance.gameState = LevelManager.State.SimulationFailed;
 						heldPart.highlighted = true;
 						break;
 					}
@@ -499,7 +499,7 @@ public class Grabber : Mechanism, IPooledObject
 					Debug.LogWarning("Multiple grab, two parts welded together while held", otherMovingGrabber);
 					Debug.LogWarning("Multiple grab, two parts welded together while held", GrabberManager.instance.GetPartHeldBy(this));
 					Debug.LogWarning("Multiple grab, two parts welded together while held", GrabberManager.instance.GetPartHeldBy(otherMovingGrabber));
-					GameManager.instance.MultipleGrabOccured(this, otherMovingGrabber);
+					LevelManager.instance.MultipleGrabOccured(this, otherMovingGrabber);
 					
 					return false;
 				}

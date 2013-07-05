@@ -1017,7 +1017,7 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 				return;
 			}
 		
-			GameManager.instance.PartCollisionOccured(this, otherPart);
+			LevelManager.instance.PartCollisionOccured(this, otherPart);
 		}
 	}
 	#endregion

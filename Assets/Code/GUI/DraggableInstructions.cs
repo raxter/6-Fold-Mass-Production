@@ -83,12 +83,12 @@ public class DraggableInstructions : MonoBehaviour
 		
 		selectionIcon.transform.localScale = Vector3.zero;
 		
-		GameManager.instance.GameStateChangedEvent += () =>
+		LevelManager.instance.GameStateChangedEvent += () =>
 		{
-			selectionIcon.transform.localScale = Vector3.one*(GameManager.instance.gameState == GameManager.State.Construction ? 0f : 1f);
+			selectionIcon.transform.localScale = Vector3.one*(LevelManager.instance.gameState == LevelManager.State.Construction ? 0f : 1f);
 		};
 		
-		GameManager.instance.InstructionStartedEvent += () =>
+		LevelManager.instance.InstructionStartedEvent += () =>
 		{
 //			Debug.LogWarning("Instruction Step!");
 			if (selectedGrabber != null)
@@ -144,7 +144,7 @@ public class DraggableInstructions : MonoBehaviour
 				Debug.Log ("Cancelled "+parms.dragObj);
 				Debug.Log ("DropTarget: "+parms.dragObj.DropTarget);
 				
-				if (GameManager.instance.gameState != GameManager.State.Construction)
+				if (LevelManager.instance.gameState != LevelManager.State.Construction)
 				{
 					return;
 				}

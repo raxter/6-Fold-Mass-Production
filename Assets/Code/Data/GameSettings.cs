@@ -22,6 +22,11 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 	
 //	public PartGenerator generatorPrefab;
 	
+	public Object baseLevelScene;
+	
+	public string BaseLevelSceneName { get { return baseLevelScene.name; } }
+	
+	
 	
 	public GrabbablePart GetPartPrefab(PartType partType)
 	{

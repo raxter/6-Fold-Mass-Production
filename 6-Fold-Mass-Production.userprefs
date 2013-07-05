@@ -1,18 +1,13 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\GUI\Title Scene\MainMenuController.cs">
     <Files>
-      <File FileName="Assets\Code\Game\Construction.cs" Line="225" Column="41" />
-      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionMaker.cs" Line="226" Column="95" />
-      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="320" Column="25" />
-      <File FileName="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs" Line="75" Column="69" />
-      <File FileName="Assets\Code\Game\ConstructionDefinition.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\GridManager.cs" Line="232" Column="22" />
-      <File FileName="Assets\Code\Game\Mechanism.cs" Line="42" Column="56" />
-      <File FileName="Assets\Code\Managers\InputManager.cs" Line="29" Column="20" />
-      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionPreview.cs" Line="59" Column="33" />
-      <File FileName="Assets\Code\Game\Grabber.cs" Line="311" Column="42" />
-      <File FileName="Assets\Code\Managers\GameManager.cs" Line="389" Column="71" />
+      <File FileName="Assets\Code\GUI\Title Scene\MainMenuController.cs" Line="10" Column="116" />
+      <File FileName="Assets\Code\Game\Grabber.cs" Line="10" Column="44" />
+      <File FileName="Assets\External Plugins\RaxterFramework\Persistant.cs" Line="5" Column="2" />
+      <File FileName="Assets\Code\Game\GameCommon.cs" Line="17" Column="1" />
+      <File FileName="Assets\Code\Data\GameSettings.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\GUIManager.cs" Line="29" Column="29" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-
-public class GameManager : SingletonBehaviour<GameManager> 
+// should really be called LevelManager
+public class LevelManager : SingletonBehaviour<LevelManager> 
 {
 	
 	
