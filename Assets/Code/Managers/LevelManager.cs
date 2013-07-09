@@ -342,7 +342,7 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 			}
 //			Debug.Log ("Found " +partsOverFinishCell.Count+ " parts over finish cells");
 			
-			while (partsOverFinishCell.Count > 0)
+			while (partsOverFinishCell.Count > 0 && _gameState == State.Simulation)
 			{
 //				Debug.Log ("Checking " +partsOverFinishCell.Count+ " parts");
 				// get a part from the ones over the finish cells
@@ -357,8 +357,8 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 				GrabbablePart partOverFinish = partsOverFinishCell.First();
 				
 				Construction constructionOverFinish = partOverFinish.ParentConstruction;
-//				Debug.Log ("Checking Part "+partOverFinish.name);
-//				Debug.Log ("Checking Construction "+constructionOverFinish);
+				Debug.Log ("Checking Part "+partOverFinish.name);
+				Debug.Log ("Checking Construction "+constructionOverFinish);
 				bool allPartsOverFinish = true;
 				foreach(GrabbablePart constructionPart in constructionOverFinish.Parts)
 				{

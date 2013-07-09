@@ -13,7 +13,7 @@ public class MainMenuController : MonoBehaviour
 	
 	void StartLevelEditor()
 	{
-		
+		GameCommon.instance.LoadLevel(LevelSettings.instance.levels[0].name, true); // should pass the encoded string in rather
 	}
 	
 }

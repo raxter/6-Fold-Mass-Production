@@ -1,23 +1,17 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\GUI\Title Scene\MainMenuController.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Resources\LevelSet.txt">
     <Files>
-      <File FileName="Assets\Code\GUI\Title Scene\MainMenuController.cs" Line="10" Column="116" />
-      <File FileName="Assets\Code\Game\Grabber.cs" Line="10" Column="44" />
-      <File FileName="Assets\External Plugins\RaxterFramework\Persistant.cs" Line="5" Column="2" />
-      <File FileName="Assets\Code\Game\GameCommon.cs" Line="17" Column="1" />
-      <File FileName="Assets\Code\Data\GameSettings.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\GUIManager.cs" Line="29" Column="29" />
+      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\GUI\Title Scene\MainMenuController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\GameCommon.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="42" Column="14" />
+      <File FileName="Assets\Resources\LevelSet.txt" Line="1" Column="51" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore>
-      <Breakpoint file="/Users/richard/Projects/Personal Development/6-Fold-Mass-Production/Assets/Code/HexCellPlaceable.cs" line="90" />
-      <Breakpoint file="D:\GameDev\6-Fold-Mass-Production\Assets\Code\Game\CollisionDelegate.cs" line="17" />
-    </BreakpointStore>
+    <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
-    <Watch file="Assets\Code\Game\GrabbablePart.cs" line="75" offsetX="139" offsetY="1184" expression="colliders" liveUpdate="False" />
-    <Watch file="Assets\Code\Game\Grabber.cs" line="288" offsetX="867" offsetY="4592" expression="locationAtClampEnd" liveUpdate="False" />
-  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

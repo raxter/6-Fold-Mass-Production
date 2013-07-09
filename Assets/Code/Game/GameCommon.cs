@@ -1,12 +1,17 @@
 using UnityEngine;
 using System.Collections;
 
-public class GameCommon : AutoSingletonBehaviour<GameCommon> 
+public class GameCommon : SingletonBehaviour<GameCommon> 
 {
 	
 	string levelString;
+	bool editorMode = false;
 	
 	public void LoadLevel(string encodedLevel)
+	{
+		LoadLevel(encodedLevel, false);
+	}
+	public void LoadLevel(string encodedLevel, bool loadEditor)
 	{
 		// setup options for level and save then here
 		levelString = encodedLevel;
