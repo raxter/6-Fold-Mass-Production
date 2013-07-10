@@ -1,15 +1,6 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Resources\LevelSet.txt">
-    <Files>
-      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\Title Scene\MainMenuController.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\GameCommon.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="42" Column="14" />
-      <File FileName="Assets\Resources\LevelSet.txt" Line="1" Column="51" />
-    </Files>
-  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

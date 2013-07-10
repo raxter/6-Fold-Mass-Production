@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public delegate void ConstructionSavedDelegate(string encoded);
+public delegate void ConstructionSavedDelegate(Construction construction);
 
 public class ConstructionMaker : SingletonBehaviour<ConstructionMaker> 
 {
@@ -313,8 +313,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	public event ConstructionSavedDelegate saveEvent;
 	
 	
-	public void OpenMaker (string code)
+	public void OpenMaker (Construction construction)
 	{
+		string constructionCode = CharSerializer.Encode(construction);
 //		this.transform.localScale = Vector3.one;
 		this.gameObject.SetActive(true);
 		
@@ -323,7 +324,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		InputCatcher.instance.RequestInputOverride(HandleScreenPoint);
 		
 		targetConstructions = new List<Construction>();
-		targetConstructions.Add(Construction.Decode(code));
+		targetConstructions.Add(Construction.Decode(constructionCode));
 		targetConstructions[0].transform.parent = _constructionHolder.transform;
 		targetConstructions[0].transform.localPosition = Vector3.zero;
 //		construction.gameObject.SetLayerRecursively(gameObject.layer);
@@ -352,7 +353,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		Debug.Log ("Saving");
 		if (targetConstructions.Count > 0 && saveEvent != null)
 		{
-			saveEvent(targetConstructions[0].Encode());
+			saveEvent(targetConstructions[0]);
 		}
 	}
 #endregion

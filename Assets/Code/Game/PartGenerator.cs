@@ -28,19 +28,21 @@ public class PartGenerator : Mechanism
 	#endregion
 	
 	bool movable = false;
-	
-	// Grabber code is (movable)(construction)
-	public override string Encode()
+
+	public override string Get3CharUniqueID ()
 	{
-		string code = movable ? "1" : "0";
+		return "GEN";
+	}
+	// Grabber code is (movable)(construction)
+	public override IEnumerable Encode()
+	{
+		yield return movable ? 1 : 0;
 		
 		if (toGenerateConstruction != null)
 		{
-			code += toGenerateConstruction.Encode();
+			yield return toGenerateConstruction.Encode();
 		}
 		
-		
-		return code;
 	}
 	
 	public override bool Decode(string encoded)
@@ -62,10 +64,13 @@ public class PartGenerator : Mechanism
 		return true;
 	}
 	
+	string encodedConsruction = "";
+	
 	public void StartSimulation()
 	{
 		placeOnNextTurn = true;
 		generatorCount = 0;
+		encodedConsruction = CharSerializer.Encode(toGenerateConstruction);
 	}
 
 	public Construction StepPreStart ()
@@ -76,7 +81,7 @@ public class PartGenerator : Mechanism
 			if (placeOnNextTurn)
 			{
 				Construction construction;
-				construction = Construction.Decode(toGenerateConstruction.Encode());
+				construction = Construction.Decode(encodedConsruction);
 				
 				construction.idNumber = generatorCount;
 //				construction.gameObject.name = toGenerateConstruction.gameObject.name+" "+generatorCount;

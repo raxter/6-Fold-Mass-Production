@@ -802,35 +802,15 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 	
 #region Encodign and Decoding
 	
-	public string Encode(Dictionary<GrabbablePart, int> partIDs)
+	public IEnumerable EncodeWithContext(Dictionary<GrabbablePart, int> partIDs)
 	{
-		
-//			Debug.Log("Defining "+element.id);
-//		HexMetrics.Direction orientation = part.SimulationOrientation;
-//		
-//		int [] connectedParts = new int [6];
-//		GrabbablePart.PhysicalConnectionType [] physicalConnectionType = new GrabbablePart.PhysicalConnectionType [6];
-//		int [] auxilaryConnectionType = new int [6];
-//		
-//		for(int i = 0 ; i < 6 ; i++)
-//		{
-//			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
-//			GrabbablePart connPart = part.GetConnectedPart(iDir);
-//			element.connectedParts[i] = connPart == null ? 0 : partIDs[connPart];
-//			element.physicalConnectionType[i] = part.GetPhysicalConnectionType(iDir);
-//			element.auxilaryConnectionType[i] = part.GetAuxilaryConnectionTypes(iDir);
-//			
-//			if (element.physicalConnectionType[i] == GrabbablePart.PhysicalConnectionType.None)
-//			{
-//				element.connectedParts[i] = 0;
-//				element.auxilaryConnectionType[i] = 0;
-//			}
-//		}
-//		
-		
 		int id = partIDs[this];
 		
-		string code = ""+CharSerializer.ToCode(id)+CharSerializer.ToCode((int)partType)+CharSerializer.ToCode((int)SimulationOrientation);
+		yield return id;
+		yield return (int)partType;
+		yield return (int)SimulationOrientation;
+		
+//		string code = ""+CharSerializer.ToCode()+CharSerializer.ToCode((int)partType)+CharSerializer.ToCode((int)SimulationOrientation);
 		for (int i = 0 ; i < 6 ; i++)
 		{
 			HexMetrics.Direction iDir = (HexMetrics.Direction)i;
@@ -844,13 +824,16 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 				auxilaryConnType = 0;
 			}
 			
-			code += ""+
-					CharSerializer.ToCode(connPartID)+
-					CharSerializer.ToCode((int)physicalConnType)+
-					CharSerializer.ToCode((int)auxilaryConnType);
+			yield return connPartID;
+			yield return (int)physicalConnType;
+			yield return (int)auxilaryConnType;
+//			code += ""+
+//					CharSerializer.ToCode(connPartID)+
+//					CharSerializer.ToCode((int)physicalConnType)+
+//					CharSerializer.ToCode((int)auxilaryConnType);
 		}
 		
-		return code;
+//		return code;
 	}
 	
 	

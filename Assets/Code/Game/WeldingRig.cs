@@ -22,10 +22,14 @@ public class WeldingRig : Mechanism
 	#endregion
 	
 	HexCell leftBelow = null, centerBelow = null, rightBelow = null;
-	
-	public override string Encode()
+
+	public override string Get3CharUniqueID ()
 	{
-		return "";
+		return "RIG";
+	}
+	public override IEnumerable Encode()
+	{
+		yield break;
 	}
 	
 	public override bool Decode(string encoded)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 //public delegate GameObject InstantiatePrefabDelegate (GameObject prefab);
 //public delegate T InstantiatePrefabDelegate<T> (T prefab) where T : MonoBehaviour;
 
-public class Construction : MonoBehaviour, System.IComparable<Construction>, IPooledObject
+public class Construction : MonoBehaviour, System.IComparable<Construction>, IPooledObject, Encodable
 {
 
 		//=========================================================================================
@@ -330,12 +330,14 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 	}
 		
 	public static Construction Decode(string encoded)
-//	public static Construction Decode(string encoded)
 	{
+		List<string> encodedElements = new List<string>(CharSerializer.SplitEncoding(encoded));
+		
+		
 //		Debug.Log ("Decoding Construction: "+encoded);
-		if (encoded.Length == 1)
+		if (encodedElements.Count == 1 && encodedElements[0].Length == 1)
 		{
-			PartType partType = (PartType)CharSerializer.CodeToNumber(encoded[0]);
+			PartType partType = (PartType)CharSerializer.CodeToNumber(encodedElements[0][0]);
 			return CreateSimpleConstruction(partType);
 		}
 		
@@ -344,7 +346,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		Dictionary<GrabbablePart, string> partEncodings = new Dictionary<GrabbablePart, string>();
 //		
 //		List<GrabbablePart> elements = new List<GrabbablePart>();
-		List<string> encodedElements = new List<string>(encoded.Split(','));
+//		List<string> encodedElements = new List<string>(encoded.Split(','));
 		
 		
 //		
@@ -353,6 +355,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		for (int i = 0 ; i < encodedElements.Count ; i++)
 		{
 			int id = CharSerializer.ToNumber(encodedElements[i][0]);
+//			Debug.Log ("Encoding "+encodedElements[i][0]+" ("+id+")");
 			if (centerId == -1)
 			{
 				centerId = id;
@@ -401,7 +404,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 				
 				if (otherId != 0 && !idParts.ContainsKey(otherId))
 				{
-					Debug.LogError ("idParts does not contain part with id "+otherId+"\n"+encoded);
+					Debug.LogError ("idParts does not contain part with id "+otherId+"\n"+encoded+"\n"+string.Join(", ", new List<int>(idParts.Keys).ConvertAll((e) => ""+e).ToArray()));
 					return false;
 					
 				}
@@ -459,10 +462,9 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		return construction;
 		
 	}
-	
 				
 	
-	public string Encode()
+	public IEnumerable Encode()
 	{
 		
 		Dictionary<GrabbablePart, int> partID = new Dictionary<GrabbablePart, int>();
@@ -485,11 +487,11 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 			foreach (GrabbablePart element in CenterPart.GetAllConnectedParts())
 	//		foreach (GrabbablePart element in Parts)
 			{
-				encodedElements.Add(element.Encode(partID));
+				yield return element.EncodeWithContext(partID);
 			}
 		}
 		
-		return string.Join(",", encodedElements.ToArray());
+//		return string.Join(",", encodedElements.ToArray());
 		
 	}
 			

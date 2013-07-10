@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-// should really be called LevelManager
 public class LevelManager : SingletonBehaviour<LevelManager> 
 {
 	
@@ -87,11 +86,6 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 	
 	IEnumerator Start()
 	{
-		yield return null;
-		
-		LoadLevel(loadLevelOnStart);
-		
-		gameState = State.Construction;
 		cellMechanismPrefabs = new Dictionary<MechanismType, Mechanism>();
 		
 		cellMechanismPrefabs.Add(MechanismType.None, null);
@@ -100,10 +94,19 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 		{
 			cellMechanismPrefabs.Add(mechanismPrefab.MechanismType, mechanismPrefab);
 		}
+		
+		yield return null;
+		
+		LoadLevel(loadLevelOnStart);
+		GridManager.instance.LoadLayout();
+		
+		completedConstructions = 0;
+		
+		gameState = State.Construction;
+		
 		StopSimulation();
 		
 		
-		GridManager.instance.LoadLayout();
 	}
 
 	void LoadLevel (string leveName)
@@ -122,7 +125,6 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 //			generator.toGenerateConstruction.ignoreCollisions = true;
 //			generator.PlaceAtLocation(generatorDetails.location);
 //		}
-		completedConstructions = 0;
 	}
 
 	public void AddCompletedConstruction ()

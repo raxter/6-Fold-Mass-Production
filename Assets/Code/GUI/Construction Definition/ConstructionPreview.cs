@@ -27,12 +27,12 @@ public class ConstructionPreview : MonoBehaviour
 //	public delegate void CreateConstructionDelegate(string encoded);
 	ConstructionSavedDelegate saveFunction = null;
 	
-	public void OnSaveEvent(string encoded)
+	public void OnSaveEvent(Construction construction)
 	{
 		if (saveFunction != null)
 		{
-			saveFunction(encoded);
-			SetPreviewedConstructionInternal(encoded);
+			saveFunction(construction);
+			SetPreviewedConstructionInternal(construction);
 		}
 	}
 	
@@ -47,7 +47,7 @@ public class ConstructionPreview : MonoBehaviour
 			}
 			else
 			{
-				ConstructionMaker.instance.OpenMaker(PreviewedConstruction.Encode());
+				ConstructionMaker.instance.OpenMaker(PreviewedConstruction);
 			}
 		}
 		
@@ -56,12 +56,13 @@ public class ConstructionPreview : MonoBehaviour
 	
 	void SelectTarget()
 	{
+		Debug.Log ("Selecting Target"+GridManager.instance.target);
 		InputManager.instance.ClearSelection();
-		SetPreviewedConstruction(GridManager.instance.target.Encode(), 
-		(encoded) => 
+		SetPreviewedConstruction(GridManager.instance.target, 
+		(construction) => 
 		{
 			ObjectPoolManager.DestroyObject(GridManager.instance.target);
-			GridManager.instance.SetTarget(encoded);
+			GridManager.instance.SetTarget(CharSerializer.Encode(construction));
 		});
 		
 	}
@@ -96,21 +97,21 @@ public class ConstructionPreview : MonoBehaviour
 		
 	}
 	
-	void SetPreviewedConstructionInternal(string encoded)
+	void SetPreviewedConstructionInternal(Construction construction)
 	{
-		if (encoded == "")
+		if (construction == null)
 		{
 			PreviewedConstruction = null;
 		}
 		else 
 		{
-			PreviewedConstruction = Construction.Decode(encoded);
+			PreviewedConstruction = Construction.Decode(CharSerializer.Encode(construction));
 		}
 	}
 	
-	public void SetPreviewedConstruction(string encoded, ConstructionSavedDelegate saveDelegate)
+	public void SetPreviewedConstruction(Construction construction, ConstructionSavedDelegate saveDelegate)
 	{
-		SetPreviewedConstructionInternal(encoded);
+		SetPreviewedConstructionInternal(construction);
 		
 		saveFunction = PreviewedConstruction == null ? null : saveDelegate;
 	}
@@ -132,12 +133,12 @@ public class ConstructionPreview : MonoBehaviour
 		}
 		
 		SetPreviewedConstruction(
-			selectedGenerator == null ? "" : selectedGenerator.toGenerateConstruction == null ? "" : selectedGenerator.toGenerateConstruction.Encode(), 
-			(encoded) => 
+			selectedGenerator == null ? null : selectedGenerator.toGenerateConstruction, 
+			(construction) => 
 			{
-				Debug.LogWarning("encoding "+encoded,this);
+				Debug.LogWarning("encoding "+construction.name,this);
 				ObjectPoolManager.DestroyObject(selectedGenerator.toGenerateConstruction);
-				selectedGenerator.toGenerateConstruction = Construction.Decode(encoded);
+				selectedGenerator.toGenerateConstruction = Construction.Decode(CharSerializer.Encode(construction));
 				selectedGenerator.toGenerateConstruction.ignoreCollisions = true;
 			});
 		

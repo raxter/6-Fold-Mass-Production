@@ -77,25 +77,38 @@ public class Grabber : Mechanism, IPooledObject
 	MeshRenderer _clampClosedRenderer;
 	
 	
-	// Grabber code is (direction)(extention)(instruction0)(instruction1)...
-	public override string Encode()
+	public override string Get3CharUniqueID ()
 	{
-		string code = "";
-		
-		code += (int)_startState.direction;
-		code += _startState.extention;
-		
+		return "GRB";
+	}
+	// Grabber code is (direction)(extention)(instruction0)(instruction1)...
+	public override IEnumerable Encode()
+	{
+		yield return (int)_startState.direction;
+		yield return _startState.extention;
 		foreach (Instruction instruction in instructions)
 		{
-			if (instruction == Instruction.None)
-			{
-				break;
-			}
-			code += CharSerializer.ToCode((int)instruction);
+			yield return (int)instruction;
 		}
-		
-		return code;
 	}
+//	public override string Encode()
+//	{
+//		string code = "";
+//		
+//		code += (int)_startState.direction;
+//		code += _startState.extention;
+//		
+//		foreach (Instruction instruction in instructions)
+//		{
+//			if (instruction == Instruction.None)
+//			{
+//				break;
+//			}
+//			code += CharSerializer.ToCode((int)instruction);
+//		}
+//		
+//		return code;
+//	}
 	
 	public override bool Decode(string encoded)
 	{

@@ -237,6 +237,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void LoadLayout()
 	{
+		PlayerPrefs.DeleteKey("save string");
 		string saveString = PlayerPrefs.GetString("save string");
 		if (saveString == "")
 		{

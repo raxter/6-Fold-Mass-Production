@@ -5,44 +5,65 @@ using System.Collections.Generic;
 public class LevelDataManager : SingletonBehaviour<LevelDataManager> 
 {
 	
-	string standardLevelSetName = "LevelSet";
+	string standardLevelSetDirectory = "Levels";
+	
+	Dictionary<string, string> levels = new Dictionary<string, string>();
 	
 	void Start () 
 	{
-		TextAsset standardLevelSetText = Resources.Load(standardLevelSetName, typeof(TextAsset)) as TextAsset;
-		
-		Debug.Log (" -> \n"+standardLevelSetText);
-		
-		if (standardLevelSetText == null)
-		{
-#if UNITY_EDITOR
-			System.IO.File.Create("Assets/Resources/"+standardLevelSetName+".txt");
-			System.IO.File.WriteAllText("Assets/Resources/"+standardLevelSetName+".txt", "\n");
-			standardLevelSetText = Resources.Load(standardLevelSetName, typeof(TextAsset)) as TextAsset;
-#endif
-
-		}
-		
-		Debug.Log (" -> \n"+standardLevelSetText.text);
-		
-		
-		ParseLevelData(standardLevelSetText.text);
+		ReloadLevelData();
 	}
 	
-	void ParseLevelData (string text)
+	public void SaveLevel(string levelName, string encodedLevel)
 	{
-		List<string> levels = text.Split("\n");
-		
-		foreach(string levelString in levels)
-		{
-			encodedString = levelString.Trim();
-			
-			if (encodedString.StartsWith("//"))
-			{
-				continue;
-			}
-		}
+		System.IO.File.WriteAllText("Assets/"+standardLevelSetDirectory+"/"+levelName.Replace(" ", "_")+".txt", levelName+"\n"+encodedLevel);
 	}
+	
+	public IEnumerator<string> GetLevelList()
+	{
+		return levels.Keys.GetEnumerator();
+	}
+	
+	void ReloadLevelData()
+	{
+		levels.Clear();
+		Object [] levelObjects = Resources.LoadAll(standardLevelSetDirectory, typeof(TextAsset));
+		
+		foreach(Object obj in levelObjects)
+			if (obj is TextAsset)
+				ParseLevelFile(obj as TextAsset);
+	}
+	
+	void ParseLevelFile(TextAsset textAsset)
+	{
+		string [] data = textAsset.text.Split('\n');
+		
+		if (data.Length < 2)
+		{
+			Debug.LogWarning(textAsset.name+" not a valid 6xMP save file");
+			return;
+		}
+		
+		string name = data[0].Trim();
+		string encodedLevel = data[1].Trim();
+		
+		// TODO check if it's a valid save
+		levels[name] = encodedLevel;
+	}
+
+	
+	
+	
 	
 	
 }
+
+
+
+
+
+
+
+
+
+

@@ -1,16 +1,19 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum MechanismType {None, Grabber, WeldingRig, Generator};
 
-public abstract class Mechanism : HexCellPlaceable 
+public abstract class Mechanism : HexCellPlaceable, Encodable
 {
 	
 	public abstract MechanismType MechanismType
 	{
 		get;
 	}
-	
+
+	public abstract string Get3CharUniqueID ();
+	public abstract IEnumerable Encode ();
 	
 	bool _dragging = false;
 		
@@ -85,8 +88,6 @@ public abstract class Mechanism : HexCellPlaceable
 	
 	protected abstract void MechanismUpdate();
 	protected abstract void MechanismStart();
-	
-	public abstract string Encode();
 	
 	public abstract bool Decode(string encoded);
 	
