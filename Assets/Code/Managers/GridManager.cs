@@ -85,7 +85,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		if (LevelEditorGUI.instance.editorEnabled)
 		{
 			// save order -> n Generators : Target1 (: Target2)
-			LevelDataManager.instance.Save(LevelDataManager.editorSaveName, Encoding.Encode(new EncodableLevel()), SaveType.Level);
+			LevelDataManager.instance.Save(LevelDataManager.editorSaveName, LevelEncoding, SaveType.Level);
 			// TODO save grabbers/welders etc
 		}
 		
@@ -133,7 +133,108 @@ public class GridManager : SingletonBehaviour<GridManager>
 //		
 //	}
 	
-	public class EncodableLevel : IEncodable
+	public string LevelEncoding
+	{
+		get
+		{
+			return Encoding.Encode(new EncodableLevel());
+		}
+	}
+	
+	public string SolutionEncoding
+	{
+		get
+		{
+			return Encoding.Encode(new EncodableLevelSolution());
+		}
+	}
+	class EncodableLevelSolution : IEncodable
+	{
+		public IEnumerable<IEncodable> Encode ()
+		{
+			List<PartGenerator> movableGenerators = new List<PartGenerator>();
+			List<IEncodable> grabbers = new List<IEncodable>();
+			List<IEncodable> weldingRigs = new List<IEncodable>();
+			
+			foreach(HexCell hc in GridManager.instance.GetAllCells())
+			{
+				PartGenerator generator = hc.placedMechanism as PartGenerator;
+				Grabber grabber = hc.placedMechanism as Grabber;
+				WeldingRig weldingRig = hc.placedMechanism as WeldingRig;
+				
+				if (generator != null && generator.movable)
+					movableGenerators.Add (generator);
+				
+				if (grabber != null)
+					grabbers.Add (grabber);
+				
+				if (weldingRig != null)
+					weldingRigs.Add (weldingRig);
+				
+			}
+			
+			
+			yield return (EncodableInt)movableGenerators.Count;
+			yield return new EncodableSubGroup(movableGenerators.ConvertAll<IEncodable>(
+				(movableGenerator) => new EncodableSubGroup(new List<IEncodable>()
+				{
+					(EncodableInt)movableGenerator.Location.x,
+					(EncodableInt)movableGenerator.Location.y,
+					movableGenerator.toGenerateConstruction,
+				} )
+			) );
+			
+			
+			foreach (List<IEncodable> list in new List<IEncodable> [] {grabbers, weldingRigs})
+			{
+				yield return (EncodableInt)list.Count;
+				yield return new EncodableSubGroup(list);
+			}
+			
+		}
+		
+		
+
+		public bool Decode (Encoding encodings)
+		{
+			// find moveable grabbers in the level that match the save file
+			List<PartGenerator> generators = new List<PartGenerator>();
+			foreach(HexCell hc in GridManager.instance.GetAllCells())
+			{
+				PartGenerator generator = hc.placedMechanism as PartGenerator;
+				if (generator != null && generator.movable)
+					generators.Add (generator);
+				
+			}
+			PartGenerator [] movableGenerators = new PartGenerator [encodings.Int(0)];
+			for (int i = 0 ; i < movableGenerators.Length ; i++)
+			{
+				Encoding movableGeneratorEncoding = encodings.SubEncoding(1).SubEncoding(i);
+				Construction movableGeneratorConstruction = Construction.DecodeCreate(movableGeneratorEncoding.SubEncoding(2));
+				
+				PartGenerator moveableGenerator = generators.Find((con) => con.toGenerateConstruction.CompareTo(movableGeneratorConstruction) == 0);
+				
+				if (moveableGenerator != null)
+				{
+					moveableGenerator.PlaceAtLocation(new IntVector2(movableGeneratorEncoding.Int (0), movableGeneratorEncoding.Int (1)));
+				}
+				else
+					Debug.LogWarning("Couldn't find movable generator that was saved");
+				
+				movableGeneratorConstruction.DestroySelf();
+			}
+			
+			// TODO
+			// place grabbers
+			
+			// TODO
+			// place welding rigs
+			
+			return true;
+		}
+	}
+	
+	class EncodableLevel : IEncodable
 	{
 		public IEnumerable<IEncodable> Encode ()
 		{

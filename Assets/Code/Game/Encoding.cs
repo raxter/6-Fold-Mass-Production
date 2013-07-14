@@ -203,7 +203,7 @@ public class Encoding
 	
 	static IEnumerable<Encoding> SplitEncoding(string encoded)
 	{
-		Debug.Log("Splitting \""+encoded+"\"");
+//		Debug.Log("Splitting \""+encoded+"\"");
 		int delimIndex = delimeters.Length-1;
 		for ( ; delimIndex >= -1  ; delimIndex --)
 		{
@@ -211,7 +211,7 @@ public class Encoding
 			{
 				foreach (char c in encoded)
 				{
-					Debug.Log ("Returning int "+CodeToNumber(c) +"("+c+")");
+//					Debug.Log ("Returning int "+CodeToNumber(c) +"("+c+")");
 					yield return new Encoding(CodeToNumber(c));
 				}
 //				yield return encoded;
@@ -228,12 +228,12 @@ public class Encoding
 		{
 			if (s.Length > 1)
 			{
-				Debug.Log ("Returning encoding \""+s+"\" ("+delimeters[delimIndex]+")");
+//				Debug.Log ("Returning encoding \""+s+"\" ("+delimeters[delimIndex]+")");
 				yield return new Encoding (s);
 			}
 			else if (s.Length == 1)
 			{
-				Debug.Log ("Returning int "+CodeToNumber(s[0]) +"("+s[0]+")");
+//				Debug.Log ("Returning int "+CodeToNumber(s[0]) +"("+s[0]+")");
 				yield return new Encoding(CodeToNumber(s[0]));
 			}
 		}

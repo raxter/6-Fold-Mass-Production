@@ -6,13 +6,15 @@ using System.Collections.Generic;
 public enum ControlState {Starting, Ending, Active, Inactive};
 
 
-public class InputCatcher : SingletonBehaviour<InputCatcher>
+public class InputCatcher : MonoBehaviour
 {
 	
 	[SerializeField]
 	float moveZto = 10;
 	
-	public UIButton _catcher;
+	public UIButton Control { get { return _catcher; } }
+	[SerializeField]
+	UIButton _catcher;
 	
 	public delegate void HandleInputDelegate (POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState);
 	public event HandleInputDelegate OnInputEvent;
@@ -172,8 +174,10 @@ public class InputCatcher : SingletonBehaviour<InputCatcher>
 		
 		if (OnInputEventOverride == null)
 		{
-			OnInputEvent(ptr, pressState.state, dragState.state);
-//			InputManager.instance.HandleScreenPoint(ptr.devicePos, pressState);
+			if (OnInputEvent != null)
+			{
+				OnInputEvent(ptr, pressState.state, dragState.state);
+			}
 		}
 		else
 		{

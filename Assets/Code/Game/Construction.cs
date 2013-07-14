@@ -352,6 +352,11 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		return newConstruction;
 	}
 	
+	public void DestroySelf()
+	{
+		ObjectPoolManager.DestroyObject(this);
+	}
+	
 	
 	public bool Decode(Encoding encodedElements)
 	{

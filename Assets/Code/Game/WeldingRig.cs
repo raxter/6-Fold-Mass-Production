@@ -24,10 +24,6 @@ public class WeldingRig : Mechanism
 	
 	HexCell leftBelow = null, centerBelow = null, rightBelow = null;
 
-	public override string Get3CharUniqueID ()
-	{
-		return "RIG";
-	}
 	public override IEnumerable<IEncodable> Encode()
 	{
 		yield break;

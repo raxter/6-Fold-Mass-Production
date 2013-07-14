@@ -409,7 +409,8 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 					{
 						parts.Remove(toRemove);
 					}
-					ObjectPoolManager.DestroyObject(constructionOverFinish);
+					constructionOverFinish.DestroySelf();
+//					ObjectPoolManager.DestroyObject(constructionOverFinish);
 				}
 				
 			}
@@ -668,7 +669,8 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 		{
 			if (part != null)
 			{
-				ObjectPoolManager.DestroyObject(part.ParentConstruction);
+				part.ParentConstruction.DestroySelf();
+//				ObjectPoolManager.DestroyObject(part.ParentConstruction);
 			}
 		}
 		parts.Clear();

@@ -77,10 +77,6 @@ public class Grabber : Mechanism, IPooledObject
 	MeshRenderer _clampClosedRenderer;
 	
 	
-	public override string Get3CharUniqueID ()
-	{
-		return "GRB";
-	}
 	// Grabber code is (direction)(extention)(instruction0)(instruction1)...
 	public override IEnumerable<IEncodable> Encode()
 	{

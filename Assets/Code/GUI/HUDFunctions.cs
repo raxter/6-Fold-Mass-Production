@@ -58,7 +58,7 @@ public class HUDFunctions : MonoBehaviour
 			
 		}
 		
-		InputCatcher.instance.InputDelegate(ref ptr);
+		BackgroundInputCatcher.Catcher.InputDelegate(ref ptr);
 	}
 	
 }

@@ -12,9 +12,18 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		get;
 	}
 
-	public abstract string Get3CharUniqueID ();
-	public abstract IEnumerable<IEncodable> Encode ();
-	public abstract bool Decode (Encoding encoding);
+	public virtual IEnumerable<IEncodable> Encode ()
+	{
+		yield return (EncodableInt)Location.x;
+		yield return (EncodableInt)Location.y;
+	}
+	
+	public virtual bool Decode (Encoding encoding)
+	{
+		PlaceAtLocation(new IntVector2(encoding.Int(0), encoding.Int (1)));
+		
+		return true;
+	}
 	
 	
 	bool _dragging = false;

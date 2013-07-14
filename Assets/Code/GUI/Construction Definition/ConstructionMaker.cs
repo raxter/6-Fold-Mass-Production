@@ -16,6 +16,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	SpriteBase _innerArrowPrefab = null;
 	
 	SpriteBase [] _innerArrows = new SpriteBase [6];
+	SpriteBase [] _oppositeInnerArrows = new SpriteBase [6];
 	
 	Dictionary<PartType, UIButton> dragButtons = new Dictionary<PartType, UIButton>();
 	Dictionary<UIButton, GrabbablePart> buttonToPart = new Dictionary<UIButton, GrabbablePart>();
@@ -30,6 +31,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	[SerializeField]
 	UIRadioBtn _defaultControlModeButton = null;
+	
+	[SerializeField]
+	InputCatcher _editorAreaInputCatcher;
 	
 //	List<UIButton> _dragButtons = new List<UIButton>();
 	
@@ -60,6 +64,11 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			_innerArrows[i].transform.localRotation = Quaternion.Euler(0,0,-60*i);
 			_innerArrows[i].transform.parent = transform;
 			_innerArrows[i].transform.localScale = Vector3.zero;
+			
+			_oppositeInnerArrows[i] = (Instantiate(_innerArrowPrefab.gameObject) as GameObject).GetComponent<SpriteBase>();
+			_oppositeInnerArrows[i].transform.localRotation = Quaternion.Euler(0,0,-60*((i+3)%6));
+			_oppositeInnerArrows[i].transform.parent = transform;
+			_oppositeInnerArrows[i].transform.localScale = Vector3.zero;
 		}
 		
 	}
@@ -102,11 +111,14 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			counter += 1;
 		}
 		
+		_editorAreaInputCatcher.OnInputEvent += HandleScreenPoint;
+		
 		
 		yield return null;
 		foreach (Construction construction in draggableParts)
 		{
-			construction.CenterPart.PartSphereCollider.gameObject.SetActive(false);
+//			construction.CenterPart.PartSphereCollider.gameObject.SetActive(false);
+			construction.ignoreCollisions = true;
 		}
 		
 		CloseMaker ();
@@ -118,6 +130,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		for (int i = 0 ; i < 6 ; i++)
 		{
 			_innerArrows[i].transform.localScale = Vector3.zero;
+			_oppositeInnerArrows[i].transform.localScale = Vector3.zero;
 		}
 	}
 	
@@ -139,6 +152,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				HexMetrics.Direction absoluteDir = partSide.part.Absolute(partSide.relativeDirection);
 				_innerArrows[(int)absoluteDir].transform.localScale = Vector3.one;
 				_innerArrows[(int)absoluteDir].transform.position = partSide.part.transform.position;
+				
+				_oppositeInnerArrows[(int)absoluteDir].transform.localScale = Vector3.one;
+				_oppositeInnerArrows[(int)absoluteDir].transform.position = part.transform.position;
 			}
 //			Debug.Log ("is connectable "+partSide.part.name +" in "+partSide.relativeDirection+" ("+partSide.offsetFromSide+")");
 			
@@ -168,6 +184,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 //		Debug.DebugBreak();
 		button.SetDragDropDelegate((parms) => 
 		{
+			
 			if (parms.evt == EZDragDropEvent.Begin)
 			{
 				Debug.Log ("Begin "+parms.dragObj/*+":"+parms.dragObj.transform.position+":"+parms.ptr.ray*/);
@@ -206,19 +223,37 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				Debug.Log ("Cancelled "+parms.dragObj);
 				Debug.Log ("DropTarget: "+parms.dragObj.DropTarget);
 				
-				if (targetConstructions.Count > 0)
+				if (parms.dragObj.DropTarget == _editorAreaInputCatcher.Control.gameObject)
 				{
-					ClearInnerArrows();
+					foreach (Construction construction in targetConstructions)
+					{
+						Debug.Log("Construction: "+construction);
+					}
 					
-					ConnectPartWithBestRotation(part);
-					
-				}
-				else
-				{
-					targetConstructions.Add(Construction.CreateSimpleConstruction(part.partType));
-					targetConstructions[0].FirstPart.SetSimulationOrientation(part.SimulationOrientation);
-					targetConstructions[0].transform.parent = _constructionHolder.transform;
-					targetConstructions[0].transform.localPosition = Vector3.zero;
+					if (targetConstructions.Count > 0 && targetConstructions[0].Count > 0)
+					{
+						ClearInnerArrows();
+						
+						ConnectPartWithBestRotation(part);
+						
+					}
+					else if (targetConstructions.Count > 0 && targetConstructions[0].Count == 0)
+					{
+						Debug.Log ("Adding new part to blank construction");
+						GrabbablePart singlePart = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(part.partType));
+						targetConstructions[0].AddToConstruction(singlePart);
+						targetConstructions[0].CenterConstruction(singlePart);
+						MarkConstructionChange();
+					}
+					else
+					{
+						Debug.Log ("Adding new construction");
+						targetConstructions.Add(Construction.CreateSimpleConstruction(part.partType));
+						targetConstructions[0].FirstPart.SetSimulationOrientation(part.SimulationOrientation);
+						targetConstructions[0].transform.parent = _constructionHolder.transform;
+						targetConstructions[0].transform.localPosition = Vector3.zero;
+						MarkConstructionChange();
+					}
 				}
 				part.SetSimulationOrientation(HexMetrics.Direction.Up);
 				
@@ -234,6 +269,10 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	private void DestroyPart(GrabbablePart toDestroy)
 	{
+		GrabbablePart centerPart = targetConstructions.Count == 0 ? null : targetConstructions[0].CenterPart;
+		
+		List<GrabbablePart> centerParts = centerPart == null ? null :new List<GrabbablePart>(centerPart.GetConnectedParts());
+		
 		if (toDestroy != null)
 		{
 			if (targetConstructions.Contains(toDestroy.ParentConstruction))
@@ -246,14 +285,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				
 				// adding the split constructions
 				targetConstructions.AddRange(toRemoveConstruction.RemoveFromConstruction(toDestroy));
-//				foreach(Construction construction in )
-//				{
-////					Debug.Log(construction.name+" created "+(targetConstructions.Contains(construction)?"already in":"not in"));
-////					if (!targetConstructions.Contains(construction))
-////					{
-////					}
-//					targetConstructions.Add(construction);
-//				}
+				
 				
 				// removing the construction we are about to destroy
 				targetConstructions.Remove(toDestroy.ParentConstruction);
@@ -275,6 +307,17 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			}
 			targetConstructions.Clear();
 			targetConstructions.Add (firstConstruction);
+		}
+		if (centerParts != null) 
+		{
+			foreach (GrabbablePart part in centerParts)
+			{
+				if (targetConstructions[0].Contains(part))
+				{
+					targetConstructions[0].CenterConstruction(centerPart);
+					break;
+				}
+			}
 		}
 		
 		MarkConstructionChange();
@@ -321,7 +364,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 //		_dragButtons.ForEach((obj) => obj.SetCamera(_makerCamera));
 		
-		InputCatcher.instance.RequestInputOverride(HandleScreenPoint);
+		BackgroundInputCatcher.Catcher.RequestInputOverride(HandleBackgroundScreenPoint);
 		
 		targetConstructions = new List<Construction>();
 		//Construction.Decode(constructionCode)
@@ -333,6 +376,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		_defaultControlModeButton.SetState(0);
 		ChangeControlMode(ControlMode.DragAndRotate);
+		MarkConstructionChange();
 	}
 	
 	public void CloseMaker ()
@@ -340,13 +384,20 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 //		this.transform.localScale = Vector3.zero;
 		this.gameObject.SetActive(false);
 		
-		InputCatcher.instance.ReleaseInputOverride(HandleScreenPoint);
+		BackgroundInputCatcher.Catcher.ReleaseInputOverride(HandleBackgroundScreenPoint);
+//		_editorAreaInputCatcher.ReleaseInputOverride(HandleScreenPoint);
 		
 		if (targetConstructions != null)
 		{
 			targetConstructions.ForEach((con) => ObjectPoolManager.DestroyObject(con));
 			targetConstructions = null;
 		}
+	}
+	
+	
+	public void HandleBackgroundScreenPoint(POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState)
+	{
+//		Debug.Log("Background input "+pressState+":"+dragState);
 	}
 	
 #region EZ GUI
@@ -396,7 +447,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	public void HandleScreenPoint(POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState)
 	{
 		
-		Ray	inputRay = UIManager.instance.rayCamera.ScreenPointToRay(pointerInfo.devicePos);
+		Ray	inputRay = LevelEditorGUI.instance.EditorCamera.ScreenPointToRay(pointerInfo.devicePos);
 		
 //		HandleRay(inputRay, pressState, dragState);
 //	}
@@ -419,11 +470,10 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			hitPart = hitParent.gameObject.GetComponent<GrabbablePart>();
 			
 			if (hitPart == null) continue;
-//			Debug.Log ("hit a part");
 			
 		}
 		
-		if (targetConstructions.Count == 0)
+		if (targetConstructions == null || targetConstructions.Count == 0)
 		{
 			return;
 		}
@@ -487,7 +537,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	void MarkConstructionChange()
 	{
-		if (targetConstructions.Count > 0)
+		if (targetConstructions.Count > 0 && targetConstructions[0].Count > 0)
 		{
 			targetConstructions[0].transform.localPosition = Vector3.zero;
 			
@@ -605,7 +655,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	{
 		UIButton dragButton = dragButtons[part.partType];
 		
-		InputCatcher.instance.Retarget(dragButton);
+		_editorAreaInputCatcher.Retarget(dragButton);
 		
 		
 		onDragStart = () => 

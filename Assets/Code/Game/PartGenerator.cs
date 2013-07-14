@@ -28,15 +28,13 @@ public class PartGenerator : Mechanism
 	}
 	#endregion
 	
-	bool movable = false;
+	
+	public bool movable = false;
 
-	public override string Get3CharUniqueID ()
-	{
-		return "GEN";
-	}
 	// Grabber code is (movable)(construction)
 	public override IEnumerable<IEncodable> Encode()
 	{
+		yield return new EncodableSubGroup(base.Encode());
 		yield return (EncodableInt)(movable ? 1 : 0);
 		
 		
@@ -50,7 +48,8 @@ public class PartGenerator : Mechanism
 //		List<object> encoded = new List<object>(encodings);
 		
 		Debug.Log ("Decoding Generator: "+encoding.DebugString());
-		movable = (int)encoding.Int(0) == 1;
+		base.Decode(encoding.SubEncoding(0));
+		movable = (int)encoding.Int(1) == 1;
 		
 		if (toGenerateConstruction != null)
 		{
@@ -59,7 +58,7 @@ public class PartGenerator : Mechanism
 		}
 		if (encoding.Count > 1)
 		{
-			toGenerateConstruction = Construction.DecodeCreate(encoding.SubEncoding(1));
+			toGenerateConstruction = Construction.DecodeCreate(encoding.SubEncoding(2));
 			toGenerateConstruction.ignoreCollisions = true;
 		}
 		
@@ -78,7 +77,7 @@ public class PartGenerator : Mechanism
 	public Construction StepPreStart ()
 	{
 //		Debug.Log ("StepPreStart");
-		if (hexCell != null)
+		if (hexCell != null && toGenerateConstruction.Count > 0)
 		{
 			if (placeOnNextTurn)
 			{

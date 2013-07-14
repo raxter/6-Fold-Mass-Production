@@ -6,7 +6,7 @@ public abstract class HexCellPlaceable : MonoBehaviour
 {
 	public IntVector2 Location
 	{
-		get; set;
+		get; protected set;
 	}
 	
 	[SerializeField]

@@ -85,14 +85,14 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	void Start()
 	{
-		InputCatcher.instance.OnInputEvent += HandleScreenPoint;
+		BackgroundInputCatcher.Catcher.OnInputEvent += HandleScreenPoint;
 	}
 	
 	public override void OnDestroy()
 	{
-		if (InputCatcher.hasInstance)
+		if (BackgroundInputCatcher.hasInstance)
 		{
-			InputCatcher.instance.OnInputEvent -= HandleScreenPoint;
+			BackgroundInputCatcher.Catcher.OnInputEvent -= HandleScreenPoint;
 		}
 		base.OnDestroy();
 	}

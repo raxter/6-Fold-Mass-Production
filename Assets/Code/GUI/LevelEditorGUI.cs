@@ -3,6 +3,10 @@ using System.Collections;
 
 public class LevelEditorGUI : SingletonBehaviour<LevelEditorGUI> 
 {
+	public Camera EditorCamera { get { return _editorCamera; } }
+	
+	[SerializeField]
+	Camera _editorCamera;
 	
 	[SerializeField]
 	SpriteText levelName;
@@ -23,9 +27,9 @@ public class LevelEditorGUI : SingletonBehaviour<LevelEditorGUI>
 	
 	#region EZ GUI
 	
-	void SaveGame()
+	void SaveLevel()
 	{
-		
+		LevelDataManager.instance.Save(levelName.Text, GridManager.instance.LevelEncoding, SaveType.Level);
 	}
 	
 	#endregion
