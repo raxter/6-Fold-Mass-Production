@@ -1,8 +1,23 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\GridManager.cs">
+    <Files>
+      <File FileName="Assets\Code\Game\Construction.cs" Line="315" Column="4" />
+      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\Encoding.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="160" Column="17" />
+      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\External Plugins\RaxterFramework\Singleton.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\GameCommon.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\PartGenerator.cs" line="52" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Encoding.cs" line="180" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Encoding.cs" line="215" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

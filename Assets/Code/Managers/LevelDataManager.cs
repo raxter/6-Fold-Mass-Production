@@ -2,26 +2,53 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+public enum SaveType {Level, AutoSaveSolution, NamedSolution}
+
 public class LevelDataManager : SingletonBehaviour<LevelDataManager> 
 {
 	
+	public class LevelData
+	{
+		public string levelName;
+		public string levelEncoding;
+		public string autosaveEncoding;
+		public Dictionary<string, string> namedSaveEncodings = new Dictionary<string, string>();
+	}
+	
+	
+	public const string editorSaveName = "_Editor";
+	
 	string standardLevelSetDirectory = "Levels";
 	
-	Dictionary<string, string> levels = new Dictionary<string, string>();
+	Dictionary<string, LevelData> levels = new Dictionary<string, LevelData>();
 	
 	void Start () 
 	{
 		ReloadLevelData();
 	}
 	
-	public void SaveLevel(string levelName, string encodedLevel)
+	public void Save(string levelName, string encodedLevel, SaveType saveType)
 	{
-		System.IO.File.WriteAllText("Assets/"+standardLevelSetDirectory+"/"+levelName.Replace(" ", "_")+".txt", levelName+"\n"+encodedLevel);
+		System.IO.File.WriteAllText("Assets/Resources/"+standardLevelSetDirectory+"/"+levelName.Replace(" ", "_")+".txt", levelName+"\n"+encodedLevel);
 	}
 	
-	public IEnumerator<string> GetLevelList()
+	public string Load(string levelName, SaveType saveType)
 	{
-		return levels.Keys.GetEnumerator();
+		ReloadLevelData();
+		
+		if (!levels.ContainsKey(levelName))
+			return "";
+		
+		switch(saveType)
+		{
+		case SaveType.Level: 
+			return levels[levelName].levelEncoding;
+			break;
+		case SaveType.AutoSaveSolution: 
+			return levels[levelName].autosaveEncoding;
+			break;
+		default: return "";
+		}
 	}
 	
 	void ReloadLevelData()
@@ -48,7 +75,11 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 		string encodedLevel = data[1].Trim();
 		
 		// TODO check if it's a valid save
-		levels[name] = encodedLevel;
+		levels[name] = new LevelData() 
+		{ 
+			levelName = name, 
+			levelEncoding = encodedLevel, 
+		};
 	}
 
 	

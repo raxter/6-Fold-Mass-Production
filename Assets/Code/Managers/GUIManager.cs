@@ -19,8 +19,9 @@ public class GUIManager : MonoBehaviour
 	
 	void Start()
 	{
+		// save number of targets in save game file
 		LevelManager.instance.ConstructionCompletedEvent += 
-		 	() => _targetText.Text = "Target\n"+LevelManager.instance.completedConstructions+"/"+LevelManager.instance.currentLevel.targetConstructions;
+		 	() => _targetText.Text = "Target\n"+LevelManager.instance.completedConstructions+"/"+GridManager.instance.targetConstructions;
 	
 	
 		LevelManager.instance.SimulationSpeedChangedEvent += 

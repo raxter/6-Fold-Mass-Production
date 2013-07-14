@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PartGenerator : Mechanism
 {
@@ -34,30 +35,31 @@ public class PartGenerator : Mechanism
 		return "GEN";
 	}
 	// Grabber code is (movable)(construction)
-	public override IEnumerable Encode()
+	public override IEnumerable<IEncodable> Encode()
 	{
-		yield return movable ? 1 : 0;
+		yield return (EncodableInt)(movable ? 1 : 0);
 		
-		if (toGenerateConstruction != null)
-		{
-			yield return toGenerateConstruction.Encode();
-		}
+		
+		yield return toGenerateConstruction as IEncodable ?? (EncodableInt)0;
+		 // TODO save and load position of mechanism (put in mechanism class!)
 		
 	}
 	
-	public override bool Decode(string encoded)
+	public override bool Decode(Encoding encoding)
 	{
-		Debug.Log ("Decoding Generator: "+encoded);
-		movable = encoded[0] == '1';
+//		List<object> encoded = new List<object>(encodings);
+		
+		Debug.Log ("Decoding Generator: "+encoding.DebugString());
+		movable = (int)encoding.Int(0) == 1;
 		
 		if (toGenerateConstruction != null)
 		{
 			ObjectPoolManager.DestroyObject(toGenerateConstruction);
 			toGenerateConstruction = null;
 		}
-		if (encoded.Length > 1)
+		if (encoding.Count > 1)
 		{
-			toGenerateConstruction = Construction.Decode(encoded.Substring(1));
+			toGenerateConstruction = Construction.DecodeCreate(encoding.SubEncoding(1));
 			toGenerateConstruction.ignoreCollisions = true;
 		}
 		
@@ -70,7 +72,7 @@ public class PartGenerator : Mechanism
 	{
 		placeOnNextTurn = true;
 		generatorCount = 0;
-		encodedConsruction = CharSerializer.Encode(toGenerateConstruction);
+		encodedConsruction = Encoding.Encode(toGenerateConstruction);
 	}
 
 	public Construction StepPreStart ()
@@ -81,7 +83,7 @@ public class PartGenerator : Mechanism
 			if (placeOnNextTurn)
 			{
 				Construction construction;
-				construction = Construction.Decode(encodedConsruction);
+				construction = Construction.DecodeCreate(encodedConsruction);
 				
 				construction.idNumber = generatorCount;
 //				construction.gameObject.name = toGenerateConstruction.gameObject.name+" "+generatorCount;

@@ -802,13 +802,14 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 	
 #region Encodign and Decoding
 	
-	public IEnumerable EncodeWithContext(Dictionary<GrabbablePart, int> partIDs)
+	
+	public IEnumerable<IEncodable> EncodeWithContext(Dictionary<GrabbablePart, int> partIDs)
 	{
 		int id = partIDs[this];
 		
-		yield return id;
-		yield return (int)partType;
-		yield return (int)SimulationOrientation;
+		yield return (EncodableInt)id;
+		yield return (EncodableInt)(int)partType;
+		yield return (EncodableInt)(int)SimulationOrientation;
 		
 //		string code = ""+CharSerializer.ToCode()+CharSerializer.ToCode((int)partType)+CharSerializer.ToCode((int)SimulationOrientation);
 		for (int i = 0 ; i < 6 ; i++)
@@ -824,9 +825,9 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 				auxilaryConnType = 0;
 			}
 			
-			yield return connPartID;
-			yield return (int)physicalConnType;
-			yield return (int)auxilaryConnType;
+			yield return (EncodableInt)connPartID;
+			yield return (EncodableInt)(int)physicalConnType;
+			yield return (EncodableInt)(int)auxilaryConnType;
 //			code += ""+
 //					CharSerializer.ToCode(connPartID)+
 //					CharSerializer.ToCode((int)physicalConnType)+

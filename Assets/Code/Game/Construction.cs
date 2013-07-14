@@ -5,7 +5,7 @@ using System.Collections.Generic;
 //public delegate GameObject InstantiatePrefabDelegate (GameObject prefab);
 //public delegate T InstantiatePrefabDelegate<T> (T prefab) where T : MonoBehaviour;
 
-public class Construction : MonoBehaviour, System.IComparable<Construction>, IPooledObject, Encodable
+public class Construction : MonoBehaviour, System.IComparable<Construction>, IPooledObject, IEncodable
 {
 
 		//=========================================================================================
@@ -322,28 +322,60 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 	public static Construction CreateSimpleConstruction(PartType partType)	
 	{
 		Construction singleConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
-		GrabbablePart singlePart = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(partType));
-		singleConstruction.AddToConstruction(singlePart);
-		singlePart.transform.localPosition = Vector3.zero;
+		
+		if (partType != PartType.None)
+		{
+			GrabbablePart singlePart = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(partType));
+			singleConstruction.AddToConstruction(singlePart);
+			singlePart.transform.localPosition = Vector3.zero;
+		}
 		singleConstruction.transform.position = Vector3.zero;
 		return singleConstruction;
 	}
 		
-	public static Construction Decode(string encoded)
+	public static Construction DecodeCopy(Construction toCopy)
 	{
-		List<string> encodedElements = new List<string>(CharSerializer.SplitEncoding(encoded));
+		Construction newConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+		Encoding.DecodeCopy(newConstruction, toCopy);
+		return newConstruction;
+	}
+	public static Construction DecodeCreate(Encoding encodedElements)
+	{
+		Construction newConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+		Encoding.Decode(newConstruction, encodedElements);
+		return newConstruction;
+	}
+	public static Construction DecodeCreate(string encodedString)
+	{
+		Construction newConstruction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+		Encoding.Decode(newConstruction, encodedString);
+		return newConstruction;
+	}
+	
+	
+	public bool Decode(Encoding encodedElements)
+	{
+//		List<string> encodedElements = new List<string>(CharSerializer.AllStrings(encoding));
 		
+//		Encoding encodedElements = new Encoding(encodings);
 		
-//		Debug.Log ("Decoding Construction: "+encoded);
-		if (encodedElements.Count == 1 && encodedElements[0].Length == 1)
+//		string fullEncoding = string.Join (" | ", encodedElements.ToArray());
+		
+		Debug.Log ("Decoding Construction: \n"+encodedElements.DebugString());
+		if (encodedElements.Count == -1 || encodedElements.Count == 0 || (encodedElements.Count == 1 && encodedElements.IsInt(0)))
 		{
-			PartType partType = (PartType)CharSerializer.CodeToNumber(encodedElements[0][0]);
-			return CreateSimpleConstruction(partType);
+			return true;
 		}
+		
+//		if (encodedElements.Count == 1 && encodedElements.IsInt(0))
+//		{
+//			PartType partType = (PartType)encodedElements.Int(0);
+//			return CreateSimpleConstruction(partType);
+//		}
 		
 		
 		Dictionary<int, GrabbablePart> idParts = new Dictionary<int, GrabbablePart>();
-		Dictionary<GrabbablePart, string> partEncodings = new Dictionary<GrabbablePart, string>();
+		Dictionary<GrabbablePart, Encoding> partEncodings = new Dictionary<GrabbablePart, Encoding>();
 //		
 //		List<GrabbablePart> elements = new List<GrabbablePart>();
 //		List<string> encodedElements = new List<string>(encoded.Split(','));
@@ -354,28 +386,29 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 		for (int i = 0 ; i < encodedElements.Count ; i++)
 		{
-			int id = CharSerializer.ToNumber(encodedElements[i][0]);
+			Encoding partEncoding = encodedElements.SubEncoding(i);
+			int id = partEncoding.Int(0);
 //			Debug.Log ("Encoding "+encodedElements[i][0]+" ("+id+")");
 			if (centerId == -1)
 			{
 				centerId = id;
 			}
-			PartType partType = (PartType)CharSerializer.ToNumber(encodedElements[i][1]);
+			PartType partType = (PartType)partEncoding.Int(1);
 			
 
 			idParts[id] = ObjectPoolManager.GetObject(GameSettings.instance.GetPartPrefab(partType));
-			partEncodings[idParts[id]] = encodedElements[i];
+			partEncodings[idParts[id]] = partEncoding;
 			
 //			Debug.Log ("Creating part "+id);
 		}
 		
 		foreach(int id in idParts.Keys)
 		{
-			idParts[id].SetSimulationOrientation(CharSerializer.ToNumber(partEncodings[idParts[id]][2]));
+			idParts[id].SetSimulationOrientation(partEncodings[idParts[id]].Int(2));
 
 		}
 		
-		Construction construction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
+//		Construction construction = ObjectPoolManager.GetObject(GameSettings.instance.constructionPrefab);
 //		construction.name = "Decoded Construction";
 		
 		
@@ -385,26 +418,26 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		addToConstructionRecursively = (newPart) => 
 		{
 			exploredParts.Add(newPart);
-			construction.AddToConstruction(newPart);
+			this.AddToConstruction(newPart);
 			
-			string code = partEncodings[newPart];
-			int id = CharSerializer.ToNumber(code[0]);
-			PartType type = (PartType)CharSerializer.ToNumber(code[1]);
+			Encoding code = partEncodings[newPart];
+			int id = code.Int(0);
+			PartType type = (PartType) code.Int(1);
 			
 //			Debug.Log ("Connecting part "+id+"("+type+")");
 			
 			for (int i = 0 ; i < 6 ; i++)
 			{
 				HexMetrics.Direction iDir = (HexMetrics.Direction)i;
-				int otherId = CharSerializer.ToNumber(code[3+(i*3)+0]);
-				GrabbablePart.PhysicalConnectionType physicalConnType = (GrabbablePart.PhysicalConnectionType)CharSerializer.ToNumber(code[3+(i*3)+1]);
-				int auxilaryConnectionType = CharSerializer.ToNumber(code[3+(i*3)+2]);
+				int otherId =  code.Int(3+(i*3)+0);
+				GrabbablePart.PhysicalConnectionType physicalConnType = (GrabbablePart.PhysicalConnectionType)code.Int(3+(i*3)+1);
+				int auxilaryConnectionType = code.Int(3+(i*3)+2);
 				
 //				Debug.Log("Connection Def: "+id+"->"+otherId+":"+iDir+":"+physicalConnType);
 				
 				if (otherId != 0 && !idParts.ContainsKey(otherId))
 				{
-					Debug.LogError ("idParts does not contain part with id "+otherId+"\n"+encoded+"\n"+string.Join(", ", new List<int>(idParts.Keys).ConvertAll((e) => ""+e).ToArray()));
+					Debug.LogError ("idParts does not contain part with id "+otherId+"\n"+string.Join(", ", new List<int>(idParts.Keys).ConvertAll((e) => ""+e).ToArray()));
 					return false;
 					
 				}
@@ -438,33 +471,32 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 		
 		if (idParts.ContainsKey(centerId))
 		{
-			idParts[centerId].transform.position = construction.transform.position;
+			idParts[centerId].transform.position = this.transform.position;
 			if (!addToConstructionRecursively(idParts[centerId]))
 			{
 				foreach(GrabbablePart part in idParts.Values) 
 				{
 					ObjectPoolManager.DestroyObject(part);
 				}
-				ObjectPoolManager.DestroyObject(construction);
+				ObjectPoolManager.DestroyObject(this);
 				
 				return Construction.CreateSimpleConstruction(PartType.Standard6Sided);
 			}
 				
 		}
-		construction.CenterConstruction(idParts[centerId]);
+		this.CenterConstruction(idParts[centerId]);
 		
 		// do this in such a way that they are placed properly
 //		for (int i = 1 ; i < encodedElements.Count ; i++)
 //		{
 //			construction.AddToConstruction(idParts[i+1]);
 //		}
-			
-		return construction;
 		
+		return true;
 	}
 				
 	
-	public IEnumerable Encode()
+	public IEnumerable<IEncodable> Encode()
 	{
 		
 		Dictionary<GrabbablePart, int> partID = new Dictionary<GrabbablePart, int>();
@@ -487,7 +519,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 			foreach (GrabbablePart element in CenterPart.GetAllConnectedParts())
 	//		foreach (GrabbablePart element in Parts)
 			{
-				yield return element.EncodeWithContext(partID);
+				yield return new EncodableSubGroup(element.EncodeWithContext(partID));
 			}
 		}
 		

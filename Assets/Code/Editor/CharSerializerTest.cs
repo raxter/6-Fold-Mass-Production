@@ -26,13 +26,13 @@ public class CharSerializerTest: EditorWindow
 		for (int i = min ; i <= max ; i++)
 		{
 			EditorGUILayout.BeginHorizontal();
-			char code = CharSerializer.ToCode(i);
-			string longCode = CharSerializer.ToLongCode(i);
+			char code = Encoding.ToCode(i);
+			string longCode = Encoding.ToLongCode(i);
 			EditorGUILayout.LabelField(""+i, maxWidth);
 			EditorGUILayout.LabelField(""+code, maxWidth);
-			EditorGUILayout.LabelField(""+CharSerializer.ToNumber(code), maxWidth);
+			EditorGUILayout.LabelField(""+Encoding.ToNumber(code), maxWidth);
 			EditorGUILayout.LabelField(""+longCode, maxWidth);
-			EditorGUILayout.LabelField(""+CharSerializer.ToNumber(longCode), maxWidth);
+			EditorGUILayout.LabelField(""+Encoding.ToNumber(longCode), maxWidth);
 			EditorGUILayout.EndHorizontal();
 		}
 		

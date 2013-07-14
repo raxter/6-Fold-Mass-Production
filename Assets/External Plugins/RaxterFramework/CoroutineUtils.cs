@@ -5,13 +5,13 @@ public class CoroutineUtils : AutoSingletonBehaviour<CoroutineUtils>
 {
 	
 	
-	public Coroutine WaitOneFrameAndDo(System.Action action)
+	public static Coroutine WaitOneFrameAndDo(System.Action action)
 	{
-		return StartCoroutine(WaitOneFrameAndDoCoroutine(action));
+		return instance.StartCoroutine(WaitOneFrameAndDoCoroutine(action));
 	}
 	
 	
-	private IEnumerator WaitOneFrameAndDoCoroutine(System.Action action)
+	private static IEnumerator WaitOneFrameAndDoCoroutine(System.Action action)
 	{
 		yield return null;
 		if (action != null)

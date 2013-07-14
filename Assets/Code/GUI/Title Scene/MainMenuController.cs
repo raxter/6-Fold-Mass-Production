@@ -7,13 +7,13 @@ public class MainMenuController : MonoBehaviour
 	
 	void QuickPlay()
 	{
-		GameCommon.instance.LoadLevel(LevelSettings.instance.levels[0].name); // should pass the encoded string in rather
+		GameCommon.instance.LoadLevel(LevelSettings.instance.levels[0].name);
 	}
 	
 	
 	void StartLevelEditor()
 	{
-		GameCommon.instance.LoadLevel(LevelSettings.instance.levels[0].name, true); // should pass the encoded string in rather
+		GameCommon.instance.LoadEditor();
 	}
 	
 }

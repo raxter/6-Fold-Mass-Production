@@ -31,6 +31,7 @@ public class HexCellRow
 public class GridManager : SingletonBehaviour<GridManager> 
 {
 	
+	
 	[SerializeField]
 	GameObject _hexCellHolder;
 	
@@ -42,6 +43,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 	HexCellRow [] _hexCellRows;
 	
 	Dictionary<IntVector2, HexCell> _hexCellLocations;
+	
+	public int targetConstructions { get; private set; }
 	
 	public HexCell GetHexCell(IntVector2 location)
 	{
@@ -57,13 +60,130 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public Construction target { get; private set; }
 	
-	public void SetTarget(string encodedTarget)
+	public void SetTarget(Construction targetConstruction)
 	{
-		target = Construction.Decode(encodedTarget);
+		target = Construction.DecodeCopy(targetConstruction);
 		target.ignoreCollisions = true;
 //		GrabbablePart targetPart = target.GenerateConnectedParts();
 		target.transform.parent = _targetHolder.transform;
 		target.transform.localPosition = Vector3.zero;
+	}
+	
+	void Start()
+	{
+		MechanismChangedEvent += PerformAutosave;
+	}
+	
+	public event System.Action MechanismChangedEvent;
+	
+	public void PerformAutosave()
+	{
+		Debug.Log ("Autosaveing");
+		// put autosave system here
+		
+		// save editor level if editor is enabled
+		if (LevelEditorGUI.instance.editorEnabled)
+		{
+			// save order -> n Generators : Target1 (: Target2)
+			LevelDataManager.instance.Save(LevelDataManager.editorSaveName, Encoding.Encode(new EncodableLevel()), SaveType.Level);
+			// TODO save grabbers/welders etc
+		}
+		
+		if (LevelEditorGUI.instance.editorEnabled)
+		{
+		
+			// save layout for editor is editor is enabled
+		}
+		
+		// save autosave layout for level (reference by level name? AUTOSAVE_<lvlname>)
+		
+	}
+	
+	public void LoadEditor()
+	{
+		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.editorSaveName, SaveType.Level);
+		if (encodedLevel != "")
+		{
+			Debug.Log ("Loading "+encodedLevel);
+			Encoding.Decode(new EncodableLevel(), encodedLevel);
+		}
+		else
+		{
+			GridManager.instance.target = Construction.CreateSimpleConstruction(PartType.None);
+		}
+	}
+	
+//	public void Load(string levelName)
+//	{
+//		Debug.Log ("Autoloading");
+//		// put autosave system here
+//		
+//		// save editor level if editor is enabled
+//		if (LevelEditorGUI.instance.editorEnabled)
+//		{
+//			// save order -> n Generators : Target1 (: Target2)
+//			string encodedLevel = LevelDataManager.instance.Load(levelName, SaveType.Level);
+//			return;
+//		}
+//		
+//		
+//		// save layout for editor is editor is enabled
+//		
+//		// save autosave layout for level (reference by level name? AUTOSAVE_<lvlname>)
+//		
+//	}
+	
+	public class EncodableLevel : IEncodable
+	{
+		public IEnumerable<IEncodable> Encode ()
+		{
+			
+			List<IEncodable> generators = new List<IEncodable>();
+			foreach(HexCell hc in GridManager.instance.GetAllCells())
+			{
+				PartGenerator generator = hc.placedMechanism as PartGenerator;
+				
+				if (generator != null)
+				{
+					generators.Add (generator);
+				}
+			}
+			
+			yield return (EncodableInt)generators.Count;
+			foreach (IEncodable generator in generators)
+				yield return generator;
+			
+			yield return (EncodableInt)10; // target # 1
+			yield return (EncodableInt)10; // target # 2
+			
+			yield return GridManager.instance.target; // target 1
+			yield return (EncodableInt)0;// target 2
+		}
+
+		public bool Decode (Encoding encodings)
+		{
+			Debug.Log ("GridManager Encoding Data\n"+ encodings.DebugString());
+			int count = encodings.Int(0);
+			for (int i = 0 ; i < count ; i++)
+			{
+				PartGenerator generator = ObjectPoolManager.GetObject(GameSettings.instance.partGeneratorPrefab);
+				generator.Decode(encodings.SubEncoding(1+i));
+			}
+			
+//			targetConstructions = encodings.Int(1);
+			GridManager.instance.targetConstructions = encodings.Int(1+count);
+//			GridManager.instance.targetConstructions2 = encodings.Int(1+count+1);
+			GridManager.instance.SetTarget(Construction.DecodeCreate(encodings.SubEncoding(1+count+3)));
+//			GridManager.instance.SetTarget2(encodings.SubEncoding(1+count+1));
+			
+			return true;
+		}
+	}
+	
+	public void RegisterMechanismChange ()
+	{
+		if (MechanismChangedEvent != null)
+			MechanismChangedEvent();
 	}
 	
 	
@@ -213,52 +333,51 @@ public class GridManager : SingletonBehaviour<GridManager>
 		return MechanismType.None;
 	}
 	
-	public void SaveLayout()
-	{
-		HashSet<Mechanism> savedMechanisms = new HashSet<Mechanism>();
-		List<string> encodings = new List<string>();
-		foreach(HexCell hc in GetAllCells())
-		{
-			Mechanism mech = hc.placedMechanism;
-			if (mech != null && !savedMechanisms.Contains(mech))
-			{
-				encodings.Add(GetMechanismCode(mech.MechanismType)+";"+mech.Location.x+";"+mech.Location.y+";"+mech.Encode());
-				
-				savedMechanisms.Add(mech);
-			}
-		}
-		
-		string saveString = string.Join(":", encodings.ToArray());
-//		Debug.Log("Saveing: "+saveString);
-		
-		PlayerPrefs.SetString("save string", saveString);
-		PlayerPrefs.Save();
-	}
+//	public void SaveLayout(string name)
+//	{
+//		HashSet<Mechanism> savedMechanisms = new HashSet<Mechanism>();
+//		List<string> encodings = new List<string>();
+//		foreach(HexCell hc in GetAllCells())
+//		{
+//			Mechanism mech = hc.placedMechanism;
+//			if (mech != null && !savedMechanisms.Contains(mech))
+//			{
+//				encodings.Add(GetMechanismCode(mech.MechanismType)+";"+mech.Location.x+";"+mech.Location.y+";"+mech.Encode());
+//				
+//				savedMechanisms.Add(mech);
+//			}
+//		}
+//		
+//		string saveString = string.Join(":", encodings.ToArray());
+////		Debug.Log("Saveing: "+saveString);
+//		
+//		PlayerPrefs.SetString("save string", saveString);
+//		PlayerPrefs.Save();
+//	}
 	
-	public void LoadLayout()
-	{
-		PlayerPrefs.DeleteKey("save string");
-		string saveString = PlayerPrefs.GetString("save string");
-		if (saveString == "")
-		{
-			return;
-		}
-		
-		Debug.Log("Loading: "+saveString);
-		
-		string [] mechanismCodes = saveString.Split(':');
-		
-		foreach (string code in mechanismCodes)
-		{
-			MechanismType codeType = GetMechanismType(code[0]);
-			
-			string [] codeData = code.Split(';');
-			
-			Mechanism newMechanism = LevelManager.instance.InstantiateMechanism(codeType);
-			newMechanism.Decode(codeData[3]);
-			newMechanism.PlaceAtLocation(new IntVector2(int.Parse(codeData[1]), int.Parse(codeData[2])));
-		}
-	}
+//	public void LoadLayout()
+//	{
+//		string saveString = PlayerPrefs.GetString("save string");
+//		if (saveString == "")
+//		{
+//			return;
+//		}
+//		
+//		Debug.Log("Loading: "+saveString);
+//		
+//		string [] mechanismCodes = saveString.Split(':');
+//		
+//		foreach (string code in mechanismCodes)
+//		{
+//			MechanismType codeType = GetMechanismType(code[0]);
+//			
+//			string [] codeData = code.Split(';');
+//			
+//			Mechanism newMechanism = LevelManager.instance.InstantiateMechanism(codeType);
+//			newMechanism.Decode(codeData[3]);
+//			newMechanism.PlaceAtLocation(new IntVector2(int.Parse(codeData[1]), int.Parse(codeData[2])));
+//		}
+//	}
 	
 }
 

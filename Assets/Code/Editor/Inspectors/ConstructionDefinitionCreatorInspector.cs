@@ -15,7 +15,7 @@ public class ConstructionDefinitionCreatorInspector : Editor
 		
 		if (GUILayout.Button("Generate Construction"))
 		{
-			Construction construction = Construction.Decode(constructionText);
+			Construction construction = Construction.DecodeCreate(constructionText);
 			Debug.Log (construction.PartsList.Count);
 			
 			EditorUtility.SetDirty(construction);

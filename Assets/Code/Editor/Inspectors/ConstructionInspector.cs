@@ -35,7 +35,7 @@ public class ConstructionInspector : Editor
 		}
 		if (encodedString == "")
 		{
-			encodedString = CharSerializer.Encode(construction);
+			encodedString = Encoding.Encode(construction);
 		}
 		EditorGUILayout.SelectableLabel(encodedString);
 		

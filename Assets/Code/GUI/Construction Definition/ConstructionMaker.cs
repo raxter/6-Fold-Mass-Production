@@ -315,7 +315,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	public void OpenMaker (Construction construction)
 	{
-		string constructionCode = CharSerializer.Encode(construction);
+//		string constructionCode = CharSerializer.Encode(construction);
 //		this.transform.localScale = Vector3.one;
 		this.gameObject.SetActive(true);
 		
@@ -324,7 +324,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		InputCatcher.instance.RequestInputOverride(HandleScreenPoint);
 		
 		targetConstructions = new List<Construction>();
-		targetConstructions.Add(Construction.Decode(constructionCode));
+		//Construction.Decode(constructionCode)
+		
+		targetConstructions.Add(Construction.DecodeCopy(construction));
 		targetConstructions[0].transform.parent = _constructionHolder.transform;
 		targetConstructions[0].transform.localPosition = Vector3.zero;
 //		construction.gameObject.SetLayerRecursively(gameObject.layer);

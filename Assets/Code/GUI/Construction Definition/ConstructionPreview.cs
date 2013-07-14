@@ -62,7 +62,7 @@ public class ConstructionPreview : MonoBehaviour
 		(construction) => 
 		{
 			ObjectPoolManager.DestroyObject(GridManager.instance.target);
-			GridManager.instance.SetTarget(CharSerializer.Encode(construction));
+			GridManager.instance.SetTarget(construction);
 		});
 		
 	}
@@ -105,7 +105,8 @@ public class ConstructionPreview : MonoBehaviour
 		}
 		else 
 		{
-			PreviewedConstruction = Construction.Decode(CharSerializer.Encode(construction));
+			
+			PreviewedConstruction = Construction.DecodeCopy(construction);
 		}
 	}
 	
@@ -138,7 +139,7 @@ public class ConstructionPreview : MonoBehaviour
 			{
 				Debug.LogWarning("encoding "+construction.name,this);
 				ObjectPoolManager.DestroyObject(selectedGenerator.toGenerateConstruction);
-				selectedGenerator.toGenerateConstruction = Construction.Decode(CharSerializer.Encode(construction));
+				selectedGenerator.toGenerateConstruction = Construction.DecodeCopy(construction);
 				selectedGenerator.toGenerateConstruction.ignoreCollisions = true;
 			});
 		

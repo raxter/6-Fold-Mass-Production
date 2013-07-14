@@ -6,10 +6,6 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 {
 	
 	
-	Dictionary<MechanismType, Mechanism> cellMechanismPrefabs;
-	
-	
-	
 	LevelSettings.Level _currentLevel = null;
 	public LevelSettings.Level currentLevel
 	{
@@ -86,19 +82,18 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 	
 	IEnumerator Start()
 	{
-		cellMechanismPrefabs = new Dictionary<MechanismType, Mechanism>();
-		
-		cellMechanismPrefabs.Add(MechanismType.None, null);
-		
-		foreach (Mechanism mechanismPrefab in GameSettings.instance.mechanismPrefabs)
+		if (GameCommon.instance.editorMode)
 		{
-			cellMechanismPrefabs.Add(mechanismPrefab.MechanismType, mechanismPrefab);
+			// enable editor
+			GridManager.instance.LoadEditor();
+		}
+		else
+		{
+			// disable editor
+//			GridManager.instance.Load(GameCommon.instance.levelToLoad);
 		}
 		
 		yield return null;
-		
-		LoadLevel(loadLevelOnStart);
-		GridManager.instance.LoadLayout();
 		
 		completedConstructions = 0;
 		
@@ -109,23 +104,6 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 		
 	}
 
-	void LoadLevel (string leveName)
-	{
-		// clear all parts first when reloading! TODO
-		
-		_currentLevel = LevelSettings.instance.GetLevel(leveName);
-		
-		GridManager.instance.SetTarget(_currentLevel.targetConstruction);
-		
-//		foreach (LevelSettings.GeneratorDetails generatorDetails in _currentLevel.generators)
-//		{
-////			PartGenerator generator = (GameObject.Instantiate(GameSettings.instance.generatorPrefab.gameObject) as GameObject).GetComponent<PartGenerator>();
-//			
-//			generator.toGenerateConstruction = Construction.Decode(generatorDetails.toGenerate, (prefab) => Instantiate(prefab) as GameObject);
-//			generator.toGenerateConstruction.ignoreCollisions = true;
-//			generator.PlaceAtLocation(generatorDetails.location);
-//		}
-	}
 
 	public void AddCompletedConstruction ()
 	{
@@ -141,23 +119,40 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 		throw new System.NotImplementedException ();
 	}
 	
-	public Mechanism InstantiateMechanism(MechanismType cellMechanismType)
-	{
-		Mechanism toReturn = ObjectPoolManager.GetObject(cellMechanismPrefabs[cellMechanismType]);
-		if (toReturn is PartGenerator)
-		{
-			(toReturn as PartGenerator).toGenerateConstruction = Construction.CreateSimpleConstruction(PartType.Standard6Sided); // if it is a generator, we give it a default thing to generate
-		}
-		
-		return toReturn;
-	}
+//	public Mechanism InstantiateMechanism(MechanismType cellMechanismType)
+//	{
+//		Mechanism toReturn = ObjectPoolManager.GetObject(cellMechanismPrefabs[cellMechanismType]);
+//		if (toReturn is PartGenerator)
+//		{
+//			(toReturn as PartGenerator).toGenerateConstruction = Construction.CreateSimpleConstruction(PartType.Standard6Sided); // if it is a generator, we give it a default thing to generate
+//		}
+//		
+//		return toReturn;
+//	}
 	
 	public void CreateMechanismForDragging(MechanismType cellMechanismType)
 	{
 		if (cellMechanismType == MechanismType.None)
 			return;
+		Mechanism unplacedMechanism;
+		switch(cellMechanismType)
+		{
+		case MechanismType.Generator:
+			unplacedMechanism = ObjectPoolManager.GetObject<PartGenerator>(GameSettings.instance.partGeneratorPrefab);
+			break;
+		case MechanismType.Grabber:
+			unplacedMechanism = ObjectPoolManager.GetObject<Grabber>(GameSettings.instance.grabberPrefab);
+			break;
+		case MechanismType.WeldingRig:
+			unplacedMechanism = ObjectPoolManager.GetObject<WeldingRig>(GameSettings.instance.weldingRigPrefab);
+			break;
+		default:
+			unplacedMechanism = null;
+			Debug.LogError("Trying to instansiate a non mechanism");
+			break;
+		}
 		
-		Mechanism unplacedMechanism = InstantiateMechanism(cellMechanismType);
+//		Mechanism unplacedMechanism = InstantiateMechanism(cellMechanismType);
 		
 		InputManager.instance.StartDraggingUnplaced(unplacedMechanism);
 		

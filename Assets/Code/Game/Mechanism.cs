@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public enum MechanismType {None, Grabber, WeldingRig, Generator};
 
-public abstract class Mechanism : HexCellPlaceable, Encodable
+public abstract class Mechanism : HexCellPlaceable, IEncodable
 {
 	
 	public abstract MechanismType MechanismType
@@ -13,7 +13,9 @@ public abstract class Mechanism : HexCellPlaceable, Encodable
 	}
 
 	public abstract string Get3CharUniqueID ();
-	public abstract IEnumerable Encode ();
+	public abstract IEnumerable<IEncodable> Encode ();
+	public abstract bool Decode (Encoding encoding);
+	
 	
 	bool _dragging = false;
 		
@@ -58,7 +60,8 @@ public abstract class Mechanism : HexCellPlaceable, Encodable
 		
 		_dragging = false;
 		
-		CoroutineUtils.instance.WaitOneFrameAndDo(() => GridManager.instance.SaveLayout());
+		CoroutineUtils.WaitOneFrameAndDo(() => GridManager.instance.RegisterMechanismChange());
+		
 	}
 	
 //	IEnumerator WaitOneFrameAndSaveLayout()
@@ -88,8 +91,6 @@ public abstract class Mechanism : HexCellPlaceable, Encodable
 	
 	protected abstract void MechanismUpdate();
 	protected abstract void MechanismStart();
-	
-	public abstract bool Decode(string encoded);
 	
 	
 }

@@ -13,7 +13,7 @@ public class Grabber : Mechanism, IPooledObject
 //	Instruction [] instructions = new Instruction [16];
 	List<Instruction> instructions = new List<Instruction>();
 	
-	bool saveOnUpdate = false;
+	bool registerChangeOnUpdate = false;
 
 	#region IPooledObject implementation
 	public void OnPoolActivate ()
@@ -46,7 +46,7 @@ public class Grabber : Mechanism, IPooledObject
 			else
 				instructions.Add(instruction);
 		}
-		saveOnUpdate = true;
+		registerChangeOnUpdate = true;
 	}
 	public Instruction GetInstruction(int i)
 	{
@@ -82,48 +82,29 @@ public class Grabber : Mechanism, IPooledObject
 		return "GRB";
 	}
 	// Grabber code is (direction)(extention)(instruction0)(instruction1)...
-	public override IEnumerable Encode()
+	public override IEnumerable<IEncodable> Encode()
 	{
-		yield return (int)_startState.direction;
-		yield return _startState.extention;
+		yield return (EncodableInt)(int)_startState.direction;
+		yield return (EncodableInt)_startState.extention;
 		foreach (Instruction instruction in instructions)
 		{
-			yield return (int)instruction;
+			yield return (EncodableInt)(int)instruction;
 		}
 	}
-//	public override string Encode()
-//	{
-//		string code = "";
-//		
-//		code += (int)_startState.direction;
-//		code += _startState.extention;
-//		
-//		foreach (Instruction instruction in instructions)
-//		{
-//			if (instruction == Instruction.None)
-//			{
-//				break;
-//			}
-//			code += CharSerializer.ToCode((int)instruction);
-//		}
-//		
-//		return code;
-//	}
 	
-	public override bool Decode(string encoded)
+	public override bool Decode(Encoding encoding)
 	{
-		_startState.direction = (HexMetrics.Direction)CharSerializer.ToNumber(encoded[0]);
-		_startState.extention = CharSerializer.ToNumber(encoded[1]);
+		_startState.direction = (HexMetrics.Direction)encoding.Int(0);
+		_startState.extention = encoding.Int(1);
 		MoveToStartState();
 		
 		for (int i = 0 ; i < instructions.Count ; i++)
 		{
 			instructions[i] = Instruction.None;
 		}
-		int instructionOffset = 2;
-		for (int i = 0 ; i < encoded.Length-instructionOffset ; i++)
+		for (int i = 2 ; i < encoding.Count ; i++)
 		{
-			instructions.Add((Instruction)CharSerializer.ToNumber(encoded[i+instructionOffset]));
+			instructions.Add((Instruction)encoding.Int(i));
 		}
 		
 		return true;
@@ -227,25 +208,29 @@ public class Grabber : Mechanism, IPooledObject
 	{
 		_startState.extention = Mathf.Clamp(_startState.extention + 1, 0, 2);
 		MoveToStartState();
-		GridManager.instance.SaveLayout();
+		GridManager.instance.RegisterMechanismChange();
+//		GridManager.instance.SaveLayout();
 	}
 	public void RetractStartState()
 	{
 		_startState.extention = Mathf.Clamp(_startState.extention - 1, 0, 2);
 		MoveToStartState();
-		GridManager.instance.SaveLayout();
+		GridManager.instance.RegisterMechanismChange();
+//		GridManager.instance.SaveLayout();
 	}
 	public void RotateClockStartState()
 	{
 		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 1) % 6);
 		MoveToStartState();
-		GridManager.instance.SaveLayout();
+		GridManager.instance.RegisterMechanismChange();
+//		GridManager.instance.SaveLayout();
 	}
 	public void RotateAntiStartState()
 	{
 		_startState.direction = (HexMetrics.Direction)(((int)_startState.direction + 5) % 6);
 		MoveToStartState();
-		GridManager.instance.SaveLayout();
+		GridManager.instance.RegisterMechanismChange();
+//		GridManager.instance.SaveLayout();
 	}
 	
 	
@@ -587,10 +572,12 @@ public class Grabber : Mechanism, IPooledObject
 	
 	protected override void MechanismUpdate()
 	{
-		if (saveOnUpdate)
+		if (registerChangeOnUpdate)
 		{
-			GridManager.instance.SaveLayout();
-			saveOnUpdate = false;
+			
+			GridManager.instance.RegisterMechanismChange();
+//			GridManager.instance.SaveLayout();
+			registerChangeOnUpdate = false;
 		}
 	}
 	

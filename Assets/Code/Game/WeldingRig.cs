@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class WeldingRig : Mechanism 
 {
@@ -27,12 +28,12 @@ public class WeldingRig : Mechanism
 	{
 		return "RIG";
 	}
-	public override IEnumerable Encode()
+	public override IEnumerable<IEncodable> Encode()
 	{
 		yield break;
 	}
 	
-	public override bool Decode(string encoded)
+	public override bool Decode(Encoding encoded)
 	{
 		return true;
 	}

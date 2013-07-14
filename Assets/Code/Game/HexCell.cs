@@ -58,75 +58,12 @@ public class HexCell : MonoBehaviour
 			return _partOverCell;
 		}
 	}
-//	public GrabbablePart partOverCell
-//	{
-////		get { return _partOnCell ?? partHeldOverCell; }
-//		get
-//		{
-//			Collider [] colliders = Physics.OverlapSphere(transform.position, 1, 1<<LayerMask.NameToLayer("GrabbablePart"));
-//		
-//			foreach(Collider c in colliders)
-//			{
-//				return c.attachedRigidbody.GetComponent<GrabbablePart>();
-//			}
-//			return null; 
-//		}
-//	}
 	
-////	public GrabbablePart _partHeldOverCell;
-//	public GrabbablePart partHeldOverCell
-//	{
-//		get 
-//		{ 
-//			Collider [] colliders = Physics.OverlapSphere(transform.position, 1, 1<<LayerMask.NameToLayer("GrabbablePart"));
-//		
-//			foreach(Collider c in colliders)
-//			{
-//				return c.attachedRigidbody.GetComponent<GrabbablePart>();
-//			}
-//			return _partHeldOverCell; 
-//		}
-////		set 
-////		{
-////			// Must deregister overLocation with Part
-////			if (_partHeldOverCell != null)
-////			{
-////				partOverCell.heldOverLocation = null;
-////			}
-////			_partHeldOverCell = value;
-////			if (_partHeldOverCell != null)
-////			{
-////				partOverCell.heldOverLocation = location;
-////			}
-////			SetDebugText();
-////		}
-//	}
-	
-//	GrabbablePart _part;
-//	GrabbablePart _partOnCell;
-//	public GrabbablePart partOnCell
-//	{
-//		get {return _partOnCell;}
-//		set 
-//		{
-//			_partOnCell = value;
-//			if (_partOnCell != null)
-//			{
-//				button.SetColor(Color.red);
-//			}
-//			else
-//			{
-//				finishCell = _finishCell;
-//			}
-//			SetDebugText();
-//		}
-//	}
 	
 	public Mechanism placedMechanism { get { return placedPlaceable as Mechanism; } }
 	
 	public IntVector2 location;
 	
-//	[HideInInspector]
 	[SerializeField]
 	bool _finishCell;
 	public bool finishCell

@@ -18,14 +18,17 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 
 	public List<GrabbablePart> partPrefabs;
 	
-	public List<Mechanism> mechanismPrefabs;
+//	public List<Mechanism> mechanismPrefabs;
+	
+	public PartGenerator partGeneratorPrefab;
+	public WeldingRig weldingRigPrefab;
+	public Grabber grabberPrefab;
 	
 //	public PartGenerator generatorPrefab;
 	
 	public Object baseLevelScene;
 	
 	public string BaseLevelSceneName { get { return baseLevelScene.name; } }
-	
 	
 	
 	public GrabbablePart GetPartPrefab(PartType partType)
