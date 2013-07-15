@@ -63,6 +63,8 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 			{
 				toActivate = GameObject.Instantiate(prefab) as GameObject;
 				instance.objectIds.Add(toActivate, id);
+				
+#if UNITY_EDITOR
 				instance.objectHistory[toActivate] = new List<ObjectHistoryEvent>();
 				
 //#if UNITY_EDITOR
@@ -70,6 +72,7 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 //#endif
 				
 				instance.objectHistory[toActivate].Add(new ObjectHistoryEvent(PoolEvent.Created));
+#endif
 				
 				id += 1;
 			}
@@ -80,7 +83,9 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 			}
 			
 			
+#if UNITY_EDITOR
 			instance.objectHistory[toActivate].Add(new ObjectHistoryEvent(PoolEvent.Activated));
+#endif
 			
 			instance.objectToPrefab[toActivate] = prefab;
 			active.Add (toActivate);
@@ -112,7 +117,9 @@ public class ObjectPoolManager : SingletonBehaviour<ObjectPoolManager>
 			}
 			instance.objectToPrefab.Remove(toDeactivate);
 			
+#if UNITY_EDITOR
 			instance.objectHistory[toDeactivate].Add(new ObjectHistoryEvent(PoolEvent.Deactivated));
+#endif
 			return true;
 		}
 	}

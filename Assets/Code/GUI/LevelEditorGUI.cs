@@ -8,9 +8,6 @@ public class LevelEditorGUI : SingletonBehaviour<LevelEditorGUI>
 	[SerializeField]
 	Camera _editorCamera;
 	
-	[SerializeField]
-	SpriteText levelName;
-	
 	
 	public bool editorEnabled 
 	{
@@ -24,14 +21,5 @@ public class LevelEditorGUI : SingletonBehaviour<LevelEditorGUI>
 		}
 	}
 	
-	
-	#region EZ GUI
-	
-	void SaveLevel()
-	{
-		LevelDataManager.instance.Save(levelName.Text, GridManager.instance.LevelEncoding, SaveType.Level);
-	}
-	
-	#endregion
 	
 }

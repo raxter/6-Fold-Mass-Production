@@ -33,6 +33,7 @@ public class GameCommon : SingletonBehaviour<GameCommon>
 		LevelNameString = levelName;
 		
 		// change scene
+		Debug.Log ("Loading Scene "+GameSettings.instance.BaseLevelSceneName);
 		Application.LoadLevel(GameSettings.instance.BaseLevelSceneName);
 		
 		Debug.Log ("Level Loaded "+levelName);

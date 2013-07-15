@@ -20,7 +20,22 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	
 	string standardLevelSetDirectory = "Levels";
 	
+	string SaveDir { get { return Application.persistentDataPath+"/"+standardLevelSetDirectory; } }
+	
 	Dictionary<string, LevelData> levels = new Dictionary<string, LevelData>();
+	
+	public IEnumerable SaveList
+	{
+		get
+		{
+			ReloadLevelData();
+			foreach(string levelName in levels.Keys)
+			{
+				if (levelName != editorSaveName)
+					yield return levelName;
+			}
+		}
+	}
 	
 	void Start () 
 	{
@@ -29,7 +44,7 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	
 	public void Save(string levelName, string encodedLevel, SaveType saveType)
 	{
-		System.IO.File.WriteAllText("Assets/Resources/"+standardLevelSetDirectory+"/"+levelName.Replace(" ", "_")+".txt", levelName+"\n"+encodedLevel);
+		System.IO.File.WriteAllText(SaveDir+"/"+levelName.Replace(" ", "_")+".6xmpl", levelName+"\n"+encodedLevel);
 	}
 	
 	public string Load(string levelName, SaveType saveType)
@@ -54,20 +69,29 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	void ReloadLevelData()
 	{
 		levels.Clear();
-		Object [] levelObjects = Resources.LoadAll(standardLevelSetDirectory, typeof(TextAsset));
 		
-		foreach(Object obj in levelObjects)
-			if (obj is TextAsset)
-				ParseLevelFile(obj as TextAsset);
+		if (!System.IO.Directory.Exists(SaveDir))
+			System.IO.Directory.CreateDirectory(SaveDir);
+		
+		foreach ( string filePath in System.IO.Directory.GetFiles(SaveDir, "*.6xmpl"))
+		{
+			ParseLevelFile(filePath);
+		}
+//		Object [] levelObjects = Resources.LoadAll(standardLevelSetDirectory, typeof(TextAsset));
+		
+//		foreach(Object obj in levelObjects)
+//			if (obj is TextAsset)
+//				ParseLevelFile(obj as TextAsset);
 	}
 	
-	void ParseLevelFile(TextAsset textAsset)
+	void ParseLevelFile(string filePath)
 	{
-		string [] data = textAsset.text.Split('\n');
+		string fileText = System.IO.File.ReadAllText(filePath);
+		string [] data = fileText.Split('\n');
 		
 		if (data.Length < 2)
 		{
-			Debug.LogWarning(textAsset.name+" not a valid 6xMP save file");
+			Debug.LogWarning(filePath+ " not a valid 6xMP level file");
 			return;
 		}
 		
