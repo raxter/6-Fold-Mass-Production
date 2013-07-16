@@ -32,6 +32,10 @@ public abstract class SingletonBehaviour<T> : MonoBehaviour where T : MonoBehavi
     {
         get { return ( SingletonBehaviour<T>.instance != null ); }
     }
+	   public static bool hasActiveInstance
+    {
+        get { return ( hasInstance && instance.gameObject.activeInHierarchy ); }
+    }
 
     public virtual void Awake()
     {

@@ -11,16 +11,20 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 	{
 		get;
 	}
-
+	
+	
+	public bool movable = true;		
 	public virtual IEnumerable<IEncodable> Encode ()
 	{
 		yield return (EncodableInt)Location.x;
 		yield return (EncodableInt)Location.y;
+		yield return (EncodableInt)(movable ? 1 : 0);
 	}
 	
 	public virtual bool Decode (Encoding encoding)
 	{
 		PlaceAtLocation(new IntVector2(encoding.Int(0), encoding.Int (1)));
+		movable = (int)encoding.Int(2) == 1;
 		
 		return true;
 	}
@@ -30,7 +34,7 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		
 	public void StartDrag()
 	{
-		if (LevelManager.instance.currentSpeed != LevelManager.SimulationSpeed.Stopped)
+		if (LevelManager.instance.currentSpeed != LevelManager.SimulationSpeed.Stopped || (!LevelEditorGUI.hasActiveInstance && !movable))
 		{
 			return;
 		}
@@ -49,6 +53,7 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		}
 //		Debug.Log ("StopDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
 		
+		movable = !LevelEditorGUI.hasActiveInstance;
 		
 		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedPlaceable == null)
 		{

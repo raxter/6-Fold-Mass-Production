@@ -58,7 +58,7 @@ public interface IEncodable
 	
 }
 
-
+public enum EncodingType {Group, Int};
 
 public class Encoding 
 {
@@ -83,6 +83,19 @@ public class Encoding
 		
 		encodings = new List<Encoding>();
 		encodings.AddRange(SplitEncoding(encoding));
+	}
+	
+	public bool Validate (params EncodingType [] types)
+	{
+		if (types.Length != encodings.Count) return false;
+		
+		for (int i = 0 ; i < types.Length ; i++)
+		{
+			if (types[i] == EncodingType.Int && !IsInt(i))
+				return false;
+		}
+		
+		return true;
 	}
 	
 	public bool IsInt(int index)

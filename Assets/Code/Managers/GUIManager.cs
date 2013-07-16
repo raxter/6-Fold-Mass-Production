@@ -16,9 +16,22 @@ public class GUIManager : MonoBehaviour
 	[SerializeField]
 	SpriteText _targetText = null;
 	
+	[SerializeField]
+	UIButton _testLevelButton;
+	
+	string _testLevelStartText;
+	
+	void TestLevel()
+	{
+		if (_testLevelStartText == _testLevelButton.spriteText.Text)
+			_testLevelButton.spriteText.Text = "Edit Level";
+		else
+			_testLevelButton.spriteText.Text = _testLevelStartText;
+	}
 	
 	void Start()
 	{
+		_testLevelStartText = _testLevelButton.spriteText.Text;
 		// save number of targets in save game file
 		LevelManager.instance.ConstructionCompletedEvent += 
 		 	() => _targetText.Text = "Target\n"+LevelManager.instance.completedConstructions+"/"+GridManager.instance.targetConstructions;

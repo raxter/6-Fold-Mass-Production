@@ -5,7 +5,7 @@ using System.Collections.Generic;
 //public delegate GameObject InstantiatePrefabDelegate (GameObject prefab);
 //public delegate T InstantiatePrefabDelegate<T> (T prefab) where T : MonoBehaviour;
 
-public class Construction : MonoBehaviour, System.IComparable<Construction>, IPooledObject, IEncodable
+public class Construction : MonoBehaviour, System.IComparable<Construction>, System.IComparable<Encoding>, IPooledObject, IEncodable
 {
 
 		//=========================================================================================
@@ -558,7 +558,17 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, IPo
 	}
 	
 	public enum CompareCode {Equal = 0, NumElementDiffer = -1, ConnectionsDiffer = -2, PartConnectionsDiffer = -3, PartMakeupDiffer = -4};
+
+	#region IComparable[Encoding] implementation
+	public int CompareTo (Encoding otherEncoding)
+	{
+		Construction toCompare = Construction.DecodeCreate(otherEncoding);
+		int compValue = CompareTo(toCompare);
+		toCompare.DestroySelf();
+		return compValue;
+	}
 	
+	#endregion	
 	#region IComparable[Construction] implementation
 	public int CompareTo (Construction other)
 	{

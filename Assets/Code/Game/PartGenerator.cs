@@ -21,6 +21,7 @@ public class PartGenerator : Mechanism
 	
 	protected override void MechanismStart ()
 	{
+		movable = false;
 	}
 
 	protected override void MechanismUpdate ()
@@ -28,18 +29,13 @@ public class PartGenerator : Mechanism
 	}
 	#endregion
 	
-	
-	public bool movable = false;
 
 	// Grabber code is (movable)(construction)
 	public override IEnumerable<IEncodable> Encode()
 	{
 		yield return new EncodableSubGroup(base.Encode());
-		yield return (EncodableInt)(movable ? 1 : 0);
-		
-		
+
 		yield return toGenerateConstruction as IEncodable ?? (EncodableInt)0;
-		 // TODO save and load position of mechanism (put in mechanism class!)
 		
 	}
 	
@@ -47,9 +43,14 @@ public class PartGenerator : Mechanism
 	{
 //		List<object> encoded = new List<object>(encodings);
 		
+		if (!encoding.Validate(	EncodingType.Int,
+								EncodingType.Group
+								))
+		{
+			return false;
+		}
 		Debug.Log ("Decoding Generator: "+encoding.DebugString());
 		base.Decode(encoding.SubEncoding(0));
-		movable = (int)encoding.Int(1) == 1;
 		
 		if (toGenerateConstruction != null)
 		{
@@ -58,7 +59,7 @@ public class PartGenerator : Mechanism
 		}
 		if (encoding.Count > 1)
 		{
-			toGenerateConstruction = Construction.DecodeCreate(encoding.SubEncoding(2));
+			toGenerateConstruction = Construction.DecodeCreate(encoding.SubEncoding(1));
 			toGenerateConstruction.ignoreCollisions = true;
 		}
 		

@@ -1,31 +1,23 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\LevelDataManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\GUIManager.cs">
     <Files>
-      <File FileName="Assets\Code\Game\Construction.cs" Line="12" Column="2" />
-      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="47" Column="78" />
-      <File FileName="Assets\Code\Game\Encoding.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\External Plugins\RaxterFramework\Singleton.cs" Line="64" Column="3" />
-      <File FileName="Assets\Code\Game\GameCommon.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\Mechanism.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionMaker.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\BackgroundInputCatcher.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\HUDFunctions.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\InputManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\External Plugins\RaxterFramework\InputCatcher.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\LevelEditorGUI.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\GridManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\SaveLoadMenuController.cs" Line="7" Column="2" />
-      <File FileName="Assets\External Plugins\RaxterFramework\ObjectPoolManager.cs" Line="122" Column="7" />
-      <File FileName="Assets\Code\GUI\Title Scene\MainMenuController.cs" Line="20" Column="1" />
-      <File FileName="Assets\Code\Data\GameSettings.cs" Line="8" Column="31" />
+      <File FileName="Assets\Code\GUI\SaveLoadMenuController.cs" Line="65" Column="104" />
+      <File FileName="Assets\Code\Game\Construction.cs" Line="570" Column="2" />
+      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="54" Column="59" />
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="141" Column="32" />
+      <File FileName="Assets\Code\Game\Mechanism.cs" Line="56" Column="47" />
+      <File FileName="Assets\Code\Game\GameCommon.cs" Line="8" Column="31" />
+      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="384" Column="97" />
+      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="31" Column="2" />
+      <File FileName="Assets\External Plugins\RaxterFramework\Singleton.cs" Line="37" Column="81" />
+      <File FileName="Assets\Code\Game\Encoding.cs" Line="95" Column="18" />
+      <File FileName="Assets\Code\Managers\GUIManager.cs" Line="29" Column="59" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Encoding.cs" line="180" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Encoding.cs" line="193" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

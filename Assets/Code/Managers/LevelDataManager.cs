@@ -16,13 +16,20 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	}
 	
 	
-	public const string editorSaveName = "_Editor";
+	public static string EditorSaveName { get { return "_Editor"; } }
 	
 	string standardLevelSetDirectory = "Levels";
 	
 	string SaveDir { get { return Application.persistentDataPath+"/"+standardLevelSetDirectory; } }
 	
 	Dictionary<string, LevelData> levels = new Dictionary<string, LevelData>();
+	
+	public bool Contains (string levelName)
+	{
+	
+		ReloadLevelData();
+		return levelName != EditorSaveName && levels.ContainsKey(levelName);
+	}
 	
 	public IEnumerable SaveList
 	{
@@ -31,7 +38,7 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 			ReloadLevelData();
 			foreach(string levelName in levels.Keys)
 			{
-				if (levelName != editorSaveName)
+				if (levelName != EditorSaveName)
 					yield return levelName;
 			}
 		}
@@ -42,9 +49,19 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 		ReloadLevelData();
 	}
 	
+	string LevelFileNameString(string levelName)
+	{
+		return SaveDir+"/"+levelName.Replace(" ", "_")+".6xmpl";
+	}
+	
 	public void Save(string levelName, string encodedLevel, SaveType saveType)
 	{
-		System.IO.File.WriteAllText(SaveDir+"/"+levelName.Replace(" ", "_")+".6xmpl", levelName+"\n"+encodedLevel);
+		System.IO.File.WriteAllText(LevelFileNameString(levelName), levelName+"\n"+encodedLevel);
+	}
+	
+	public void Delete(string levelName, SaveType saveType)
+	{
+		System.IO.File.Delete(LevelFileNameString(levelName));
 	}
 	
 	public string Load(string levelName, SaveType saveType)

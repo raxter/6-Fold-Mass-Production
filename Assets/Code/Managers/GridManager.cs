@@ -85,7 +85,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		if (LevelEditorGUI.instance.editorEnabled)
 		{
 			// save order -> n Generators : Target1 (: Target2)
-			LevelDataManager.instance.Save(LevelDataManager.editorSaveName, LevelEncoding, SaveType.Level);
+			LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, LevelEncoding, SaveType.Level);
 			// TODO save grabbers/welders etc
 		}
 		
@@ -105,14 +105,19 @@ public class GridManager : SingletonBehaviour<GridManager>
 		LevelDataManager.instance.Save(levelName, LevelEncoding, SaveType.Level);
 	}
 	
+	public string LoadedLevelName { get; private set;}
+	
 	
 	public void LoadEditor()
 	{
-		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.editorSaveName, SaveType.Level);
+		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Level);
 		if (encodedLevel != "")
 		{
 			Debug.Log ("Loading "+encodedLevel);
+			ClearLevel();
 			Encoding.Decode(new EncodableLevel(), encodedLevel);
+			
+			LoadedLevelName = LevelDataManager.EditorSaveName;
 		}
 		else
 		{
@@ -120,16 +125,20 @@ public class GridManager : SingletonBehaviour<GridManager>
 		}
 	}
 	
+	
 	public void LoadLevel(string levelName)
 	{
 		Debug.Log ("Loading "+levelName);
-		
+		LoadedLevelName = "";
 		// save order -> n Generators : Target1 (: Target2)
 		string encodedLevel = LevelDataManager.instance.Load(levelName, SaveType.Level);
 		if (encodedLevel != "")
 		{
 			Debug.Log ("Loading "+encodedLevel);
+			ClearLevel();
 			Encoding.Decode(new EncodableLevel(), encodedLevel);
+			
+			LoadedLevelName = levelName;
 		}
 		return;
 		
@@ -138,6 +147,22 @@ public class GridManager : SingletonBehaviour<GridManager>
 		
 		// save autosave layout for level (reference by level name? AUTOSAVE_<lvlname>)
 		
+	}
+	
+	public void ClearLevel()
+	{
+		// clear targets
+		// clear all hexcellplacables
+		foreach(HexCell hc in GridManager.instance.GetAllCells())
+		{
+			HexCellPlaceable placeable = hc.placedPlaceable;
+			
+			if (placeable != null)
+			{
+				hc.placedPlaceable = null;
+				ObjectPoolManager.DestroyObject(placeable);
+			}
+		}
 	}
 	
 	public string LevelEncoding
@@ -217,9 +242,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 			for (int i = 0 ; i < movableGenerators.Length ; i++)
 			{
 				Encoding movableGeneratorEncoding = encodings.SubEncoding(1).SubEncoding(i);
-				Construction movableGeneratorConstruction = Construction.DecodeCreate(movableGeneratorEncoding.SubEncoding(2));
 				
-				PartGenerator moveableGenerator = generators.Find((con) => con.toGenerateConstruction.CompareTo(movableGeneratorConstruction) == 0);
+				PartGenerator moveableGenerator = generators.Find((con) => con.toGenerateConstruction.CompareTo(movableGeneratorEncoding.SubEncoding(2)) == 0);
 				
 				if (moveableGenerator != null)
 				{
@@ -228,7 +252,6 @@ public class GridManager : SingletonBehaviour<GridManager>
 				else
 					Debug.LogWarning("Couldn't find movable generator that was saved");
 				
-				movableGeneratorConstruction.DestroySelf();
 			}
 			
 			// TODO
@@ -416,76 +439,6 @@ public class GridManager : SingletonBehaviour<GridManager>
 		BuildDictionary();
 	}
 	
-	private char GetMechanismCode(MechanismType mechanismType)
-	{
-		return new Dictionary<MechanismType, char>()
-		{
-			{MechanismType.None, 	   '!'},
-			{MechanismType.Grabber,    'G'},
-			{MechanismType.WeldingRig, 'W'},
-			{MechanismType.Generator,  'N'}
-		}[mechanismType];
-	
-	}
-	
-	private MechanismType GetMechanismType(char c)
-	{
-		foreach(MechanismType type in System.Enum.GetValues(typeof(MechanismType)))
-		{
-			if (c == GetMechanismCode(type))
-			{
-				return type;
-			}
-		}
-		
-		return MechanismType.None;
-	}
-	
-//	public void SaveLayout(string name)
-//	{
-//		HashSet<Mechanism> savedMechanisms = new HashSet<Mechanism>();
-//		List<string> encodings = new List<string>();
-//		foreach(HexCell hc in GetAllCells())
-//		{
-//			Mechanism mech = hc.placedMechanism;
-//			if (mech != null && !savedMechanisms.Contains(mech))
-//			{
-//				encodings.Add(GetMechanismCode(mech.MechanismType)+";"+mech.Location.x+";"+mech.Location.y+";"+mech.Encode());
-//				
-//				savedMechanisms.Add(mech);
-//			}
-//		}
-//		
-//		string saveString = string.Join(":", encodings.ToArray());
-////		Debug.Log("Saveing: "+saveString);
-//		
-//		PlayerPrefs.SetString("save string", saveString);
-//		PlayerPrefs.Save();
-//	}
-	
-//	public void LoadLayout()
-//	{
-//		string saveString = PlayerPrefs.GetString("save string");
-//		if (saveString == "")
-//		{
-//			return;
-//		}
-//		
-//		Debug.Log("Loading: "+saveString);
-//		
-//		string [] mechanismCodes = saveString.Split(':');
-//		
-//		foreach (string code in mechanismCodes)
-//		{
-//			MechanismType codeType = GetMechanismType(code[0]);
-//			
-//			string [] codeData = code.Split(';');
-//			
-//			Mechanism newMechanism = LevelManager.instance.InstantiateMechanism(codeType);
-//			newMechanism.Decode(codeData[3]);
-//			newMechanism.PlaceAtLocation(new IntVector2(int.Parse(codeData[1]), int.Parse(codeData[2])));
-//		}
-//	}
 	
 }
 

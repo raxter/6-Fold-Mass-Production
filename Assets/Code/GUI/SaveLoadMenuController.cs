@@ -6,31 +6,86 @@ public class SaveLoadMenuController : SingletonBehaviour<SaveLoadMenuController>
 	
 	
 	[SerializeField]
-	UIPanel _saveLoadPanel;
+	UIPanel _saveLoadPanel = null;
 	
 	[SerializeField]
-	UIScrollList _saveScrollList;
+	UIScrollList _saveScrollList = null;
 	
 	[SerializeField]
-	UIListItem _saveListItemPrefab;
+	UIListItem _saveListItemPrefab = null;
 	
 	[SerializeField]
-	SpriteText _saveLevelName;
+	UITextField _saveLevelTextField = null;
+	
+	string SaveName { get { return _saveLevelTextField.Text; } }
+	
+	[SerializeField]
+	UIButton _loadButton = null;
+	
+	[SerializeField]
+	UIButton _deleteButton = null;
+	
+	[SerializeField]
+	UIButton _quickSaveButton = null;
+	
+	string _quickSaveTextAtStart;
 	
 	// Use this for initialization
-	void Start () 
+	IEnumerator Start () 
 	{
+		_quickSaveTextAtStart = _quickSaveButton.spriteText.Text;
 		_saveLoadPanel.Dismiss();
+		
+		GridManager.instance.MechanismChangedEvent += UpdateQuickSave;
+		
+		_saveLevelTextField.AddValueChangedDelegate((obj) => RefreshButtons());
+		
+		yield return null;
+		RefreshButtons();
+		
+	}
+	
+	void UpdateQuickSave()
+	{
+		_quickSaveButton.spriteText.Text = _quickSaveTextAtStart+"*"+"\n"+SaveName;
+	}
+	
+	void ResetQuickSave()
+	{
+		_quickSaveButton.spriteText.Text = _quickSaveTextAtStart+"\n"+SaveName;
+	}
+	
+	void RefreshButtons()
+	{
+		bool exists = LevelDataManager.instance.Contains(SaveName);
+		
+		_loadButton.gameObject.SetActive(exists);
+		_deleteButton.gameObject.SetActive(exists);
+		
+		_quickSaveButton.gameObject.SetActive(LevelDataManager.instance.Contains(GridManager.instance.LoadedLevelName));
+		
 	}
 	
 	void RefreshList()
 	{
-		_saveScrollList.ClearList(false);
+		RefreshButtons();
+		
+		_saveScrollList.ClearList(true);
 		foreach (string levelName in LevelDataManager.instance.SaveList)
 		{
-			_saveScrollList.CreateItem(_saveListItemPrefab.gameObject, levelName);
+			IUIListObject listObject = _saveScrollList.CreateItem(_saveListItemPrefab.gameObject, levelName);
+			listObject.SetInputDelegate(HandleHandleEZInputDelegate);
 		}
 	}
+
+	void HandleHandleEZInputDelegate (ref POINTER_INFO ptr)
+	{
+		if (ptr.evt == POINTER_INFO.INPUT_EVENT.TAP || ptr.evt == POINTER_INFO.INPUT_EVENT.RELEASE)
+		{
+			_saveLevelTextField.Text = (ptr.targetObj as UIListItem).Text;
+		}
+	}
+	
 	
 	#region EZ GUI
 	
@@ -48,13 +103,29 @@ public class SaveLoadMenuController : SingletonBehaviour<SaveLoadMenuController>
 	
 	void Load()
 	{
-		GridManager.instance.LoadLevel(_saveLevelName.Text);
+		GridManager.instance.LoadLevel(SaveName);
+		ResetQuickSave();
+		RefreshButtons();
+	}
+	
+	void Delete()
+	{
+		LevelDataManager.instance.Delete(SaveName, SaveType.Level);
+		RefreshList();
 	}
 	
 	void Save()
 	{
-		GridManager.instance.SaveCurrentLevelAs(_saveLevelName.Text);
+		GridManager.instance.SaveCurrentLevelAs(SaveName);
 		RefreshList();
+		ResetQuickSave();
+		
+	}
+	
+	void QuickSave()
+	{
+		GridManager.instance.SaveCurrentLevelAs(SaveName);
+		ResetQuickSave();
 	}
 	
 	#endregion
