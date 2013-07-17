@@ -2,6 +2,10 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public enum SaveType {Level, AutoSaveSolution, NamedSolution}
 
 public class LevelDataManager : SingletonBehaviour<LevelDataManager> 
@@ -18,20 +22,19 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	
 	public static string EditorSaveName { get { return "_Editor"; } }
 	
-	string standardLevelSetDirectory = "Levels";
+	static string standardLevelSetDirectory = "Levels";
 	
-	string SaveDir { get { return Application.persistentDataPath+"/"+standardLevelSetDirectory; } }
+	static string SaveDir { get { return Application.persistentDataPath+"/"+standardLevelSetDirectory; } }
 	
 	Dictionary<string, LevelData> levels = new Dictionary<string, LevelData>();
 	
 	public bool Contains (string levelName)
 	{
-	
 		ReloadLevelData();
 		return levelName != EditorSaveName && levels.ContainsKey(levelName);
 	}
 	
-	public IEnumerable SaveList
+	public IEnumerable<string> SaveList
 	{
 		get
 		{
@@ -56,6 +59,20 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	
 	public void Save(string levelName, string encodedLevel, SaveType saveType)
 	{
+		if (levelName != EditorSaveName && levelName.StartsWith("_") && saveType == SaveType.Level)
+		{
+#if UNITY_EDITOR
+			LevelSettings.instance.levels.RemoveAll((obj) => obj.name == levelName);
+			
+			LevelSettings.instance.levels.Add(new LevelSettings.Level() { name = levelName, encodedLevel = encodedLevel,});
+			EditorUtility.SetDirty(LevelSettings.instance);
+			return;
+#endif
+			
+		}
+		
+		levelName.TrimStart('_');
+		
 		System.IO.File.WriteAllText(LevelFileNameString(levelName), levelName+"\n"+encodedLevel);
 	}
 	
@@ -64,12 +81,36 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 		System.IO.File.Delete(LevelFileNameString(levelName));
 	}
 	
+#if UNITY_EDITOR
+	
+	public static void DeleteAll()
+	{
+		foreach ( string filePath in System.IO.Directory.GetFiles(SaveDir, "*.6xmpl"))
+		{
+			Debug.Log("Deleting "+filePath);
+			System.IO.File.Delete(filePath);
+		}
+	}
+	
+#endif
+	
 	public string Load(string levelName, SaveType saveType)
 	{
-		ReloadLevelData();
 		
+		ReloadLevelData();
 		if (!levels.ContainsKey(levelName))
 			return "";
+		
+		if (levelName != EditorSaveName && levelName.StartsWith("_") && saveType == SaveType.Level)
+		{
+			
+			LevelSettings.Level level = LevelSettings.instance.levels.Find((obj) => obj.name == levelName);
+			
+			return level == null ? "" : level.encodedLevel;
+		}
+		
+		levelName.TrimStart('_');
+		
 		
 		switch(saveType)
 		{
@@ -94,6 +135,17 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 		{
 			ParseLevelFile(filePath);
 		}
+		
+#if UNITY_EDITOR
+		foreach ( LevelSettings.Level level in LevelSettings.instance.levels)
+		{
+			levels[level.name] = 	new LevelData() 
+									{ 
+										levelName = level.name, 
+										levelEncoding = level.encodedLevel, 
+									};
+		}
+#endif
 //		Object [] levelObjects = Resources.LoadAll(standardLevelSetDirectory, typeof(TextAsset));
 		
 //		foreach(Object obj in levelObjects)

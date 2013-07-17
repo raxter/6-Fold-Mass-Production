@@ -34,11 +34,8 @@ public class LevelSettings : ScriptableObjectSingleton<LevelSettings>
 	public class Level
 	{
 		public string name;
-		public List<GeneratorDetails> generators;
 		
-		public int targetConstructions;
-		
-		public string targetConstruction;
+		public string encodedLevel;
 	}
 	
 	

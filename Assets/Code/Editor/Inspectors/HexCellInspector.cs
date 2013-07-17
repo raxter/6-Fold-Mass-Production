@@ -1,10 +1,21 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 [CustomEditor(typeof(HexCell))]
 public class HexCellInspector : Editor
 {
+	
+	
+	[MenuItem("Custom/Clear Editor Save")]
+	public void ClearEditorSave()
+	{
+		foreach (var thing in new List<string>(LevelDataManager.instance.SaveList))
+		{
+			LevelDataManager.instance.Delete(thing, SaveType.Level);
+		}
+	}
 	
 	public override void OnInspectorGUI()
 	{

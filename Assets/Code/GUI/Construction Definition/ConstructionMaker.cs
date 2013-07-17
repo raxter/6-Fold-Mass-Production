@@ -404,9 +404,18 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	public void SaveConstruction ()
 	{
 		Debug.Log ("Saving");
-		if (targetConstructions.Count > 0 && saveEvent != null)
+		if (saveEvent != null)
 		{
-			saveEvent(targetConstructions[0]);
+			if (targetConstructions.Count > 0)
+			{
+				saveEvent(targetConstructions[0]);
+			}
+			else
+			{
+				Construction noneConstruction = Construction.CreateSimpleConstruction(PartType.None);
+				saveEvent(noneConstruction);
+				noneConstruction.DestroySelf();
+			}
 		}
 	}
 #endregion

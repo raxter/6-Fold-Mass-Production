@@ -31,6 +31,20 @@ public class GameSettings : ScriptableObjectSingleton<GameSettings>
 	public string BaseLevelSceneName { get { return baseLevelScene; } }
 	
 	
+	public Mechanism GetMechanism(MechanismType type)
+	{
+		switch (type)
+		{
+			case MechanismType.Generator:
+				return partGeneratorPrefab;
+			case MechanismType.Grabber:
+				return grabberPrefab;
+			case MechanismType.WeldingRig:
+				return weldingRigPrefab;
+		}
+		return null;
+	}
+	
 	public GrabbablePart GetPartPrefab(PartType partType)
 	{
 		foreach(GrabbablePart partPrefab in partPrefabs)

@@ -60,7 +60,17 @@ public class HexCell : MonoBehaviour
 	}
 	
 	
-	public Mechanism placedMechanism { get { return placedPlaceable as Mechanism; } }
+	public Mechanism placedMechanism 
+	{
+		get
+		{
+			return placedPlaceable as Mechanism; 
+		}
+		set
+		{
+			placedPlaceable = value;
+		}
+	}
 	
 	public IntVector2 location;
 	

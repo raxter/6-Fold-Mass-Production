@@ -23,10 +23,15 @@ public class GUIManager : MonoBehaviour
 	
 	void TestLevel()
 	{
-		if (_testLevelStartText == _testLevelButton.spriteText.Text)
+		LevelEditorGUI.instance.EditorEnabled = !LevelEditorGUI.instance.EditorEnabled;
+		if (!LevelEditorGUI.instance.EditorEnabled)
+		{
 			_testLevelButton.spriteText.Text = "Edit Level";
+		}
 		else
+		{
 			_testLevelButton.spriteText.Text = _testLevelStartText;
+		}
 	}
 	
 	void Start()

@@ -1,18 +1,25 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\GUIManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Game\PartGenerator.cs">
     <Files>
-      <File FileName="Assets\Code\GUI\SaveLoadMenuController.cs" Line="65" Column="104" />
+      <File FileName="Assets\Code\GUI\SaveLoadMenuController.cs" Line="65" Column="107" />
       <File FileName="Assets\Code\Game\Construction.cs" Line="570" Column="2" />
-      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="54" Column="59" />
-      <File FileName="Assets\Code\Managers\GridManager.cs" Line="141" Column="32" />
-      <File FileName="Assets\Code\Game\Mechanism.cs" Line="56" Column="47" />
-      <File FileName="Assets\Code\Game\GameCommon.cs" Line="8" Column="31" />
-      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="384" Column="97" />
-      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="31" Column="2" />
-      <File FileName="Assets\External Plugins\RaxterFramework\Singleton.cs" Line="37" Column="81" />
-      <File FileName="Assets\Code\Game\Encoding.cs" Line="95" Column="18" />
-      <File FileName="Assets\Code\Managers\GUIManager.cs" Line="29" Column="59" />
+      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="21" Column="2" />
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="308" Column="4" />
+      <File FileName="Assets\Code\Game\Mechanism.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\GameCommon.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="112" Column="74" />
+      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="27" Column="82" />
+      <File FileName="Assets\External Plugins\RaxterFramework\Singleton.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\GUI\LevelEditorGUI.cs" Line="23" Column="59" />
+      <File FileName="Assets\Code\Game\HexCell.cs" Line="71" Column="28" />
+      <File FileName="Assets\Code\Data\LevelSettings.cs" Line="38" Column="29" />
+      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionMaker.cs" Line="417" Column="36" />
+      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionPreview.cs" Line="140" Column="1" />
+      <File FileName="Assets\Code\Data\GameSettings.cs" Line="45" Column="15" />
+      <File FileName="Assets\Code\Game\Encoding.cs" Line="177" Column="1" />
+      <File FileName="Assets\Code\Game\Grabber.cs" Line="103" Column="17" />
+      <File FileName="Assets\Code\Editor\Inspectors\HexCellInspector.cs" Line="12" Column="9" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

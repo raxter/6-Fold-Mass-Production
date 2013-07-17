@@ -22,6 +22,10 @@ public class PartGenerator : Mechanism
 	protected override void MechanismStart ()
 	{
 		movable = false;
+		if (toGenerateConstruction != null)
+		{
+			toGenerateConstruction = Construction.CreateSimpleConstruction(PartType.None);
+		}
 	}
 
 	protected override void MechanismUpdate ()
@@ -35,7 +39,7 @@ public class PartGenerator : Mechanism
 	{
 		yield return new EncodableSubGroup(base.Encode());
 
-		yield return toGenerateConstruction as IEncodable ?? (EncodableInt)0;
+		yield return toGenerateConstruction as IEncodable;
 		
 	}
 	
@@ -43,10 +47,11 @@ public class PartGenerator : Mechanism
 	{
 //		List<object> encoded = new List<object>(encodings);
 		
-		if (!encoding.Validate(	EncodingType.Int,
+		if (!encoding.Validate(	EncodingType.Group,
 								EncodingType.Group
 								))
 		{
+			Debug.Log ("Could not decode generator \n"+encoding.DebugString());
 			return false;
 		}
 		Debug.Log ("Decoding Generator: "+encoding.DebugString());

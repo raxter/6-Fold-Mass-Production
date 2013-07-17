@@ -80,6 +80,7 @@ public class Grabber : Mechanism, IPooledObject
 	// Grabber code is (direction)(extention)(instruction0)(instruction1)...
 	public override IEnumerable<IEncodable> Encode()
 	{
+		yield return new EncodableSubGroup(base.Encode());
 		yield return (EncodableInt)(int)_startState.direction;
 		yield return (EncodableInt)_startState.extention;
 		foreach (Instruction instruction in instructions)
@@ -90,15 +91,16 @@ public class Grabber : Mechanism, IPooledObject
 	
 	public override bool Decode(Encoding encoding)
 	{
-		_startState.direction = (HexMetrics.Direction)encoding.Int(0);
-		_startState.extention = encoding.Int(1);
+		base.Decode(encoding.SubEncoding(0));
+		_startState.direction = (HexMetrics.Direction)encoding.Int(1);
+		_startState.extention = encoding.Int(2);
 		MoveToStartState();
 		
 		for (int i = 0 ; i < instructions.Count ; i++)
 		{
 			instructions[i] = Instruction.None;
 		}
-		for (int i = 2 ; i < encoding.Count ; i++)
+		for (int i = 3 ; i < encoding.Count ; i++)
 		{
 			instructions.Add((Instruction)encoding.Int(i));
 		}

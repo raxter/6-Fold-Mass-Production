@@ -5,15 +5,15 @@ using System.Collections.Generic;
 public class LevelManager : SingletonBehaviour<LevelManager> 
 {
 	
-	
-	LevelSettings.Level _currentLevel = null;
-	public LevelSettings.Level currentLevel
-	{
-		get
-		{
-			return _currentLevel;
-		}
-	}
+//	
+//	LevelSettings.Level _currentLevel = null;
+//	public LevelSettings.Level currentLevel
+//	{
+//		get
+//		{
+//			return _currentLevel;
+//		}
+//	}
 	
 	int _completedConstructions = -1;
 	public int completedConstructions
@@ -109,7 +109,7 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 	{
 		completedConstructions += 1;
 		
-		if (_completedConstructions >= _currentLevel.targetConstructions)
+		if (_completedConstructions >= GridManager.instance.targetConstructions)
 		{
 		}
 	}

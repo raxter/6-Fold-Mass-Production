@@ -2,6 +2,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 [System.Serializable]
 public class HexCellRow 
 { 
@@ -31,6 +36,16 @@ public class HexCellRow
 public class GridManager : SingletonBehaviour<GridManager> 
 {
 	
+#if UNITY_EDITOR
+	
+	[MenuItem("Custom/Clear Editor Save")]
+	static void ClearEditorSave()
+	{
+		LevelDataManager.DeleteAll();
+		
+	}
+	
+#endif
 	
 	[SerializeField]
 	GameObject _hexCellHolder;
@@ -82,14 +97,14 @@ public class GridManager : SingletonBehaviour<GridManager>
 		// put autosave system here
 		
 		// save editor level if editor is enabled
-		if (LevelEditorGUI.instance.editorEnabled)
+		if (LevelEditorGUI.instance.EditorEnabled)
 		{
 			// save order -> n Generators : Target1 (: Target2)
 			LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, LevelEncoding, SaveType.Level);
 			// TODO save grabbers/welders etc
 		}
 		
-		if (LevelEditorGUI.instance.editorEnabled)
+		if (LevelEditorGUI.instance.EditorEnabled)
 		{
 		
 			// save layout for editor is editor is enabled
@@ -113,7 +128,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Level);
 		if (encodedLevel != "")
 		{
-			Debug.Log ("Loading "+encodedLevel);
+			Debug.Log ("Loading Editor "+encodedLevel);
 			ClearLevel();
 			Encoding.Decode(new EncodableLevel(), encodedLevel);
 			
@@ -122,6 +137,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 		else
 		{
 			GridManager.instance.target = Construction.CreateSimpleConstruction(PartType.None);
+			
+			LoadedLevelName = LevelDataManager.EditorSaveName;
 		}
 	}
 	
@@ -149,9 +166,24 @@ public class GridManager : SingletonBehaviour<GridManager>
 		
 	}
 	
+	public void ClearSolution()
+	{
+		// clear movable mechanisms
+		foreach(HexCell hc in GridManager.instance.GetAllCells())
+		{
+			Mechanism mechanism = hc.placedMechanism;
+			
+			if (mechanism != null && mechanism.movable)
+			{
+				hc.placedMechanism = null;
+				ObjectPoolManager.DestroyObject(mechanism);
+			}
+		}
+	}
+	
 	public void ClearLevel()
 	{
-		// clear targets
+		// clear targets? (they get overridden if necessary)
 		// clear all hexcellplacables
 		foreach(HexCell hc in GridManager.instance.GetAllCells())
 		{
@@ -268,44 +300,70 @@ public class GridManager : SingletonBehaviour<GridManager>
 	{
 		public IEnumerable<IEncodable> Encode ()
 		{
+			Dictionary<MechanismType, List<IEncodable>> immovableParts = new Dictionary<MechanismType, List<IEncodable>>();
+			MechanismType [] mechanismTypes = new MechanismType [] {MechanismType.Generator, MechanismType.Grabber, MechanismType.WeldingRig};
+			foreach (MechanismType type in mechanismTypes)
+				immovableParts[type] = new List<IEncodable>();
+				
 			
 			List<IEncodable> generators = new List<IEncodable>();
 			foreach(HexCell hc in GridManager.instance.GetAllCells())
 			{
-				PartGenerator generator = hc.placedMechanism as PartGenerator;
+//				PartGenerator generator = hc.placedMechanism as PartGenerator;
+//				
+//				if (generator != null)
+//				{
+//					generators.Add (generator);
+//				}
 				
-				if (generator != null)
+				Mechanism movableMechanism = hc.placedMechanism;
+				
+				if (movableMechanism != null && !movableMechanism.movable)
 				{
-					generators.Add (generator);
+					immovableParts[movableMechanism.MechanismType].Add(movableMechanism);
 				}
 			}
 			
-			yield return (EncodableInt)generators.Count;
-			foreach (IEncodable generator in generators)
-				yield return generator;
-			
+			foreach (MechanismType type in mechanismTypes)
+			{
+				yield return (EncodableInt)immovableParts[type].Count;
+				foreach (IEncodable immoveablePart in immovableParts[type])
+					yield return immoveablePart;
+			}
 			yield return (EncodableInt)10; // target # 1
-			yield return (EncodableInt)10; // target # 2
+			yield return (EncodableInt)0;  // target # 2
 			
 			yield return GridManager.instance.target; // target 1
-			yield return (EncodableInt)0;// target 2
+			yield return (EncodableInt)0;             // target 2
 		}
 
 		public bool Decode (Encoding encodings)
 		{
 			Debug.Log ("GridManager Encoding Data\n"+ encodings.DebugString());
-			int count = encodings.Int(0);
-			for (int i = 0 ; i < count ; i++)
+//			int count = encodings.Int(0);
+//			for (int i = 0 ; i < count ; i++)
+//			{
+//				PartGenerator generator = ObjectPoolManager.GetObject(GameSettings.instance.partGeneratorPrefab);
+//				generator.Decode(encodings.SubEncoding(1+i));
+//			}
+			int i = 0;
+			MechanismType [] mechanismTypes = new MechanismType [] {MechanismType.Generator, MechanismType.Grabber, MechanismType.WeldingRig};
+			foreach (MechanismType type in mechanismTypes)
 			{
-				PartGenerator generator = ObjectPoolManager.GetObject(GameSettings.instance.partGeneratorPrefab);
-				generator.Decode(encodings.SubEncoding(1+i));
+				int count = encodings.Int(i);
+				i++;
+				for (int j = 0 ; j < count ; j++)
+				{
+					Mechanism newMechanism = ObjectPoolManager.GetObject<Mechanism>(GameSettings.instance.GetMechanism(type));
+					newMechanism.Decode(encodings.SubEncoding(i));
+					i++;
+				}
 			}
 			
-//			targetConstructions = encodings.Int(1);
-			GridManager.instance.targetConstructions = encodings.Int(1+count);
-//			GridManager.instance.targetConstructions2 = encodings.Int(1+count+1);
-			GridManager.instance.SetTarget(Construction.DecodeCreate(encodings.SubEncoding(1+count+3)));
-//			GridManager.instance.SetTarget2(encodings.SubEncoding(1+count+1));
+			GridManager.instance.targetConstructions = encodings.Int(i+1);
+//			GridManager.instance.targetConstructions2 = encodings.Int(i+2);
+			GridManager.instance.SetTarget(Construction.DecodeCreate(encodings.SubEncoding(i+3)));
+//			GridManager.instance.SetTarget2(encodings.SubEncoding(i+4));
 			
 			return true;
 		}
