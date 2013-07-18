@@ -22,7 +22,7 @@ public class PartGenerator : Mechanism
 	protected override void MechanismStart ()
 	{
 		movable = false;
-		if (toGenerateConstruction != null)
+		if (toGenerateConstruction == null)
 		{
 			toGenerateConstruction = Construction.CreateSimpleConstruction(PartType.None);
 		}

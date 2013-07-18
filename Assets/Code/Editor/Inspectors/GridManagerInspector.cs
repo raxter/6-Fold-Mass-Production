@@ -6,6 +6,12 @@ using System.Collections;
 public class GridManagerInspector : Editor 
 {
 	
+	[MenuItem("Custom/Clear Editor Save")]
+	public void ClearEditorSave()
+	{
+		LevelDataManager.DeleteAll();
+	}
+	
 	public override void OnInspectorGUI()
 	{
 		DrawDefaultInspector();

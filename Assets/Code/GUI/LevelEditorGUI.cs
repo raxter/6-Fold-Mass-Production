@@ -20,8 +20,11 @@ public class LevelEditorGUI : SingletonBehaviour<LevelEditorGUI>
 			gameObject.SetActive(value);
 			if (gameObject.activeSelf) // editor is active, so we clear the solution
 			{
-//				GridManager.instance.SaveCurrentSolution("_Editor");
-				GridManager.instance.ClearSolution();
+				GridManager.instance.LoadEditorLevel();
+			}
+			else // we are testing so we load the autosaved solution
+			{
+				GridManager.instance.LoadEditorSolution();
 			}
 		}
 	}

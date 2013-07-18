@@ -26,10 +26,12 @@ public class GUIManager : MonoBehaviour
 		LevelEditorGUI.instance.EditorEnabled = !LevelEditorGUI.instance.EditorEnabled;
 		if (!LevelEditorGUI.instance.EditorEnabled)
 		{
+			// editor disabled (testing level)
 			_testLevelButton.spriteText.Text = "Edit Level";
 		}
 		else
 		{
+			// back to editing
 			_testLevelButton.spriteText.Text = _testLevelStartText;
 		}
 	}

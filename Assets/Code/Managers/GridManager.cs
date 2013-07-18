@@ -96,36 +96,41 @@ public class GridManager : SingletonBehaviour<GridManager>
 		Debug.Log ("Autosaveing");
 		// put autosave system here
 		
-		// save editor level if editor is enabled
-		if (LevelEditorGUI.instance.EditorEnabled)
+		if (LevelEditorGUI.hasActiveInstance)
 		{
-			// save order -> n Generators : Target1 (: Target2)
-			LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, LevelEncoding, SaveType.Level);
-			// TODO save grabbers/welders etc
-		}
-		
-		if (LevelEditorGUI.instance.EditorEnabled)
-		{
-		
-			// save layout for editor is editor is enabled
+			// save editor level if editor is enabled
+			SaveType saveType = LevelEditorGUI.instance.EditorEnabled ? SaveType.Level : SaveType.Solution;
+			string levelEncoding = LevelEncoding();
+			
+			LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, LevelEncoding(), SaveType.Level, AutoSaveType.AutoSave);
+			
+			LevelDataManager.instance.Save(LoadedLevelName, LevelEncoding(), SaveType.Level, AutoSaveType.AutoSave);
+				
 		}
 		
 		// save autosave layout for level (reference by level name? AUTOSAVE_<lvlname>)
 		
 	}
-	
+
 	
 	public void SaveCurrentLevelAs(string levelName)
 	{
-		LevelDataManager.instance.Save(levelName, LevelEncoding, SaveType.Level);
+		LevelDataManager.instance.Save(levelName, LevelEncoding(), SaveType.Level, AutoSaveType.Named);
 	}
 	
 	public string LoadedLevelName { get; private set;}
 	
 	
-	public void LoadEditor()
+	public void LoadEditorSolution()
 	{
-		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Level);
+		LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, SolutionEncoding(), SaveType.Level, AutoSaveType.AutoSave);
+		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Solution, AutoSaveType.AutoSave);
+	}
+	public void LoadEditorLevel()
+	{
+		LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, SolutionEncoding(), SaveType.Solution, AutoSaveType.AutoSave);
+		ClearSolution();
+		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Level, AutoSaveType.AutoSave);
 		if (encodedLevel != "")
 		{
 			Debug.Log ("Loading Editor "+encodedLevel);
@@ -148,7 +153,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		Debug.Log ("Loading "+levelName);
 		LoadedLevelName = "";
 		// save order -> n Generators : Target1 (: Target2)
-		string encodedLevel = LevelDataManager.instance.Load(levelName, SaveType.Level);
+		string encodedLevel = LevelDataManager.instance.Load(levelName, SaveType.Level, AutoSaveType.Named);
 		if (encodedLevel != "")
 		{
 			Debug.Log ("Loading "+encodedLevel);
@@ -197,20 +202,14 @@ public class GridManager : SingletonBehaviour<GridManager>
 		}
 	}
 	
-	public string LevelEncoding
+	public string LevelEncoding()
 	{
-		get
-		{
-			return Encoding.Encode(new EncodableLevel());
-		}
+		return Encoding.Encode(new EncodableLevel());
 	}
 	
-	public string SolutionEncoding
+	public string SolutionEncoding()
 	{
-		get
-		{
-			return Encoding.Encode(new EncodableLevelSolution());
-		}
+		return Encoding.Encode(new EncodableLevelSolution());
 	}
 	class EncodableLevelSolution : IEncodable
 	{
@@ -339,7 +338,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 
 		public bool Decode (Encoding encodings)
 		{
-			Debug.Log ("GridManager Encoding Data\n"+ encodings.DebugString());
+			Debug.Log ("EncodableLevel Encoding Data\n"+ encodings.DebugString());
 //			int count = encodings.Int(0);
 //			for (int i = 0 ; i < count ; i++)
 //			{
@@ -356,8 +355,9 @@ public class GridManager : SingletonBehaviour<GridManager>
 				{
 					Mechanism newMechanism = ObjectPoolManager.GetObject<Mechanism>(GameSettings.instance.GetMechanism(type));
 					newMechanism.Decode(encodings.SubEncoding(i));
-					i++;
+					
 				}
+				i++;
 			}
 			
 			GridManager.instance.targetConstructions = encodings.Int(i+1);

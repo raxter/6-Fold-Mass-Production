@@ -110,7 +110,7 @@ public class SaveLoadMenuController : SingletonBehaviour<SaveLoadMenuController>
 	
 	void Delete()
 	{
-		LevelDataManager.instance.Delete(SaveName, SaveType.Level);
+		LevelDataManager.instance.Delete(SaveName, SaveType.Level, AutoSaveType.Named);
 		RefreshList();
 	}
 	

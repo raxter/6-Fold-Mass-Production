@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-public enum SaveType {Level, AutoSaveSolution, NamedSolution}
+public enum SaveType {Level, Solution}
+public enum AutoSaveType {Named, AutoSave}
 
 public class LevelDataManager : SingletonBehaviour<LevelDataManager> 
 {
@@ -15,7 +16,7 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	{
 		public string levelName;
 		public string levelEncoding;
-		public string autosaveEncoding;
+		public string levelAutosaveEncoding;
 		public Dictionary<string, string> namedSaveEncodings = new Dictionary<string, string>();
 	}
 	
@@ -27,6 +28,8 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 	static string SaveDir { get { return Application.persistentDataPath+"/"+standardLevelSetDirectory; } }
 	
 	Dictionary<string, LevelData> levels = new Dictionary<string, LevelData>();
+	
+	Dictionary<string, LevelData> internalLevels = new Dictionary<string, LevelData>();
 	
 	public bool Contains (string levelName)
 	{
@@ -42,9 +45,18 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 			foreach(string levelName in levels.Keys)
 			{
 				if (levelName != EditorSaveName)
-					yield return levelName;
+				{
+#if !UNITY_EDITOR
+					if (!levelName.StartsWith('_'))
+#endif
+					{
+						yield return levelName;
+					}
+				}
 			}
+		
 		}
+		
 	}
 	
 	void Start () 
@@ -52,33 +64,98 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 		ReloadLevelData();
 	}
 	
-	string LevelFileNameString(string levelName)
+	string FileNameString(string levelName, string solutionName, SaveType saveType)
 	{
-		return SaveDir+"/"+levelName.Replace(" ", "_")+".6xmpl";
+		return SaveDir+"/"+(levelName + solutionName).Replace(" ", "_")+".6xmp"+(saveType == SaveType.Level ? "l" : "s");
 	}
 	
-	public void Save(string levelName, string encodedLevel, SaveType saveType)
+	
+	string MakeLevelNameSafe(string levelName)
+	{
+		
+		return levelName;
+	}
+	
+	const string autoSaveName = "_Autosave";
+	
+	public void Save(string levelName, string encodedLevel, SaveType saveType, AutoSaveType autoSaveType)
+	{
+		Save(levelName, encodedLevel, saveType, autoSaveType, "");
+	}
+		
+	public void Save(string levelName, string encodedLevel, SaveType saveType, AutoSaveType autoSaveType, string solutionName)
 	{
 		if (levelName != EditorSaveName && levelName.StartsWith("_") && saveType == SaveType.Level)
 		{
-#if UNITY_EDITOR
+// if we are in the editor and a Level is saved with an "_" at the beginning, then it is to be saves in resources, not normally
+#if UNITY_EDITOR 
 			LevelSettings.instance.levels.RemoveAll((obj) => obj.name == levelName);
 			
 			LevelSettings.instance.levels.Add(new LevelSettings.Level() { name = levelName, encodedLevel = encodedLevel,});
 			EditorUtility.SetDirty(LevelSettings.instance);
 			return;
+// otherwise we are playing the game normally and we just trim the "_" for a level save, 
+// all other save types keep the underscore as they must reference the full name, even an underscored (Resources) level
+#else
+			levelName.TrimStart('_');
 #endif
-			
 		}
 		
-		levelName.TrimStart('_');
+		solutionName.TrimStart('_');
 		
-		System.IO.File.WriteAllText(LevelFileNameString(levelName), levelName+"\n"+encodedLevel);
+		if (autoSaveType == AutoSaveType.AutoSave)
+		{
+			solutionName = autoSaveName;
+		}
+		
+		
+		System.IO.File.WriteAllText(FileNameString(levelName, solutionName, saveType), levelName+"\n"+solutionName+"\n"+encodedLevel);
+		Debug.Log("Saving "+FileNameString(levelName, solutionName, saveType));
+		
 	}
 	
-	public void Delete(string levelName, SaveType saveType)
+	public string Load(string levelName, SaveType saveType, AutoSaveType autoSaveType)
 	{
-		System.IO.File.Delete(LevelFileNameString(levelName));
+		return Load(levelName, saveType, autoSaveType, "");
+	}
+	
+	public string Load(string levelName, SaveType saveType, AutoSaveType autoSaveType, string solutionName)
+	{
+		
+		Debug.Log("Loading "+levelName+" "+solutionName +":"+ saveType +":"+autoSaveType+":"+solutionName);
+		
+		ReloadLevelData();
+		if (!levels.ContainsKey(levelName))
+			return "";
+		
+		if (autoSaveType == AutoSaveType.AutoSave)
+			solutionName = autoSaveName;
+		
+		switch(saveType)
+		{
+		case SaveType.Level: 
+			if (autoSaveType == AutoSaveType.AutoSave)
+				return levels[levelName].levelAutosaveEncoding;
+			else
+				return levels[levelName].levelEncoding;
+		case SaveType.Solution: 
+			if (!levels[levelName].namedSaveEncodings.ContainsKey(solutionName))
+				return "";
+			return levels[levelName].namedSaveEncodings[solutionName];
+		default: return "";
+		}
+	}
+	
+	public void Delete(string levelName, SaveType saveType, AutoSaveType autoSaveType)
+	{
+		Delete(levelName, saveType, autoSaveType, "");
+	}
+	public void Delete(string levelName, SaveType saveType, AutoSaveType autoSaveType, string solutionName)
+	{
+		if (autoSaveType == AutoSaveType.AutoSave)
+			solutionName = autoSaveName;
+		
+		System.IO.File.Delete(FileNameString(levelName, solutionName, saveType));
 	}
 	
 #if UNITY_EDITOR
@@ -90,39 +167,14 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 			Debug.Log("Deleting "+filePath);
 			System.IO.File.Delete(filePath);
 		}
+		foreach ( string filePath in System.IO.Directory.GetFiles(SaveDir, "*.6xmps"))
+		{
+			Debug.Log("Deleting "+filePath);
+			System.IO.File.Delete(filePath);
+		}
 	}
 	
 #endif
-	
-	public string Load(string levelName, SaveType saveType)
-	{
-		
-		ReloadLevelData();
-		if (!levels.ContainsKey(levelName))
-			return "";
-		
-		if (levelName != EditorSaveName && levelName.StartsWith("_") && saveType == SaveType.Level)
-		{
-			
-			LevelSettings.Level level = LevelSettings.instance.levels.Find((obj) => obj.name == levelName);
-			
-			return level == null ? "" : level.encodedLevel;
-		}
-		
-		levelName.TrimStart('_');
-		
-		
-		switch(saveType)
-		{
-		case SaveType.Level: 
-			return levels[levelName].levelEncoding;
-			break;
-		case SaveType.AutoSaveSolution: 
-			return levels[levelName].autosaveEncoding;
-			break;
-		default: return "";
-		}
-	}
 	
 	void ReloadLevelData()
 	{
@@ -136,7 +188,6 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 			ParseLevelFile(filePath);
 		}
 		
-#if UNITY_EDITOR
 		foreach ( LevelSettings.Level level in LevelSettings.instance.levels)
 		{
 			levels[level.name] = 	new LevelData() 
@@ -145,12 +196,38 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 										levelEncoding = level.encodedLevel, 
 									};
 		}
-#endif
-//		Object [] levelObjects = Resources.LoadAll(standardLevelSetDirectory, typeof(TextAsset));
 		
-//		foreach(Object obj in levelObjects)
-//			if (obj is TextAsset)
-//				ParseLevelFile(obj as TextAsset);
+		foreach ( string filePath in System.IO.Directory.GetFiles(SaveDir, "*.6xmps"))
+		{
+			ParseSolutionFile(filePath);
+		}
+		
+		
+	}
+	void ParseSolutionFile(string filePath)
+	{
+		string fileText = System.IO.File.ReadAllText(filePath);
+		string [] data = fileText.Split('\n');
+		
+		if (data.Length < 2)
+		{
+			Debug.LogWarning(filePath+ " not a valid 6xMP solution file");
+			return;
+		}
+		
+		string levelName = data[0].Trim();
+		string solutionName = data[1].Trim();
+		string encodedLevel = data[2].Trim();
+		
+		if (levels.ContainsKey(levelName))
+		{
+			levels[levelName].namedSaveEncodings[solutionName] = encodedLevel;
+		}
+		else
+		{
+			Debug.LogWarning(filePath+ " is a solution for a level ("+solutionName+") that does not exist (\""+levelName+"\")");
+			return;
+		}
 	}
 	
 	void ParseLevelFile(string filePath)
@@ -164,15 +241,19 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 			return;
 		}
 		
-		string name = data[0].Trim();
-		string encodedLevel = data[1].Trim();
+		string levelName = data[0].Trim();
+		string solutionName = data[1].Trim();
+		string encodedLevel = data[2].Trim();
 		
-		// TODO check if it's a valid save
-		levels[name] = new LevelData() 
-		{ 
-			levelName = name, 
-			levelEncoding = encodedLevel, 
-		};
+		if (!levels.ContainsKey(levelName))
+		{
+			levels[levelName] = new LevelData();
+		}
+		if (solutionName == autoSaveName)
+			levels[levelName].levelAutosaveEncoding = encodedLevel;
+		else
+			levels[levelName].levelEncoding = encodedLevel;
+			
 	}
 
 	
