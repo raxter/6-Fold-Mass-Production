@@ -1,24 +1,14 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\GUIManager.cs">
-    <Files>
-      <File FileName="Assets\External Plugins\RaxterFramework\CoroutineUtils.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\GUI\SaveLoadMenuController.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\Construction.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\GridManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\Mechanism.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\GameCommon.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="1" Column="1" />
-      <File FileName="Assets\External Plugins\RaxterFramework\Singleton.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Game\Encoding.cs" Line="1" Column="1" />
-      <File FileName="Assets\Code\Managers\GUIManager.cs" Line="29" Column="21" />
-    </Files>
-  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Encoding.cs" line="193" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="19" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="20" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="21" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="17" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Managers\GridManager.cs" line="138" />
+      <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Managers\GridManager.cs" line="133" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

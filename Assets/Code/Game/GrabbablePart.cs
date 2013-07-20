@@ -805,6 +805,8 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 	
 	public IEnumerable<IEncodable> EncodeWithContext(Dictionary<GrabbablePart, int> partIDs)
 	{
+//		Debug.Log("GrabbablePart::EncodeWithContext "+name);
+		
 		int id = partIDs[this];
 		
 		yield return (EncodableInt)id;

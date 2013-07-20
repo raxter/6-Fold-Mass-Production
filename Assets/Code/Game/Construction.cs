@@ -515,8 +515,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, Sys
 			idCount += 1;
 		}
 		
-		
-		List<string> encodedElements = new List<string>();
+//		List<string> encodedElements = new List<string>();
 		
 		if (CenterPart != null)
 		{
@@ -524,6 +523,7 @@ public class Construction : MonoBehaviour, System.IComparable<Construction>, Sys
 			foreach (GrabbablePart element in CenterPart.GetAllConnectedParts())
 	//		foreach (GrabbablePart element in Parts)
 			{
+				
 				yield return new EncodableSubGroup(element.EncodeWithContext(partID));
 			}
 		}

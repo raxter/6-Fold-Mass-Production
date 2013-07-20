@@ -23,8 +23,23 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 	
 	public virtual bool Decode (Encoding encoding)
 	{
-		PlaceAtLocation(new IntVector2(encoding.Int(0), encoding.Int (1)));
-		movable = (int)encoding.Int(2) == 1;
+		IntVector2 newLocation = new IntVector2(encoding.Int(0), encoding.Int (1));
+		Mechanism placedMechanism = GridManager.instance.GetHexCell(newLocation).placedMechanism;
+		
+		bool didReplacedPart = false;
+		if (placedMechanism != null)
+		{
+			bool oldMovable = placedMechanism.movable;
+			ObjectPoolManager.DestroyObject(placedMechanism);
+			PlaceAtLocation(newLocation);
+			bool savedMovable = (int)encoding.Int(2) == 1; // do something with this
+			movable = oldMovable;
+		}
+		else
+		{
+			PlaceAtLocation(newLocation);
+			movable = (int)encoding.Int(2) == 1;
+		}
 		
 		return true;
 	}

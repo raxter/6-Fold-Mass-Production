@@ -26,12 +26,18 @@ public class InputManager : SingletonBehaviour<InputManager>
 	
 	public void SelectUniqueMechanism(HexCellPlaceable mechanism)
 	{
-		ClearSelection();
+		ClearSelectionSilently();
 		
 		SelectPlacable(mechanism);
 	}
-
+	
 	public void ClearSelection ()
+	{
+		ClearSelectionSilently();
+		OnSelectionChange(selectedPlacables);
+	}
+		
+	void ClearSelectionSilently ()
 	{
 		foreach (HexCellPlaceable selectedMechanism in selectedPlacables)
 		{
@@ -151,10 +157,16 @@ public class InputManager : SingletonBehaviour<InputManager>
 		
 		if (Input.GetMouseButtonDown(0))
 		{
-			if (OverHexCell != null && OverHexCell.placedPlaceable != null)
+			if (OverHexCell != null)
 			{
-				SelectUniqueMechanism(OverHexCell.placedPlaceable);
-				
+				if (OverHexCell.placedPlaceable != null)
+				{
+					SelectUniqueMechanism(OverHexCell.placedPlaceable);
+				}
+				else
+				{
+					ClearSelection();
+				}
 			}
 			StartDragging();
 		}

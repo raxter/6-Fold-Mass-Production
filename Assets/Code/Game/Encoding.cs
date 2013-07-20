@@ -76,12 +76,18 @@ public class Encoding
 		intValue = i;
 	}
 		
+//	public Encoding() // blank list
+//	{
+//		encodings = new List<Encoding>();
+//	}
+	
 	public Encoding(string encoding)
 	{
-		if (encoding == "")
-			return;
-		
 		encodings = new List<Encoding>();
+		
+//		if (encoding == "")
+//			return;
+		
 		encodings.AddRange(SplitEncoding(encoding));
 	}
 	
@@ -134,15 +140,10 @@ public class Encoding
 		string ret = "";
 		foreach (Encoding encoding in encodings)
 		{
-//			if (encoding.intValue != null)
-//			{
-				if (encoding.intValue.HasValue)
-					ret += indent + encoding.intValue.Value+"\n";
-//				else
-//					ret += indent + "no value?\n";
-//			}
+			if (encoding.intValue.HasValue)
+				ret += indent + encoding.intValue.Value+"\n";
 			else
-				ret += indent + "->\n"+encoding.DebugString(indentLevel+1);
+				ret += indent + "-> (" + encoding.Count + ")\n"+encoding.DebugString(indentLevel+1);
 		}
 		return ret;
 	}
@@ -159,6 +160,7 @@ public class Encoding
 	
 	public static void Decode(IEncodable encodable, string encodedString)
 	{
+//		Debug.Log ("Decoding string \""+encodedString+"\"");
 		encodable.Decode(new Encoding(encodedString));
 	}
 	
@@ -189,10 +191,11 @@ public class Encoding
 			}
 			else
 			{
-				Debug.Log("Encoding "+o);
+//				Debug.Log("Encoding "+o);
 				stringParts.Add (Encode(o));
 			}
 		}
+		
 		
 //		string [] stringParts = children.ConvertAll((child) => Encode(child));
 		string safeJoin = string.Join(""+safeDelim, stringParts.ToArray())+safeDelim;
@@ -217,6 +220,12 @@ public class Encoding
 	static IEnumerable<Encoding> SplitEncoding(string encoded)
 	{
 //		Debug.Log("Splitting \""+encoded+"\"");
+		if (encoded == "")
+		{
+//			Debug.Log("Returning blank list");
+			yield break;
+		}
+		
 		int delimIndex = delimeters.Length-1;
 		for ( ; delimIndex >= -1  ; delimIndex --)
 		{
@@ -227,7 +236,6 @@ public class Encoding
 //					Debug.Log ("Returning int "+CodeToNumber(c) +"("+c+")");
 					yield return new Encoding(CodeToNumber(c));
 				}
-//				yield return encoded;
 				yield break;
 			}
 			if (encoded.Contains(""+delimeters[delimIndex]))
@@ -236,19 +244,39 @@ public class Encoding
 			}
 		}
 		
-//		Debug.Log("Delimeter "+delimeters[delimIndex]);
-		foreach(string s in encoded.Split(delimeters[delimIndex]))
+		if (encoded.Length == 1) // must be a single char delimeter, so must be a blank list
 		{
-			if (s.Length > 1)
+			yield break;
+		}
+		
+//		Debug.Log("Delimeter "+delimeters[delimIndex]);
+	
+		string [] splits = encoded.Split(delimeters[delimIndex]);
+		for(int i = 0 ; i < splits.Length-1 ; i++)
+		{
+			string s = splits[i];
+//			Debug.Log("Split "+s);
+			
+			if (s.Length == 0 || s.Length > 1) // if it's blank of greater than 1
 			{
 //				Debug.Log ("Returning encoding \""+s+"\" ("+delimeters[delimIndex]+")");
 				yield return new Encoding (s);
 			}
 			else if (s.Length == 1)
 			{
-//				Debug.Log ("Returning int "+CodeToNumber(s[0]) +"("+s[0]+")");
-				yield return new Encoding(CodeToNumber(s[0]));
+				int encodedInt = CodeToNumber(s[0]);
+				if (encodedInt == -1) // not a code, so probably a delimiter ... we hope
+				{
+//					Debug.Log ("Returning single char encoding \""+s+"\" ("+delimeters[delimIndex]+")");
+					yield return new Encoding(s);
+				}
+				else
+				{
+//					Debug.Log ("Returning int "+ encodedInt +"("+s[0]+")");
+					yield return new Encoding(encodedInt);
+				}
 			}
+			
 		}
 	}
 	

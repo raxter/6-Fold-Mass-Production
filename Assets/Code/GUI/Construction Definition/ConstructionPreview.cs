@@ -61,7 +61,6 @@ public class ConstructionPreview : MonoBehaviour
 		SetPreviewedConstruction(GridManager.instance.target, 
 		(construction) => 
 		{
-			ObjectPoolManager.DestroyObject(GridManager.instance.target);
 			GridManager.instance.SetTarget(construction);
 		});
 		

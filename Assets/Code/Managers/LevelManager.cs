@@ -85,7 +85,7 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 		if (GameCommon.instance.editorMode)
 		{
 			// enable editor
-			GridManager.instance.LoadEditorLevel();
+			GridManager.instance.LoadBlankEditor();
 		}
 		else
 		{

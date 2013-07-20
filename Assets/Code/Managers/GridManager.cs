@@ -77,19 +77,30 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void SetTarget(Construction targetConstruction)
 	{
+		if (target != null)
+		{
+			Debug.Log ("Destroying pooled "+target.name);
+			target.DestroySelf();
+			target = null;
+		}
+		Debug.Log ("Setting Target "+Encoding.Encode(targetConstruction));
 		target = Construction.DecodeCopy(targetConstruction);
+		Debug.Log ("Set Target "+Encoding.Encode(target));
 		target.ignoreCollisions = true;
 //		GrabbablePart targetPart = target.GenerateConnectedParts();
 		target.transform.parent = _targetHolder.transform;
 		target.transform.localPosition = Vector3.zero;
+		
+		GridChangedEvent();
 	}
 	
 	void Start()
 	{
-		MechanismChangedEvent += PerformAutosave;
+		SetTarget(Construction.CreateSimpleConstruction(PartType.None));
+		GridChangedEvent += PerformAutosave;
 	}
 	
-	public event System.Action MechanismChangedEvent;
+	public event System.Action GridChangedEvent;
 	
 	public void PerformAutosave()
 	{
@@ -123,8 +134,19 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void LoadEditorSolution()
 	{
-		LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, SolutionEncoding(), SaveType.Level, AutoSaveType.AutoSave);
-		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Solution, AutoSaveType.AutoSave);
+		LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, LevelEncoding(), SaveType.Level, AutoSaveType.AutoSave);
+		
+		string encodedSolution = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Solution, AutoSaveType.AutoSave);
+		
+		ClearSolution();
+		Encoding.Decode(new EncodableSolution(), encodedSolution);
+	}
+	public void LoadBlankEditor()
+	{
+		ClearSolution();
+		ClearLevel();
+		LoadedLevelName = LevelDataManager.EditorSaveName;
+		GridManager.instance.target = Construction.CreateSimpleConstruction(PartType.None);
 	}
 	public void LoadEditorLevel()
 	{
@@ -141,9 +163,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		}
 		else
 		{
-			GridManager.instance.target = Construction.CreateSimpleConstruction(PartType.None);
-			
-			LoadedLevelName = LevelDataManager.EditorSaveName;
+			LoadBlankEditor();
 		}
 	}
 	
@@ -173,6 +193,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void ClearSolution()
 	{
+		InputManager.instance.ClearSelection();
 		// clear movable mechanisms
 		foreach(HexCell hc in GridManager.instance.GetAllCells())
 		{
@@ -209,9 +230,9 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public string SolutionEncoding()
 	{
-		return Encoding.Encode(new EncodableLevelSolution());
+		return Encoding.Encode(new EncodableSolution());
 	}
-	class EncodableLevelSolution : IEncodable
+	class EncodableSolution : IEncodable
 	{
 		public IEnumerable<IEncodable> Encode ()
 		{
@@ -260,6 +281,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 
 		public bool Decode (Encoding encodings)
 		{
+			Debug.Log ("EncodableSolution Encoding Data\n"+ encodings.DebugString());
+			
 			// find moveable grabbers in the level that match the save file
 			List<PartGenerator> generators = new List<PartGenerator>();
 			foreach(HexCell hc in GridManager.instance.GetAllCells())
@@ -285,11 +308,27 @@ public class GridManager : SingletonBehaviour<GridManager>
 				
 			}
 			
-			// TODO
-			// place grabbers
+			int index = 2;
+			foreach (MechanismType type in new MechanismType [] {MechanismType.Grabber, MechanismType.WeldingRig})
+			{
+				if (index >= encodings.Count)
+				{
+					break;
+				}
+				
+				Mechanism [] mechanisms = new Mechanism [encodings.Int (index)];
+				index++;
+				
+				Encoding mechanismEncodingGroup = encodings.SubEncoding(index);
+				index++;
+				
+				for (int i = 0 ; i < mechanisms.Length ; i++)
+				{
+					mechanisms[i] = ObjectPoolManager.GetObject<Mechanism>(GameSettings.instance.GetMechanism(type));
+					mechanisms[i].Decode(mechanismEncodingGroup.SubEncoding(i));
+				}
+			}
 			
-			// TODO
-			// place welding rigs
 			
 			return true;
 		}
@@ -355,15 +394,19 @@ public class GridManager : SingletonBehaviour<GridManager>
 				{
 					Mechanism newMechanism = ObjectPoolManager.GetObject<Mechanism>(GameSettings.instance.GetMechanism(type));
 					newMechanism.Decode(encodings.SubEncoding(i));
-					
+					i++;
 				}
-				i++;
 			}
 			
-			GridManager.instance.targetConstructions = encodings.Int(i+1);
-//			GridManager.instance.targetConstructions2 = encodings.Int(i+2);
-			GridManager.instance.SetTarget(Construction.DecodeCreate(encodings.SubEncoding(i+3)));
-//			GridManager.instance.SetTarget2(encodings.SubEncoding(i+4));
+			GridManager.instance.targetConstructions = encodings.Int(i+0);
+//			GridManager.instance.targetConstructions2 = encodings.Int(i+1);
+			Construction target0 = Construction.DecodeCreate(encodings.SubEncoding(i+2));
+			Debug.Log ("Setting Target0 "+encodings.SubEncoding(i+2).DebugString());
+			Debug.Log ("Setting Target0 "+Encoding.Encode(target0));
+			GridManager.instance.SetTarget(target0);
+			target0.DestroySelf();
+//			Construction target0 = Construction.DecodeCreate(encodings.SubEncoding(i+3));
+//			CoroutineUtils.WaitOneFrameAndDo(() => GridManager.instance.SetTarget(target0));
 			
 			return true;
 		}
@@ -371,8 +414,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 	
 	public void RegisterMechanismChange ()
 	{
-		if (MechanismChangedEvent != null)
-			MechanismChangedEvent();
+		if (GridChangedEvent != null)
+			GridChangedEvent();
 	}
 	
 	

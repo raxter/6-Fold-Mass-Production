@@ -119,28 +119,28 @@ public class HexCell : MonoBehaviour
 	
 	public void GrabberInputDelegate(ref POINTER_INFO ptr)
 	{
-		switch (ptr.evt)
-		{
-			case POINTER_INFO.INPUT_EVENT.PRESS:
-			{
-				if (placedPlaceable is Mechanism)
-				{
-//					Debug.Log("StartDrag()");
-					placedMechanism.StartDrag();
-				}
-				break;
-			}
-			case POINTER_INFO.INPUT_EVENT.TAP:
-			case POINTER_INFO.INPUT_EVENT.RELEASE:
-			case POINTER_INFO.INPUT_EVENT.RELEASE_OFF:
-				if (placedPlaceable is Mechanism)
-				{
-//					Debug.Log("StopDrag()");
-					placedMechanism.StopDrag();
-				}
-				break;
-			
-		}
+//		switch (ptr.evt)
+//		{
+//			case POINTER_INFO.INPUT_EVENT.PRESS:
+//			{
+//				if (placedPlaceable is Mechanism)
+//				{
+////					Debug.Log("StartDrag()");
+//					placedMechanism.StartDrag();
+//				}
+//				break;
+//			}
+//			case POINTER_INFO.INPUT_EVENT.TAP:
+//			case POINTER_INFO.INPUT_EVENT.RELEASE:
+//			case POINTER_INFO.INPUT_EVENT.RELEASE_OFF:
+//				if (placedPlaceable is Mechanism)
+//				{
+////					Debug.Log("StopDrag()");
+//					placedMechanism.StopDrag();
+//				}
+//				break;
+//			
+//		}
 	}
 	
 	public Vector2 GetDirection (HexMetrics.Direction direction)

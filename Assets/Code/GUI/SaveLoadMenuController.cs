@@ -36,7 +36,7 @@ public class SaveLoadMenuController : SingletonBehaviour<SaveLoadMenuController>
 		_quickSaveTextAtStart = _quickSaveButton.spriteText.Text;
 		_saveLoadPanel.Dismiss();
 		
-		GridManager.instance.MechanismChangedEvent += UpdateQuickSave;
+		GridManager.instance.GridChangedEvent += UpdateQuickSave;
 		
 		_saveLevelTextField.AddValueChangedDelegate((obj) => RefreshButtons());
 		
