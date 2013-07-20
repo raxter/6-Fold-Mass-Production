@@ -13,12 +13,12 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 	}
 	
 	
-	public bool movable = true;		
+	public bool isSolutionMechanism = true;		
 	public virtual IEnumerable<IEncodable> Encode ()
 	{
 		yield return (EncodableInt)Location.x;
 		yield return (EncodableInt)Location.y;
-		yield return (EncodableInt)(movable ? 1 : 0);
+		yield return (EncodableInt)(isSolutionMechanism ? 1 : 0);
 	}
 	
 	public virtual bool Decode (Encoding encoding)
@@ -27,18 +27,28 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		Mechanism placedMechanism = GridManager.instance.GetHexCell(newLocation).placedMechanism;
 		
 		bool didReplacedPart = false;
-		if (placedMechanism != null)
+		if (placedMechanism != null) // we are replacing a part
 		{
-			bool oldMovable = placedMechanism.movable;
-			ObjectPoolManager.DestroyObject(placedMechanism);
-			PlaceAtLocation(newLocation);
-			bool savedMovable = (int)encoding.Int(2) == 1; // do something with this
-			movable = oldMovable;
+			if (placedMechanism.MechanismType == MechanismType && // we are replacing the same type of part
+				placedMechanism.Location.IsEqualTo(newLocation) && // the location of the old part is the same as this new one (important for multicell mechanisms e.g. weldingRig)
+				!placedMechanism.isSolutionMechanism) // is a level mechanism (not part of the solution, part of the problem ;p)
+			{
+				ObjectPoolManager.DestroyObject(placedMechanism);
+				PlaceAtLocation(newLocation);
+				isSolutionMechanism = false; // we use the already on board's movable (i.e. immovable)
+				
+			}
+			else
+			{
+				// something went wrong, we are loading a mechanism on top of one that is different, or a solution mechanism
+				Debug.LogError("Something went wrong, we are loading a mechanism on top of one that is different, or a solution mechanism");
+				return false;
+			}
 		}
-		else
+		else // this is a new part
 		{
 			PlaceAtLocation(newLocation);
-			movable = (int)encoding.Int(2) == 1;
+			isSolutionMechanism = (int)encoding.Int(2) == 1;
 		}
 		
 		return true;
@@ -49,7 +59,7 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		
 	public void StartDrag()
 	{
-		if (LevelManager.instance.currentSpeed != LevelManager.SimulationSpeed.Stopped || (!LevelEditorGUI.hasActiveInstance && !movable))
+		if (LevelManager.instance.currentSpeed != LevelManager.SimulationSpeed.Stopped || (!LevelEditorGUI.hasActiveInstance && !isSolutionMechanism))
 		{
 			return;
 		}
@@ -68,7 +78,7 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		}
 //		Debug.Log ("StopDrag()" + (hexCell!= null?""+hexCell.location.x +":"+hexCell.location.y:""));
 		
-		movable = !LevelEditorGUI.hasActiveInstance;
+		isSolutionMechanism = !LevelEditorGUI.hasActiveInstance;
 		
 		if (InputManager.instance.OverCell && InputManager.instance.OverHexCell.placedPlaceable == null)
 		{

@@ -199,7 +199,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		{
 			Mechanism mechanism = hc.placedMechanism;
 			
-			if (mechanism != null && mechanism.movable)
+			if (mechanism != null && mechanism.isSolutionMechanism)
 			{
 				hc.placedMechanism = null;
 				ObjectPoolManager.DestroyObject(mechanism);
@@ -246,7 +246,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 				Grabber grabber = hc.placedMechanism as Grabber;
 				WeldingRig weldingRig = hc.placedMechanism as WeldingRig;
 				
-				if (generator != null && generator.movable)
+				if (generator != null && generator.isSolutionMechanism)
 					movableGenerators.Add (generator);
 				
 				if (grabber != null)
@@ -288,7 +288,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 			foreach(HexCell hc in GridManager.instance.GetAllCells())
 			{
 				PartGenerator generator = hc.placedMechanism as PartGenerator;
-				if (generator != null && generator.movable)
+				if (generator != null && generator.isSolutionMechanism)
 					generators.Add (generator);
 				
 			}
@@ -356,7 +356,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 				
 				Mechanism movableMechanism = hc.placedMechanism;
 				
-				if (movableMechanism != null && !movableMechanism.movable)
+				if (movableMechanism != null && !movableMechanism.isSolutionMechanism)
 				{
 					immovableParts[movableMechanism.MechanismType].Add(movableMechanism);
 				}

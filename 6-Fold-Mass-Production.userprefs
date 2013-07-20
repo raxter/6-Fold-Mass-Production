@@ -1,6 +1,14 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\External Plugins\RaxterFramework\IntVector2.cs">
+    <Files>
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="202" Column="58" />
+      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="246" Column="1" />
+      <File FileName="Assets\Code\Game\Mechanism.cs" Line="33" Column="27" />
+      <File FileName="Assets\Code\Game\HexCellPlaceable.cs" Line="7" Column="15" />
+      <File FileName="Assets\External Plugins\RaxterFramework\IntVector2.cs" Line="62" Column="2" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="19" />
@@ -9,6 +17,8 @@
       <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="17" />
       <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Managers\GridManager.cs" line="138" />
       <Breakpoint file="E:\Game Development\6-Fold-Mass-Production\Assets\Code\Managers\GridManager.cs" line="133" />
+      <Breakpoint file="D:\GameDev\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="45" />
+      <Breakpoint file="D:\GameDev\6-Fold-Mass-Production\Assets\Code\Game\Mechanism.cs" line="44" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
