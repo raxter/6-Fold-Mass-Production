@@ -108,12 +108,11 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 				active = true;
 		}
 		
-		
-		
-		foreach (GameObject uiObject in _grabberUIObjects)
-		{
-			uiObject.transform.localScale = Vector3.one * ( active ? 1f : 0f );
-		}
+		transform.localScale = Vector3.one * ( active ? 1f : 0f );
+//		foreach (GameObject uiObject in _grabberUIObjects)
+//		{
+//			uiObject.transform.localScale = Vector3.one * ( active ? 1f : 0f );
+//		}
 	}
 
 //	public void InstructionSetAt (int _index)

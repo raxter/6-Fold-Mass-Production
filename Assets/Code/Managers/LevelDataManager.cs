@@ -44,7 +44,7 @@ public class LevelDataManager : SingletonBehaviour<LevelDataManager>
 			ReloadLevelData();
 			foreach(string levelName in levels.Keys)
 			{
-				if (levelName != EditorSaveName)
+				if (levelName != EditorSaveName && levelName != "")
 				{
 #if !UNITY_EDITOR
 					if (!levelName.StartsWith('_'))

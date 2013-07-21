@@ -9,7 +9,7 @@ public class ConstructionPreview : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		_previewWindow.renderer.enabled = false;
+		_previewWindow.gameObject.SetActive(false);
 		InputManager.instance.OnSelectionChange += OnSelectionChange;
 		ConstructionMaker.instance.saveEvent += OnSaveEvent;
 	}
@@ -41,6 +41,9 @@ public class ConstructionPreview : MonoBehaviour
 	#region EZGUI Button calls
 	void ToggleMaker()
 	{
+		if (!LevelEditorGUI.hasActiveInstance)
+			return;
+		
 		if (PreviewedConstruction != null)
 		{
 			if (ConstructionMaker.instance.Open)
@@ -66,7 +69,7 @@ public class ConstructionPreview : MonoBehaviour
 			GridManager.instance.SetTarget(construction);
 		});
 		
-		_previewWindow.renderer.enabled = true;
+		_previewWindow.gameObject.SetActive(true);
 	}
 	
 		
@@ -145,7 +148,7 @@ public class ConstructionPreview : MonoBehaviour
 				selectedGenerator.toGenerateConstruction.ignoreCollisions = true;
 			});
 		
-		_previewWindow.renderer.enabled = selectedGenerator != null;
+		_previewWindow.gameObject.SetActive(selectedGenerator != null);
 		
 		if (PreviewedConstruction == null)
 		{

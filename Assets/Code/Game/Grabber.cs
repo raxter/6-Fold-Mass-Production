@@ -23,6 +23,7 @@ public class Grabber : Mechanism, IPooledObject
 		_startState.extention = 1;
 		_startState.rotation  = 0;
 		
+		MoveToStartState();
 	}
 
 	public void OnPoolDeactivate ()

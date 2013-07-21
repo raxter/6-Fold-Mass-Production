@@ -1,19 +1,20 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\Managers\GridManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Code\GUI\HUDFunctions.cs">
     <Files>
-      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="37" Column="1" />
-      <File FileName="Assets\Code\Managers\GridManager.cs" Line="312" Column="5" />
-      <File FileName="Assets\Code\Game\Mechanism.cs" Line="18" Column="9" />
-      <File FileName="Assets\Code\Game\GrabbablePart.cs" Line="808" Column="57" />
-      <File FileName="Assets\Code\Game\HexCellPlaceable.cs" Line="40" Column="22" />
-      <File FileName="Assets\Code\Game\HexCell.cs" Line="142" Column="6" />
-      <File FileName="Assets\Code\Managers\InputManager.cs" Line="40" Column="21" />
-      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="88" Column="43" />
-      <File FileName="Assets\Code\GUI\Construction Definition\ConstructionPreview.cs" Line="12" Column="43" />
-      <File FileName="Assets\Code\Game\Encoding.cs" Line="114" Column="1" />
-      <File FileName="Assets\Code\Game\PartGenerator.cs" Line="38" Column="2" />
-      <File FileName="Assets\Code\Game\Grabber.cs" Line="94" Column="12" />
+      <File FileName="Assets\Code\Managers\LevelDataManager.cs" Line="25" Column="2" />
+      <File FileName="Assets\Code\Managers\InputManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\LevelManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\GUI\GrabberProgramUI.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\GrabberManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\GUI\DraggableInstructions.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\GridManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\GUI\HUDFunctions.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Managers\GUIManager.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\Mechanism.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\Encoding.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\GUI\SaveLoadMenuController.cs" Line="1" Column="1" />
+      <File FileName="Assets\Code\Game\Grabber.cs" Line="31" Column="24" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

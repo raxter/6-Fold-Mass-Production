@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GUIManager : MonoBehaviour
 {
@@ -12,6 +13,15 @@ public class GUIManager : MonoBehaviour
 	UIButton _playNormalButton = null;
 	[SerializeField]
 	UIButton _pauseButton = null;
+	
+	[SerializeField]
+	UIButton _fastButton = null;
+	[SerializeField]
+	UIButton _fasterButton = null;
+	[SerializeField]
+	UIButton _fastestButton = null;
+	
+	Dictionary<LevelManager.SimulationSpeed, UIButton> _simulationSpeedButtons = new Dictionary<LevelManager.SimulationSpeed, UIButton>();
 	
 	[SerializeField]
 	GameObject _buttonHolder = null;
@@ -41,6 +51,13 @@ public class GUIManager : MonoBehaviour
 	
 	void Start()
 	{
+		_simulationSpeedButtons[LevelManager.SimulationSpeed.Stopped] = _stopButton;
+		_simulationSpeedButtons[LevelManager.SimulationSpeed.Paused]  = _pauseButton;
+		_simulationSpeedButtons[LevelManager.SimulationSpeed.Normal]  = _playNormalButton;
+		_simulationSpeedButtons[LevelManager.SimulationSpeed.Fast]    = _fastButton;
+		_simulationSpeedButtons[LevelManager.SimulationSpeed.Faster]  = _fasterButton;
+		_simulationSpeedButtons[LevelManager.SimulationSpeed.Fastest] = _fastestButton;
+		
 		_testLevelStartText = _testLevelButton.spriteText.Text;
 		// save number of targets in save game file
 		LevelManager.instance.ConstructionCompletedEvent += 
@@ -50,27 +67,20 @@ public class GUIManager : MonoBehaviour
 		LevelManager.instance.SimulationSpeedChangedEvent += 
 		() =>
 		{
+			
 			LevelManager.SimulationSpeed currentSpeed = LevelManager.instance.currentSpeed;
 			
+			
+			foreach (UIButton button in _simulationSpeedButtons.Values)
+			{
+				button.controlIsEnabled = true;
+			}
+			_simulationSpeedButtons[currentSpeed].controlIsEnabled = false;
+			
 			if (currentSpeed == LevelManager.SimulationSpeed.Stopped)
-			{
-				// change stop to play
-//				_playNormalButton.transform.localScale = Vector3.one;
-//				_pauseButton.transform.localScale = Vector3.zero;
-				_stopButton.transform.localScale = Vector3.zero;
-						
-			}
-//			else if (currentSpeed == GameManager.SimulationSpeed.Paused)
-//			{
-////				_playNormalButton.transform.localScale = Vector3.one;
-////				_pauseButton.transform.localScale = Vector3.zero;
-//			}
+				_stopButton.transform.localScale = Vector3.zero;	
 			else
-			{
-//				_playNormalButton.transform.localScale = Vector3.zero;
-//				_pauseButton.transform.localScale = Vector3.one;
 				_stopButton.transform.localScale = Vector3.one;
-			}
 		};
 		
 		

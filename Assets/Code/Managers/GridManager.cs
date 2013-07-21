@@ -166,6 +166,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		}
 		OnGridChangedEvent();
 	}
+	
 	public void LoadBlankEditor()
 	{
 		ClearSolution();
@@ -175,6 +176,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 		GridManager.instance.target = Construction.CreateSimpleConstruction(PartType.None);
 		OnGridChangedEvent();
 	}
+	
 	public void LoadEditorLevel()
 	{
 		if (LoadedLevelName != "")
@@ -189,7 +191,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 			ClearLevel();
 			Encoding.Decode(new EncodableLevel(), encodedLevel);
 			
-			LoadedLevelName = LevelDataManager.EditorSaveName;
+			if (LoadedLevelName == null)
+				LoadedLevelName = LevelDataManager.EditorSaveName;
 			OnGridChangedEvent();
 		}
 		else
@@ -197,7 +200,6 @@ public class GridManager : SingletonBehaviour<GridManager>
 			LoadBlankEditor();
 		}
 	}
-	
 	
 	public void LoadLevel(string levelName)
 	{

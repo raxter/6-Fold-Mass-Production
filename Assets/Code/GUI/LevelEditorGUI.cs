@@ -8,6 +8,8 @@ public class LevelEditorGUI : SingletonBehaviour<LevelEditorGUI>
 	[SerializeField]
 	Camera _editorCamera;
 	
+	[SerializeField]
+	UIPanel _editorPanel;
 	
 	public bool EditorEnabled 
 	{

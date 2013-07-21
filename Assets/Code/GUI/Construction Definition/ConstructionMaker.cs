@@ -269,9 +269,6 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	
 	private void DestroyPart(GrabbablePart toDestroy)
 	{
-		GrabbablePart centerPart = targetConstructions.Count == 0 ? null : targetConstructions[0].CenterPart;
-		
-		List<GrabbablePart> centerParts = centerPart == null ? null :new List<GrabbablePart>(centerPart.GetConnectedParts());
 		
 		if (toDestroy != null)
 		{
@@ -279,25 +276,45 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			{
 				Debug.Log ("hit a part in our preview construction");
 				
-				// remove the construction we are splitting
-				Construction toRemoveConstruction = toDestroy.ParentConstruction;
-				targetConstructions.Remove (toRemoveConstruction);
+//				// remove the construction we are splitting
+//				Construction toRemoveConstruction = toDestroy.ParentConstruction;
+//				targetConstructions.Remove (toRemoveConstruction);
+//				
+//				// adding the split constructions
+//				targetConstructions.AddRange(toRemoveConstruction.RemoveFromConstruction(toDestroy));
+//				
+//				
+//				// removing the construction we are about to destroy
+//				targetConstructions.Remove(toDestroy.ParentConstruction);
+//				
+//				// and destroying it
+//				ObjectPoolManager.DestroyObject (toDestroy.ParentConstruction);
+////				ObjectPoolManager.DestroyObject (toRemoveConstruction);
+//				toDestroy = null;
 				
-				// adding the split constructions
-				targetConstructions.AddRange(toRemoveConstruction.RemoveFromConstruction(toDestroy));
-				
-				
-				// removing the construction we are about to destroy
-				targetConstructions.Remove(toDestroy.ParentConstruction);
-				
-				// and destroying it
-				ObjectPoolManager.DestroyObject (toDestroy.ParentConstruction);
-//				ObjectPoolManager.DestroyObject (toRemoveConstruction);
-				toDestroy = null;
+				PerformsConstructionFunctionThatMightSplit((con) => con.RemoveFromConstruction(toDestroy));
 			}
 		}
-		// we remove all but the largest construction
-		if (targetConstructions.Count > 1)
+		
+	}
+	
+	void PerformsConstructionFunctionThatMightSplit(System.Func<Construction, IEnumerable<Construction>> function)
+	{
+		GrabbablePart centerPart = targetConstructions.Count == 0 ? null : targetConstructions[0].CenterPart;
+		
+		List<GrabbablePart> centerParts = centerPart == null ? null :new List<GrabbablePart>(centerPart.GetConnectedParts());
+		
+		
+		Construction toPerformOn = targetConstructions[0];
+		targetConstructions.Remove(toPerformOn);
+		targetConstructions.AddRange(function(toPerformOn));
+		
+		
+		if (targetConstructions.Count == 0)	// nothign happened!
+		{
+			targetConstructions.Add (toPerformOn);
+		}
+		else if (targetConstructions.Count > 1) // there was a split, we remove all but the largest construction
 		{
 			targetConstructions.Sort( (x, y) => y.Count - x.Count );
 			Construction firstConstruction = targetConstructions[0];
@@ -324,8 +341,6 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	}
 	
 	
-	
-	
 	private void ConnectPartWithBestRotation(GrabbablePart part)
 	{
 		List<Construction.PartSide> partSides = new List<Construction.PartSide>();
@@ -350,6 +365,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				GrabbablePart.PhysicalConnectionType.Weld, 
 				partSide.relativeDirection);
 		}
+		
 	}
 	
 	
@@ -453,6 +469,9 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		}
 	}
 	
+	GrabbablePart partAtDragStart = null;
+	Vector3 pointAtDragStart;
+	
 	public void HandleScreenPoint(POINTER_INFO pointerInfo, ControlState pressState, ControlState dragState)
 	{
 		
@@ -467,7 +486,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		
 		Debug.DrawRay(inputRay.origin, inputRay.direction*100, Color.red);
 		
-		
+		Vector3 hitPoint = inputRay.origin;
 		GrabbablePart hitPart = null;
 		foreach (RaycastHit hitInfo in Physics.RaycastAll(inputRay, 1000, 1 << LayerMask.NameToLayer("GrabbablePart")))
 		{
@@ -477,49 +496,19 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			if (hitParent == null) continue;
 			
 			hitPart = hitParent.gameObject.GetComponent<GrabbablePart>();
-			
 			if (hitPart == null) continue;
+			
 			
 		}
 		
 		if (targetConstructions == null || targetConstructions.Count == 0)
 		{
+			HandleHoverOver(null);
 			return;
 		}
 		
-		foreach(GrabbablePart part in targetConstructions[0].Parts)
-		{
-			part.highlighted = false;
-		}
 		
-		
-		if (hitPart == null)
-		{
-			return;
-		}
-		
-		List<List<GrabbablePart>> partLists = new List<List<GrabbablePart>>();
-		foreach (IEnumerable<GrabbablePart> partList in FindConstructionComponentsWithout(hitPart))
-		{
-			partLists.Add(new List<GrabbablePart>(partList));
-		}
-		partLists.Sort((x, y) => y.Count - x.Count);
-		
-//		Debug.Log(string.Join(", ", partLists.ConvertAll((input) => ""+input.Count).ToArray()));
-		
-		hitPart.highlighted = true;
-		if (partLists.Count > 1)
-		{
-			for (int i = 1 ; i < partLists.Count ; i++)
-			{
-				foreach(GrabbablePart part in partLists[i])
-				{
-					part.highlighted = true;
-				}
-			}
-		}
-		
-		if (pressState == ControlState.Ending && dragState == ControlState.Inactive)
+		if (hitPart != null && pressState == ControlState.Ending && dragState == ControlState.Inactive)
 		{
 			Debug.Log("Tap "+Input.GetMouseButtonUp(0)+":"+Input.GetMouseButtonUp(1));
 			
@@ -532,11 +521,31 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				HandleAltTap(hitPart);
 			}
 		}
+		if (dragState == ControlState.Inactive && pressState == ControlState.Inactive)
+		{
+			HandleHoverOver(hitPart);
+		}
 		if (dragState == ControlState.Starting)
 		{
 			Debug.Log("Drag");
-			
-			HandleDrag(hitPart);
+			partAtDragStart = hitPart;
+			pointAtDragStart = hitPoint;
+			if (hitPart != null)
+			{
+				HandleDragStart(partAtDragStart);
+			}
+		}
+		else if (dragState == ControlState.Active)
+		{
+			if (partAtDragStart != null)
+				HandleDrag(partAtDragStart, hitPart, pointAtDragStart, hitPoint);
+		}
+		else if (dragState == ControlState.Ending)
+		{
+			if (partAtDragStart != null)
+				HandleDragEnd(partAtDragStart, hitPart, pointAtDragStart, hitPoint);
+				
+			partAtDragStart = null;
 		}
 
 		
@@ -568,15 +577,42 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	void HandleTap(GrabbablePart part)
 	{
 //		RotatePartInConstruction(part);
-		controlModes[currentControlMode].tapAction(part);
-		MarkConstructionChange();
+		HandleInputAction(controlModes[currentControlMode].tapAction, part);
 	}
 	
-	void HandleDrag(GrabbablePart part)
+	void HandleHoverOver(GrabbablePart part)
 	{
-		controlModes[currentControlMode].dragAction(part);
-		MarkConstructionChange();
-//		DragPart(part);
+		HandleInputAction(controlModes[currentControlMode].overAction, part);
+	}
+	
+	void HandleDragStart(GrabbablePart part)
+	{
+		HandleInputAction(controlModes[currentControlMode].dragStartAction, part);
+	}
+	
+	
+	void HandleDrag(GrabbablePart partAtStart, GrabbablePart partOver, Vector3 startPoint, Vector3 thisPoint)
+	{
+		HandleInputAction(controlModes[currentControlMode].dragAction, partAtStart, partOver, startPoint, thisPoint);
+	}
+	
+	void HandleDragEnd(GrabbablePart partAtStart, GrabbablePart partAtEnd, Vector3 startPoint, Vector3 endPoint)
+	{
+		HandleInputAction(controlModes[currentControlMode].dragEndAction, partAtStart, partAtEnd, startPoint, endPoint);
+	}
+	
+	void HandleInputAction(System.Func<GrabbablePart, bool> action, GrabbablePart part)
+	{
+		if (action != null)
+			if (action(part))
+				MarkConstructionChange();
+	}
+	
+	void HandleInputAction(System.Func<GrabbablePart, GrabbablePart, Vector3, Vector3, bool> action, GrabbablePart part0, GrabbablePart part1, Vector3 startPoint, Vector3 endPoint)
+	{
+		if (action != null)
+			if (action(part0, part1, startPoint, endPoint))
+				MarkConstructionChange();
 	}
 	
 	// avoid use of this
@@ -599,11 +635,14 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 	enum ControlMode {DragAndRotate, WeldAndRotate, Rotate, Recenter};
 	
 	Dictionary<ControlMode, ControlModeActions> controlModes = new Dictionary<ControlMode, ControlModeActions>(); 
-	Dictionary<System.Action<GrabbablePart>, string> controlDescriptions = new Dictionary<System.Action<GrabbablePart>, string>();
+	Dictionary<System.Func<GrabbablePart, bool>, string> controlDescriptions = new Dictionary<System.Func<GrabbablePart, bool>, string>();
 	class ControlModeActions
 	{
-		public System.Action<GrabbablePart> tapAction;
-		public System.Action<GrabbablePart> dragAction;
+		public System.Func<GrabbablePart, bool> tapAction;
+		public System.Func<GrabbablePart, bool> overAction;
+		public System.Func<GrabbablePart, bool> dragStartAction;
+		public System.Func<GrabbablePart, GrabbablePart, Vector3, Vector3, bool> dragAction;
+		public System.Func<GrabbablePart, GrabbablePart, Vector3, Vector3, bool> dragEndAction;
 		
 //		public System.Action<GrabbablePart> altAction;
 	}
@@ -618,7 +657,7 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		currentControlMode = controlMode;
 		
 		_tapActionText.Text = "Click\n"+controlDescriptions[controlModes[currentControlMode].tapAction];
-		_dragActionText.Text = "Drag\n"+controlDescriptions[controlModes[currentControlMode].dragAction];
+		_dragActionText.Text = "Drag\n"+controlDescriptions[controlModes[currentControlMode].dragStartAction];
 	}
 	
 	void SetUpControlModes()
@@ -626,41 +665,46 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 		controlModes[ControlMode.DragAndRotate] = new ControlModeActions()
 		{
 			tapAction = RotatePartInConstruction,
-			dragAction = DragPart,
+			dragStartAction = DragPart,
+			overAction = HighlightSplitParts,
 		};
 		
 		controlModes[ControlMode.WeldAndRotate] = new ControlModeActions()
 		{
 			tapAction = RotatePartInConstruction,
-			dragAction = DragWeld,
+			dragStartAction = DragWeldStart,
+			dragAction = DrawGhostWeld,
+			dragEndAction = WeldParts,
 		};
 		
 		controlModes[ControlMode.Rotate] = new ControlModeActions()
 		{
 			tapAction = RotatePartInConstruction,
-			dragAction = DragRotateConstruction,
+			dragStartAction = DragRotateConstruction,
 		};
 		
 		
 		controlModes[ControlMode.Recenter] = new ControlModeActions()
 		{
 			tapAction = Recenter,
+			dragStartAction = DragRecenterStart,
 			dragAction = DragRecenter,
+			dragEndAction = DragRecenterEnd,
 		};
 		
 		controlDescriptions[RotatePartInConstruction]	= "Rotates Part";
-		controlDescriptions[DragPart]					= "Remove or replace part";
-		controlDescriptions[DragWeld]					= "Welds Parts";
+		controlDescriptions[DragPart]					= "Removes parts\n(in red)";
+		controlDescriptions[DragWeldStart]				= "(Un)Welds Parts\n(in red)";
 		controlDescriptions[DragRotateConstruction]		= "Rotates Construction";
 		controlDescriptions[Recenter]					= "Recenters";
-		controlDescriptions[DragRecenter] 				= "Recenters";
+		controlDescriptions[DragRecenterStart] 			= "Recenters";
 		
 	}
 	
 	#region Construction Maker actions
 	
 	
-	void DragPart(GrabbablePart part)
+	bool DragPart(GrabbablePart part)
 	{
 		UIButton dragButton = dragButtons[part.partType];
 		
@@ -673,23 +717,181 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 
 			DestroyPart(part);
 		};
+		return true;
 	}
 	
-	void DragWeld(GrabbablePart part)
+	void ClearSelections()
 	{
-		// TODO
+		if (targetConstructions.Count == 0)
+			return;
+		
+		foreach(GrabbablePart conPart in targetConstructions[0].Parts)
+		{
+			conPart.highlighted = false;
+		}
 	}
 	
-	void DragRecenter(GrabbablePart part)
+	bool HighlightSplitParts(GrabbablePart hitPart)
 	{
-		// TODO
-	}
-	void DragRotateConstruction(GrabbablePart part)
-	{
-		// TODO
+		ClearSelections();
+		
+		Debug.Log ("HighlightSplitParts "+hitPart);
+		if (hitPart == null)
+			return false;
+		
+		
+		if (hitPart == null)
+			return false;
+		
+		List<List<GrabbablePart>> partLists = new List<List<GrabbablePart>>();
+		foreach (IEnumerable<GrabbablePart> partList in FindConstructionComponentsWithout(hitPart))
+		{
+			partLists.Add(new List<GrabbablePart>(partList));
+		}
+		partLists.Sort((x, y) => y.Count - x.Count);
+		
+//		Debug.Log(string.Join(", ", partLists.ConvertAll((input) => ""+input.Count).ToArray()));
+		
+		hitPart.highlighted = true;
+		if (partLists.Count > 1)
+		{
+			for (int i = 1 ; i < partLists.Count ; i++)
+			{
+				foreach(GrabbablePart part in partLists[i])
+				{
+					part.highlighted = true;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
-	void RotatePartInConstruction(GrabbablePart part)
+	bool DragWeldStart(GrabbablePart part)
+	{
+		// TODO
+		Debug.Log("DragWeldStart "+part.name);
+		return false;
+	}
+	
+	enum Adjancency {None, Connected, Adjacent}
+	
+	Adjancency IsAdjacent(GrabbablePart startPart, GrabbablePart overPart, out HexMetrics.Direction relativeDirection)
+	{
+		for (int i = 0 ; i < 6 ; i++)
+		{
+			HexMetrics.Direction iAbsDir = (HexMetrics.Direction)i;
+			HexMetrics.Direction iRelDir = startPart.RelativeDirectionFromAbsolute(iAbsDir);
+			
+			if (startPart.GetConnectedPart(iRelDir) == overPart) // already connected
+			{
+//				Debug.Log("Found connection "+startPart+" -> "+overPart);
+				relativeDirection = iRelDir;
+				return Adjancency.Connected;
+			}
+			else 
+			{
+				Vector3 offset = GameSettings.instance.hexCellPrefab.GetDirection(iAbsDir);
+//				Debug.Log ((startPart.transform.position + offset) +" : "+overPart.transform.position);
+				if (Vector3.SqrMagnitude((startPart.transform.position + offset) - overPart.transform.position) < 0.0001)
+				{
+					Debug.Log("Found Adjacency "+startPart+" -> "+overPart);
+					relativeDirection = iRelDir;
+					return Adjancency.Adjacent;
+				}
+			}
+		}
+		relativeDirection = (HexMetrics.Direction)(-1);
+		return Adjancency.None;
+	}
+	
+	bool DrawGhostWeld(GrabbablePart startPart, GrabbablePart overPart, Vector3 startPoint, Vector3 thisPoint)
+	{
+		ClearSelections();
+		// TODO
+//		Debug.Log("DrawGhostWeld "+startPart+" -> "+overPart+" "+startPoint+" "+thisPoint);
+		if (overPart == null)
+			return false;
+		
+		HexMetrics.Direction direction;
+		Adjancency adjacency = IsAdjacent(startPart, overPart, out direction);
+		
+		if (adjacency != Adjancency.None)
+		{
+			startPart.highlighted = true;
+			overPart.highlighted = true;
+		}
+		
+		
+		return false;
+	}
+	bool WeldParts(GrabbablePart startPart, GrabbablePart endPart,  Vector3 startPoint, Vector3 endPoint)
+	{
+		ClearSelections();
+		// TODO
+//		Debug.Log("WeldParts "+startPart+" -> "+endPart+" "+startPoint+" "+endPoint);
+		if (endPart == null)
+			return false;
+		
+		HexMetrics.Direction direction;
+		Adjancency adjacency = IsAdjacent(startPart, endPart, out direction);
+		
+		if (adjacency == Adjancency.Adjacent)
+		{
+			startPart.ConnectPartAndPlaceAtRelativeDirection(endPart,GrabbablePart.PhysicalConnectionType.Weld, (HexMetrics.Direction)direction);
+		}
+		else if (adjacency == Adjancency.Connected)
+		{
+//			startPart.SetPhysicalConnection(
+			PerformsConstructionFunctionThatMightSplit((con) => 
+				startPart.SetPhysicalConnection(direction, GrabbablePart.PhysicalConnectionType.None,GrabbablePart.SplitOptions.SplitIfNecessary));
+		}
+		
+		return true;
+	}
+	
+	Vector3 startDragLocation;
+	bool DragRecenterStart(GrabbablePart part)
+	{
+		startDragLocation = part.ParentConstruction.transform.position;
+		return false;
+	}
+	
+	GrabbablePart FindPartClosestToCenterTarget()
+	{
+		if (targetConstructions.Count == 0)
+			return null;
+		
+		List<GrabbablePart> partList = targetConstructions[0].PartsList;
+		
+		partList.Sort ((x,y) => Vector3.Distance(_centerIcon.transform.position, x.transform.position).CompareTo(Vector3.Distance(_centerIcon.transform.position, y.transform.position)));
+		
+		return partList[0];
+	}
+	
+	bool DragRecenter(GrabbablePart startPart, GrabbablePart endPart, Vector3 startPoint, Vector3 endPoint)
+	{
+		ClearSelections();
+		startPart.ParentConstruction.transform.position = startDragLocation + (endPoint - startPoint);
+		FindPartClosestToCenterTarget().highlighted = true;
+		return false;
+	}
+	
+	bool DragRecenterEnd(GrabbablePart startPart, GrabbablePart endPart, Vector3 startPoint, Vector3 endPoint)
+	{
+		ClearSelections();
+		startPart.ParentConstruction.transform.position = startDragLocation + (endPoint - startPoint);
+		
+		return Recenter(FindPartClosestToCenterTarget());
+	}
+	
+	bool DragRotateConstruction(GrabbablePart part)
+	{
+		// TODO
+		return false;
+	}
+	
+	bool RotatePartInConstruction(GrabbablePart part)
 	{
 		for (int i = 1 ; i < 6 ; i++)
 		{
@@ -701,9 +903,10 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 				break;
 			}
 		}
+		return true;
 	}
 	
-	private void RotatePartWhileDragged(GrabbablePart part)
+	private bool RotatePartWhileDragged(GrabbablePart part)
 	{
 		for (int i = 1 ; i < 6 ; i++)
 		{
@@ -719,18 +922,21 @@ public class ConstructionMaker : SingletonBehaviour<ConstructionMaker>
 			
 			part.RotatateSimulationOrientation(i);
 		}
+		return true;
 	}
 	
 	
-	void DeletePart(GrabbablePart part)
+	bool DeletePart(GrabbablePart part)
 	{
 		DestroyPart(part);
+		return true;
 	}
 	
-	void Recenter(GrabbablePart part)
+	bool Recenter(GrabbablePart part)
 	{
 		part.ParentConstruction.CenterConstruction(part);
 		part.ParentConstruction.transform.localPosition = Vector3.zero;
+		return true;
 	}
 	
 	void UndoAction()
