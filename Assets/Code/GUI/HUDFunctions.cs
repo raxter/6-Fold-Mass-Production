@@ -21,6 +21,13 @@ public class HUDFunctions : MonoBehaviour
 			_inputEnabled = (LevelManager.instance.gameState == LevelManager.State.Construction);
 		};
 		
+		GridManager.instance.OnGridChangedEvent += () =>
+		{
+			
+			grabberButton.gameObject.SetActive(LevelEditorGUI.hasActiveInstance || !GridManager.instance.IsLevelOptionActive(LevelOption.DisableGrabberPlacement));
+			welderButton.gameObject.SetActive (LevelEditorGUI.hasActiveInstance || !GridManager.instance.IsLevelOptionActive(LevelOption.DisableWelderPlacement) );
+		};
+		
 		grabberButton.AddInputDelegate(GrabberInputDelegate);
 		welderButton.AddInputDelegate(WelderInputDelegate);
 		generatorButton.AddInputDelegate(GeneratorInputDelegate);

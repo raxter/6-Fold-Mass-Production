@@ -356,7 +356,7 @@ public class Encoding
 			return (char)('A'+(i-36));
 		}
 		
-		return '!';
+		return '\n';
 	}
 	
 //	public static IEnumerator<int> DecodeToInts(string code)

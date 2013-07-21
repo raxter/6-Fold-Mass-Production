@@ -35,7 +35,11 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 			RefreshGrabberUIObjects();
 		};
 		
-	
+		GridManager.instance.OnGridChangedEvent += () =>
+		{
+			RefreshGrabberUIObjects();
+		};
+		
 		yield return null;
 		DisplayedGrabber = null;
 		
@@ -92,9 +96,23 @@ public class GrabberProgramUI : SingletonBehaviour<GrabberProgramUI>
 	
 	public void RefreshGrabberUIObjects()
 	{
+		bool active = true;
+		if (_displayedGrabber == null)
+			active = false;
+		else
+		{
+			active = !GridManager.instance.IsLevelOptionActive(LevelOption.DisableGrabberAdjustments) &&
+					 LevelManager.instance.gameState == LevelManager.State.Construction;
+			
+			if (LevelEditorGUI.hasActiveInstance)
+				active = true;
+		}
+		
+		
+		
 		foreach (GameObject uiObject in _grabberUIObjects)
 		{
-			uiObject.transform.localScale = Vector3.one * (_displayedGrabber != null && /*guiEnabled &&*/ LevelManager.instance.gameState == LevelManager.State.Construction ? 1f : 0f);
+			uiObject.transform.localScale = Vector3.one * ( active ? 1f : 0f );
 		}
 	}
 

@@ -882,6 +882,7 @@ public class GrabbablePart : MonoBehaviour, IPooledObject
 	#region IPooledObject implementation
 	public void OnPoolActivate ()
 	{
+		
 	}
 
 	public void OnPoolDeactivate ()

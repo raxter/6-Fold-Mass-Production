@@ -18,6 +18,11 @@ public class Grabber : Mechanism, IPooledObject
 	#region IPooledObject implementation
 	public void OnPoolActivate ()
 	{
+		_startState.clampOpen = true;
+		_startState.direction = HexMetrics.Direction.Up;
+		_startState.extention = 1;
+		_startState.rotation  = 0;
+		
 	}
 
 	public void OnPoolDeactivate ()

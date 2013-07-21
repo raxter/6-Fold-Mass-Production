@@ -3,11 +3,13 @@ using System.Collections;
 
 public class ConstructionPreview : MonoBehaviour 
 {
-	
+	[SerializeField]
+	UIButton _previewWindow;
 	
 	// Use this for initialization
 	void Start () 
 	{
+		_previewWindow.renderer.enabled = false;
 		InputManager.instance.OnSelectionChange += OnSelectionChange;
 		ConstructionMaker.instance.saveEvent += OnSaveEvent;
 	}
@@ -64,6 +66,7 @@ public class ConstructionPreview : MonoBehaviour
 			GridManager.instance.SetTarget(construction);
 		});
 		
+		_previewWindow.renderer.enabled = true;
 	}
 	
 		
@@ -141,6 +144,8 @@ public class ConstructionPreview : MonoBehaviour
 				selectedGenerator.toGenerateConstruction = Construction.DecodeCopy(construction);
 				selectedGenerator.toGenerateConstruction.ignoreCollisions = true;
 			});
+		
+		_previewWindow.renderer.enabled = selectedGenerator != null;
 		
 		if (PreviewedConstruction == null)
 		{

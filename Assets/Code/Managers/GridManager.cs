@@ -33,6 +33,8 @@ public class HexCellRow
 	}
 }
 
+public enum LevelOption {None = 0, DisableGrabberAdjustments = 1, DisableAdvancedInstructions = 2, DisableGrabberPlacement = 4, DisableWelderPlacement = 8};
+
 public class GridManager : SingletonBehaviour<GridManager> 
 {
 	
@@ -91,16 +93,16 @@ public class GridManager : SingletonBehaviour<GridManager>
 		target.transform.parent = _targetHolder.transform;
 		target.transform.localPosition = Vector3.zero;
 		
-		GridChangedEvent();
+		OnGridChangedEvent();
 	}
 	
 	void Start()
 	{
 		SetTarget(Construction.CreateSimpleConstruction(PartType.None));
-		GridChangedEvent += PerformAutosave;
+		OnGridChangedEvent += PerformAutosave;
 	}
 	
-	public event System.Action GridChangedEvent;
+	public event System.Action OnGridChangedEvent;
 	
 	public void PerformAutosave()
 	{
@@ -129,28 +131,56 @@ public class GridManager : SingletonBehaviour<GridManager>
 		LevelDataManager.instance.Save(levelName, LevelEncoding(), SaveType.Level, AutoSaveType.Named);
 	}
 	
-	public string LoadedLevelName { get; private set;}
+	public string LoadedLevelName { get; private set; }
+	public int LevelOptions { get; private set; }
+	
+	public bool IsLevelOptionActive ( LevelOption levelOption )
+	{
+		return (LevelOptions & (int)levelOption) != 0;
+	}
+	
+	public void SetLevelOption ( LevelOption levelOption, bool active )
+	{
+		if (active)
+		{
+			LevelOptions |= (int)levelOption;
+		}
+		else
+		{
+			LevelOptions &= ~((int)levelOption);
+		}
+		PerformAutosave();
+	}
 	
 	
 	public void LoadEditorSolution()
 	{
-		LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, LevelEncoding(), SaveType.Level, AutoSaveType.AutoSave);
-		
-		string encodedSolution = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Solution, AutoSaveType.AutoSave);
-		
 		ClearSolution();
-		Encoding.Decode(new EncodableSolution(), encodedSolution);
+		if (LoadedLevelName != "")
+		{
+			LevelDataManager.instance.Save(LoadedLevelName, LevelEncoding(), SaveType.Level, AutoSaveType.AutoSave);
+		
+			string encodedSolution = LevelDataManager.instance.Load(LoadedLevelName, SaveType.Solution, AutoSaveType.AutoSave);
+		
+			Encoding.Decode(new EncodableSolution(), encodedSolution);
+		}
+		OnGridChangedEvent();
 	}
 	public void LoadBlankEditor()
 	{
 		ClearSolution();
 		ClearLevel();
 		LoadedLevelName = LevelDataManager.EditorSaveName;
+		LevelOptions = 0;
 		GridManager.instance.target = Construction.CreateSimpleConstruction(PartType.None);
+		OnGridChangedEvent();
 	}
 	public void LoadEditorLevel()
 	{
-		LevelDataManager.instance.Save(LevelDataManager.EditorSaveName, SolutionEncoding(), SaveType.Solution, AutoSaveType.AutoSave);
+		if (LoadedLevelName != "")
+		{
+			LevelDataManager.instance.Save(LoadedLevelName, SolutionEncoding(), SaveType.Solution, AutoSaveType.AutoSave);
+		}
 		ClearSolution();
 		string encodedLevel = LevelDataManager.instance.Load(LevelDataManager.EditorSaveName, SaveType.Level, AutoSaveType.AutoSave);
 		if (encodedLevel != "")
@@ -160,6 +190,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 			Encoding.Decode(new EncodableLevel(), encodedLevel);
 			
 			LoadedLevelName = LevelDataManager.EditorSaveName;
+			OnGridChangedEvent();
 		}
 		else
 		{
@@ -181,6 +212,7 @@ public class GridManager : SingletonBehaviour<GridManager>
 			Encoding.Decode(new EncodableLevel(), encodedLevel);
 			
 			LoadedLevelName = levelName;
+			OnGridChangedEvent();
 		}
 		return;
 		
@@ -247,13 +279,21 @@ public class GridManager : SingletonBehaviour<GridManager>
 				WeldingRig weldingRig = hc.placedMechanism as WeldingRig;
 				
 				if (generator != null && generator.isSolutionMechanism)
+				{
 					movableGenerators.Add (generator);
+				}
 				
 				if (grabber != null)
+				{
 					grabbers.Add (grabber);
+					grabber.encodingOverride = Mechanism.EncodingOverride.Solution;
+				}
 				
 				if (weldingRig != null)
+				{
 					weldingRigs.Add (weldingRig);
+					weldingRig.encodingOverride = Mechanism.EncodingOverride.Solution;
+				}
 				
 			}
 			
@@ -282,6 +322,9 @@ public class GridManager : SingletonBehaviour<GridManager>
 		public bool Decode (Encoding encodings)
 		{
 			Debug.Log ("EncodableSolution Encoding Data\n"+ encodings.DebugString());
+			
+			if (encodings.Count == 0)
+				return true;
 			
 			// find moveable grabbers in the level that match the save file
 			List<PartGenerator> generators = new List<PartGenerator>();
@@ -373,6 +416,8 @@ public class GridManager : SingletonBehaviour<GridManager>
 			
 			yield return GridManager.instance.target; // target 1
 			yield return (EncodableInt)0;             // target 2
+			
+			yield return (EncodableInt)GridManager.instance.LevelOptions;
 		}
 
 		public bool Decode (Encoding encodings)
@@ -401,21 +446,22 @@ public class GridManager : SingletonBehaviour<GridManager>
 			GridManager.instance.targetConstructions = encodings.Int(i+0);
 //			GridManager.instance.targetConstructions2 = encodings.Int(i+1);
 			Construction target0 = Construction.DecodeCreate(encodings.SubEncoding(i+2));
-			Debug.Log ("Setting Target0 "+encodings.SubEncoding(i+2).DebugString());
-			Debug.Log ("Setting Target0 "+Encoding.Encode(target0));
+//			Debug.Log ("Setting Target0 "+encodings.SubEncoding(i+2).DebugString());
+//			Debug.Log ("Setting Target0 "+Encoding.Encode(target0));
 			GridManager.instance.SetTarget(target0);
 			target0.DestroySelf();
 //			Construction target0 = Construction.DecodeCreate(encodings.SubEncoding(i+3));
 //			CoroutineUtils.WaitOneFrameAndDo(() => GridManager.instance.SetTarget(target0));
 			
+			GridManager.instance.LevelOptions = encodings.Int(i+4);
 			return true;
 		}
 	}
 	
 	public void RegisterMechanismChange ()
 	{
-		if (GridChangedEvent != null)
-			GridChangedEvent();
+		if (OnGridChangedEvent != null)
+			OnGridChangedEvent();
 	}
 	
 	

@@ -70,7 +70,7 @@ public class DraggableInstructions : MonoBehaviour
 		InputManager.instance.OnSelectionChange += (selectedPlacables) => 
 		{
 			
-			if (selectedPlacables.Count == 1 && selectedPlacables[0] is Grabber)
+			if (!LevelEditorGUI.hasActiveInstance && selectedPlacables.Count == 1 && selectedPlacables[0] is Grabber)
 			{
 				selectedGrabber = selectedPlacables[0] as Grabber;
 				RefreshEmptyInstructions();

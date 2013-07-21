@@ -14,6 +14,9 @@ public class GUIManager : MonoBehaviour
 	UIButton _pauseButton = null;
 	
 	[SerializeField]
+	GameObject _buttonHolder = null;
+	
+	[SerializeField]
 	SpriteText _targetText = null;
 	
 	[SerializeField]
@@ -69,7 +72,14 @@ public class GUIManager : MonoBehaviour
 				_stopButton.transform.localScale = Vector3.one;
 			}
 		};
-	
+		
+		
+		GridManager.instance.OnGridChangedEvent += RefreshButtons;
+		RefreshButtons();
 	}
 	
+	void RefreshButtons()
+	{
+		_buttonHolder.SetActive(!LevelEditorGUI.hasActiveInstance);
+	}
 }

@@ -12,18 +12,35 @@ public abstract class Mechanism : HexCellPlaceable, IEncodable
 		get;
 	}
 	
-	
 	public bool isSolutionMechanism = true;		
+	
+	public enum EncodingOverride {None, Level, Solution};
+	public EncodingOverride encodingOverride = EncodingOverride.None;
+	
 	public virtual IEnumerable<IEncodable> Encode ()
 	{
-		yield return (EncodableInt)Location.x;
-		yield return (EncodableInt)Location.y;
-		yield return (EncodableInt)(isSolutionMechanism ? 1 : 0);
+		yield return (EncodableInt)(Location.x+31);
+		yield return (EncodableInt)(Location.y+31);
+		
+		if (encodingOverride == EncodingOverride.Solution)
+		{
+			yield return (EncodableInt)(1);
+		}
+		else if (encodingOverride == EncodingOverride.Level)
+		{
+			yield return (EncodableInt)(0);
+		}
+		else// if (encodingOverride == EncodingOverride.None)
+		{
+			yield return (EncodableInt)(isSolutionMechanism ? 1 : 0);
+		}
+		
+		encodingOverride = EncodingOverride.None;
 	}
 	
 	public virtual bool Decode (Encoding encoding)
 	{
-		IntVector2 newLocation = new IntVector2(encoding.Int(0), encoding.Int (1));
+		IntVector2 newLocation = new IntVector2(encoding.Int(0)-31, encoding.Int (1)-31);
 		Mechanism placedMechanism = GridManager.instance.GetHexCell(newLocation).placedMechanism;
 		
 		bool didReplacedPart = false;
